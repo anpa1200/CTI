@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CTI Research: Handala Hack Group (aka Handala Hack Team)</title>
+  <meta name="description" content="Evidence-labeled threat intelligence assessment and SOC defensive guidance on Handala Hack Group (Handala Hack Team), December 2023 to March 2026.">
+  <meta name="author" content="Andrey Pautov">
+  <link rel="canonical" href="https://medium.com/@1200km/cti-research-handala-hack-group-aka-handala-hack-team-ddbdd294cfb8">
+  <style>
+    :root {
+      font-family: "Georgia", "Times New Roman", serif;
+      line-height: 1.6;
+      color: #1a1a1a;
+      --toc-bg: #f8f9fa;
+      --border: #dee2e6;
+      --link: #0a5eb2;
+      --link-visited: #551a8b;
+    }
+    body { margin: 0; padding: 0; max-width: 52rem; margin-left: auto; margin-right: auto; padding: 2rem 1.5rem 3rem; }
+    .doc-meta {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.875rem;
+      color: #495057;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .doc-meta a { color: var(--link); }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-top: 0;
+      margin-bottom: 0.5rem;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 0.5rem;
+    }
+    h2 { font-size: 1.35rem; margin-top: 2.5rem; margin-bottom: 0.75rem; scroll-margin-top: 1rem; }
+    h3 { font-size: 1.15rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+    nav.toc {
+      background: var(--toc-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem 1.5rem;
+      margin: 1.5rem 0 2rem;
+    }
+    nav.toc ul { list-style: none; padding-left: 0; margin: 0; }
+    nav.toc li { margin: 0.4rem 0; }
+    nav.toc a { color: var(--link); text-decoration: none; }
+    nav.toc a:hover { text-decoration: underline; }
+    a { color: var(--link); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    a:visited { color: var(--link-visited); }
+    a.ref-cite { font-weight: 600; }
+    a.ref-link { font-weight: 600; }
+    code {
+      font-family: "Consolas", "Monaco", monospace;
+      background: #f1f3f4;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+    ul, ol { margin: 0.75rem 0 1.25rem 1.5rem; padding-left: 1.5rem; }
+    li { margin: 0.35rem 0; }
+    figure.report-fig {
+      margin: 1.5rem 0;
+      text-align: center;
+    }
+    figure.report-fig img { max-width: 100%; height: auto; border: 1px solid var(--border); border-radius: 4px; }
+    .back-top { margin-top: 2.5rem; font-size: 0.9rem; color: #6c757d; }
+    @media print {
+      body { padding: 1rem; }
+      nav.toc { break-inside: avoid; }
+      a.ref-cite { color: #0a5eb2; }
+    }
+  </style>
+</head>
+<body>
+  <header class="doc-meta">
+    <p>Evidence-Labeled Threat Intelligence Assessment and SOC Defensive Guidance (December 2023–March 2026). Author: <a href="https://medium.com/@1200km">Andrey Pautov</a>. Evidence cutoff: March 5, 2026. <a href="https://medium.com/@1200km/cti-research-handala-hack-group-aka-handala-hack-team-ddbdd294cfb8">Original article (Medium)</a>.</p>
+  </header>
+  <a id="top"></a>
+<h1 id="top">CTI Research: Handala Hack Group (aka Handala Hack Team)</h1>
+
+<h2 id="evidence-labeled-threat-intelligence-assessment-and-soc-defensive-guidance-december-2023-to-march-2026">Evidence-Labeled Threat Intelligence Assessment and SOC Defensive Guidance (December 2023 to March 2026)</h2>
+
+
+
+
+
+
+
+<figure class="report-fig"><img src="assets/fig-000.png" alt="Figure 1" loading="lazy" /></figure>
+
+<h2 id="table-of-contents">Table of Contents</h2>
+<nav class="toc" aria-label="Table of contents"><ul>
+<li><a href="#report-metadata">Report Metadata</a></li>
+<li><a href="#methodology-evidence-labels">Methodology &amp; Evidence Labels</a></li>
+<li><a href="#confidence-what-changes">Confidence &amp; What Changes Confidence</a></li>
+<li><a href="#executive-summary">Executive Summary</a></li>
+<li><a href="#alias-cluster-crosswalk">Alias / Cluster Crosswalk</a></li>
+<li><a href="#key-judgments">Key Judgments</a></li>
+<li><a href="#activity-timeline">Activity Timeline (2023–2026)</a></li>
+<li><a href="#confirmed-vs-claimed-matrix">Confirmed vs Claimed Matrix</a></li>
+<li><a href="#public-presence">Public Presence and Information Operations Footprint</a></li>
+<li><a href="#targeting-victimology">Targeting and Victimology</a></li>
+<li><a href="#ttps">Tactics, Techniques, and Procedures (Observed/Reported)</a></li>
+<li><a href="#attck-mapping">ATT&amp;CK-Oriented Mapping (Analyst View)</a></li>
+<li><a href="#detection-response-priorities">Detection and Response Priorities</a></li>
+<li><a href="#detection-engineering-pack">Detection Engineering Pack (SOC-Ready)</a></li>
+<li><a href="#wiper-first-30-minutes">Wiper First 30 Minutes (Defensive Mini-Playbook)</a></li>
+<li><a href="#controls-mapping">Controls Mapping (NIST CSF-Lite)</a></li>
+<li><a href="#ioc-compendium">Comprehensive IOC Compendium (Public Reporting)</a></li>
+<li><a href="#overall-statistics">Overall Statistics, Common Patterns, and Cross-Group Correlation</a></li>
+<li><a href="#confidence-gaps">Confidence and Gaps</a></li>
+<li><a href="#practical-defensive-actions">Practical Defensive Actions (Next 30 Days)</a></li>
+<li><a href="#references">References</a></li>
+</ul></nav>
+<h2 id="report-metadata">Report Metadata</h2>
+
+<ul>
+<li>Evidence cutoff (collection freeze): March 5, 2026 (UTC)</li>
+<li>Assessment window: December 2023 to March 2026</li>
+<li>Scope: Threat actor profile and defensive implications</li>
+<li>Date: March 6, 2026</li>
+<li>Author: Andrey Pautov</li>
+</ul>
+
+<h2 id="methodology-evidence-labels">Methodology &amp; Evidence Labels</h2>
+
+<ul>
+<li>Analytic rule: actor claims are treated as collection leads, not confirmation.</li>
+<li>Partially corroborated — rule of use: apply only when at least one technical artifact exists (for example: hash, sample, infrastructure indicator, or behavior chain). Press-only narrative coverage without technical artifacts is excluded.</li>
+<li>Partially corroborated: used in the Confirmed vs Claimed Matrix only. Denotes events where at least one technical artifact or vendor technical report exists, but full victim-side forensic detail or complete kill-chain confirmation is not publicly available. Epistemically closer to “Reported” than “Observed.”</li>
+<li>Claimed: actor-channel or press-amplified claims without sufficient technical corroboration in public artifacts.</li>
+<li>Assessed: analytic inference derived from multiple Observed/Reported items; used for synthesis, not as standalone proof.</li>
+<li>Reported: described by reputable external reporting (vendor intelligence, government advisories, established press), but not independently re-validated in this report.</li>
+<li>Observed: directly documented technical evidence in primary technical/government reporting (for example: hashes, malware behavior, telemetry-backed procedure descriptions).</li>
+</ul>
+
+<h2 id="confidence-what-changes">Confidence &amp; What Changes Confidence</h2>
+
+<ul>
+<li>What decreases confidence: single-source narratives, circular citation loops, and actor-post claims without technical evidence.</li>
+<li>What increases confidence: victim-side telemetry (EDR/SIEM), email traces, malware samples/hashes, sinkhole/passive-DNS corroboration, and independent IR confirmation from affected organizations.</li>
+<li>Low confidence: claim-led events lacking technical artifacts.</li>
+<li>Medium confidence: partial convergence, but either incomplete forensic detail or cluster-level (not incident-level) attribution.</li>
+<li>Medium-High confidence: direct primary-source equivalence statements or near-converging technical reporting with minor gaps.</li>
+<li>High confidence: converging technical reporting across independent primary sources with artifact-level overlap.</li>
+</ul>
+
+<h2 id="executive-summary">Executive Summary</h2>
+
+<p>Handala (also presented as “Handala Hack Team”) is a politically aligned hack-and-leak threat persona whose operations are designed to create both technical disruption and information shock. The group has primarily targeted Israeli organizations, with occasional spillover into regional ecosystems through supply-chain and partner-connected pathways. Their campaign pattern combines intrusion activity, selective data theft, destructive actions, and fast public messaging intended to amplify fear, uncertainty, and reputational pressure.</p>
+
+<p>This actor should be evaluated as an influence-enabled intrusion threat, not only a traditional cybercrime or espionage actor. In practice, the technical compromise is often one component of a broader operation where public claims, timed leaks, and narrative control are used to magnify impact beyond direct system damage. For executive audiences, this means risk should be measured in three dimensions at once: operational downtime, legal/regulatory exposure from data loss, and external trust erosion.</p>
+
+<p>As of the evidence cutoff (March 5, 2026 UTC), open vendor reporting has converged strongly on the identity of Handala Hack with Iranian MOIS-linked cluster Void Manticore (Storm-0842/Storm-842/BANISHED KITTEN/Dune — naming variants across vendors). Attribution confidence has strengthened materially over the assessment window:</p>
+
+<ul>
+<li>Individual incident claims from actor channels still require independent forensic corroboration.</li>
+<li>By 2025–2026, five or more independent vendors and government sources converged on strong MOIS-aligned cluster identity assessments.</li>
+<li>Early 2024 reporting contained higher uncertainty at operation level.</li>
+</ul>
+
+<p>The observed tradecraft pattern is generally pragmatic rather than novel. Reporting frequently points to phishing, social-engineering lures tied to current events, abuse of trusted sender or supplier channels, staged payload delivery via commercial file-sharing services (Storj, Mega), and wiper-linked impact paths. This suggests Handala does not require cutting-edge zero-day capability in every campaign; instead, it achieves effect through speed, timing, target selection, and rapid transition from initial access to public pressure operations.</p>
+
+<p>From a business risk perspective, organizations with high external visibility, public-service dependency, or concentrated third-party service reliance face disproportionate exposure. Particularly at risk are environments where security update trust workflows are weak,<code>.msi</code>/installer controls are permissive, and incident communications are not prepared for claim-driven campaigns. In these conditions, even a partial compromise can escalate into a strategic incident because narrative impact may outpace technical containment.</p>
+
+<p>Bottom line: Handala should be treated as a persistent regional threat persona where disruption + leak + influence are fused into a single operating concept, with high-confidence cluster-level overlap to MOIS-linked infrastructure in current open reporting. Defenders should prioritize supplier-channel trust controls, phishing hardening for event-themed lures, wiper-resilience (offline recovery), and communications playbooks that separate verified compromise evidence from adversary propaganda.</p>
+
+<p>This report does not independently validate victim compromise and should be read as structured normalization of open-source reporting. Attribution statements are strongest at cluster level and should not be interpreted as exclusive proof for every actor-branded incident.</p>
+
+<h2 id="alias-cluster-crosswalk">Alias / Cluster Crosswalk</h2>
+
+<p>[Assessed] Cross-vendor naming crosswalks indicate overlap, not identity at every incident level; operator, infrastructure, and campaign boundaries may differ by vendor model. The cluster-level equivalence between Void Manticore, BANISHED KITTEN, Dune, and the Handala Hack persona is directly stated by multiple primary sources and should be treated as high-confidence at the persona/cluster level.</p>
+
+<h3 id="attribution-link-analysis-analyst-view">Attribution Link Analysis (Analyst View)</h3>
+
+<p><code>Handala Hack Persona (public claims/leaks channels) ↔ Void Manticore (Check Point) ↔ Storm-0842/842 (Microsoft) ↔ COBALT MYSTIQUE (Sophos) ↔ BANISHED KITTEN (CrowdStrike) ↔ Dune (Recorded Future)</code></p>
+
+<figure class="report-fig"><img src="assets/fig-001.png" alt="Figure 2" loading="lazy" /></figure>
+
+<p><code>Cluster-confidence anchor:</code> Check Point direct equivalence statement<code>Void Manticore (Handala Hack)</code>+ cross-vendor naming convergence + recurring infrastructure intersections in reported operations (for example,<code>64.176.172.0/24</code> set). <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a><a href="#ref-R11" class="ref-cite" title="Reference">[R11]</a><a href="#ref-R19" class="ref-cite" title="Reference">[R19]</a><a href="#ref-R23c" class="ref-cite" title="Reference">[R23c]</a><a href="#ref-R23d" class="ref-cite" title="Reference">[R23d]</a><a href="#ref-R23e" class="ref-cite" title="Reference">[R23e]</a></p>
+
+<h2 id="key-judgments">Key Judgments</h2>
+
+<ol>
+<li>Business impact is magnified by narrative velocity. Claim and leak messaging can outpace forensic validation, forcing organizations into high-pressure legal, reputational, and executive response cycles before technical scoping is complete. Confidence: Medium. <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a><a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a><a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a> Evidence: channel activity patterns + media amplification timelines + campaign retrospectives. (Note: confidence is bounded at Medium because evidence consists of observed outputs — channel activity and media amplification — rather than operational planning artifacts or documented actor intent.)</li>
+<li>Attribution is strongest at cluster level; incident-level certainty varies. Multiple independent vendors and government sources directly link the Handala Hack persona to MOIS-aligned clusters (Void Manticore / BANISHED KITTEN / Storm-0842 or Storm-842 / Dune naming variants), while actor-channel claims remain unevenly corroborated per incident. Confidence: Medium-High. <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a><a href="#ref-R6" class="ref-cite" title="Reference">[R6]</a><a href="#ref-R11" class="ref-cite" title="Reference">[R11]</a><a href="#ref-R23c" class="ref-cite" title="Reference">[R23c]</a><a href="#ref-R23d" class="ref-cite" title="Reference">[R23d]</a><a href="#ref-R23e" class="ref-cite" title="Reference">[R23e]</a> Evidence: Check Point Research directly equates Void Manticore with the Handala Hack persona <a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a>; CrowdStrike tracks the same cluster as BANISHED KITTEN <a href="#ref-R23c" class="ref-cite" title="Reference">[R23c]</a>; cross-vendor alias mapping + cluster lineage reporting + multi-vendor convergence context <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R11" class="ref-cite" title="Reference">[R11]</a><a href="#ref-R19" class="ref-cite" title="Reference">[R19]</a><a href="#ref-R23d" class="ref-cite" title="Reference">[R23d]</a><a href="#ref-R23e" class="ref-cite" title="Reference">[R23e]</a>, plus recurring infrastructure intersections in reported campaigns (<code>64.176.169.22</code>,<code>64.176.172.101</code>,<code>64.176.172.165</code>,<code>64.176.172.235</code>,<code>64.176.173.77</code>,<code>64.176.172.0/24</code>) <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a>. Confidence is Medium-High (not High) because it covers both cluster-level identity (strong) and incident-level certainty for individual actor-channel claims (variable).</li>
+<li>Destructive capability is operationally meaningful, not theoretical. Technical reporting describes wiper-linked behaviors and destructive execution paths across at least six confirmed phases, demonstrating that impact objectives include system denial and data destruction, not only exfiltration/leak activity. Confidence: High. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a> Evidence: malware and destructive procedure descriptions in technical reporting.</li>
+<li>Initial access and delivery are typically pragmatic, not novel. The strongest documented cases show phishing/current-events lures and trusted-channel abuse (including supplier/CRM pathways and commercial file-sharing services), suggesting reliable operator tradecraft without dependence on advanced zero-day capability. Confidence: Medium-High. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R3" class="ref-cite" title="Reference">[R3]</a><a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a><a href="#ref-R14" class="ref-cite" title="Reference">[R14]</a>Evidence: vendor technical reports and campaign chain documentation.</li>
+<li>Targeting emphasizes Israeli entities with civilian-impact leverage and symbolic value. Open reporting spans public and private targets, including incidents involving educational/emergency communication contexts and healthcare infrastructure, consistent with pressure-oriented campaign design. Confidence: High. <a href="#ref-R3" class="ref-cite" title="Reference">[R3]</a><a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a><a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a><a href="#ref-R17" class="ref-cite" title="Reference">[R17]</a> Evidence: threat-intel weekly reporting + established press + incident summaries.</li>
+<li>Operational doctrine is “disrupt + leak + amplify.” Handala activity repeatedly combines technical intrusion/disruption with rapid public claim dissemination through social/messaging channels, indicating a deliberate information-operations layer rather than incidental publicity. Confidence: High. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a><a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a>. Evidence: vendor technical reporting + OSINT platform activity patterns; actor channels used as supporting context and early-warning feed.</li>
+</ol>
+
+<h2 id="activity-timeline">Activity Timeline (2023–2026)</h2>
+
+<figure class="report-fig"><img src="assets/fig-002.png" alt="Figure 3" loading="lazy" /></figure>
+
+<p>Default evidence handling for this section:</p>
+
+<p>Statements are [Reported] unless explicitly marked [Assessed] or [Claimed].</p>
+
+<p>[Claimed] entries are not treated as confirmation and require independent technical validation.</p>
+
+<ul>
+<li>Post-February 2025 note: Handala’s own public channels (including primary Telegram) went silent after approximately February 9, 2025, before resuming in approximately July 2025. Activity attributed to Handala in the interim and subsequent phases represents researcher/vendor cluster-level attribution (Void Manticore / BANISHED KITTEN) rather than actor self-claims via the group’s own infrastructure. This distinction is noted in relevant phase Claims sections. <a href="#ref-R23a" class="ref-cite" title="Reference">[R23a]</a><a href="#ref-R23b" class="ref-cite" title="Reference">[R23b]</a><a href="#ref-R23d" class="ref-cite" title="Reference">[R23d]</a></li>
+</ul>
+
+<h3 id="octobernovember-2023-pre-brand-operational-context">October–November 2023 (Pre-Brand Operational Context)</h3>
+
+<ul>
+<li>[Reported] This period is the operational backdrop for later Handala-branded activity and explains why attribution is more stable at cluster level than per individual post/claim. <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R19" class="ref-cite" title="Reference">[R19]</a></li>
+<li>[Reported] Microsoft and Check Point documented MOIS-linked destructive activity in Israel involving BiBi wiper variants and cooperation patterns between access and destructive operators (Storm-0861 with Storm-0842 in Microsoft naming). <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R19" class="ref-cite" title="Reference">[R19]</a></li>
+</ul>
+
+<p>TTPs (Reported)</p>
+
+<ul>
+<li>Impact (<code>T1485</code>,<code>T1561</code>,<code>T1490</code>): paired encryptor/wiper behavior (<code>GoXML.exe</code>,<code>cl.exe</code>,<code>rwdsk.sys</code>) and BiBi-family destructive logic. <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a></li>
+<li>Lateral movement (<code>T1021.001</code>,<code>T1021.002</code>): RDP/SMB-heavy movement patterns with internal pivoting. <a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a></li>
+<li>Credential/privilege operations (<code>T1003.001</code>,<code>T1069</code>): LSASS dumping and Exchange mailbox-search cmdlets (<code>New-MailboxSearch</code>,<code>Get-Recipient</code>). <a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a></li>
+<li>Persistence (<code>T1505.003</code>): ASPX webshell use (<code>pickers.aspx</code>,<code>error4.aspx</code>,<code>ClientBin.aspx</code>). <a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a></li>
+<li>Initial access (<code>T1190</code>): exploitation of public-facing SharePoint (<code>CVE-2019-0604</code>) in related Iran-linked destructive operations. <a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a></li>
+</ul>
+
+<p>TTPs (Assessed)</p>
+
+<ul>
+<li>[Assessed] CVE-2019–0604 is referenced here as lineage context from MOIS-linked historical operations documented in the pre-brand period. It is not assessed as a dominant or universal access vector for 2023–2026 Handala-related incidents. For broader cross-group context, see the Cross-Group Correlation section. <a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a></li>
+<li>[Assessed] The access-to-impact handoff model seen later under Handala branding was already operationally established in this lineage period. <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a><a href="#ref-R19" class="ref-cite" title="Reference">[R19]</a></li>
+</ul>
+
+<p>Claims (Unverified)</p>
+
+<ul>
+<li>[Claimed] No phase-specific actor branding claims are central here; this phase is primarily cluster-lineage reporting.</li>
+</ul>
+
+<p>IOC/Hunting Leads</p>
+
+<ul>
+<li>Sample hashes:<code>d0c03d40772cd468325bbc522402f7b737f18b8f37a89bacc5c8a00c2b87bfc6</code>,<code>deeaf85b2725289d5fc262b4f60dda0c68ae42d8d46d0dc19b9253b451aea25a</code>,<code>87f0a902d6b2e2ae3647f10ea214d19db9bd117837264ae15d622b5314ff03a5</code>,<code>85fa58cc8c4560adb955ba0ae9b9d6cab2c381d10dbd42a0bceb8b62a92b7636</code>,<code>74d8d60e900f931526a911b7157511377c0a298af986d42d373f51aac4f362f6</code>,<code>cc77e8ab73b577de1924e2f7a93bcfd852b3c96c6546229bc8b80bf3fd7bf24e</code>. <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a></li>
+<li>Network indicators:<code>64.176.169.22</code>,<code>64.176.172.235</code>,<code>64.176.172.165</code>,<code>64.176.173.77</code>,<code>64.176.172.101</code>. <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a></li>
+<li>Host artifacts:<code>error4.aspx</code>,<code>ClientBin.aspx</code>,<code>pickers.aspx</code>,<code>cl.exe</code>,<code>GoXML.exe</code>,<code>rwdsk.sys</code>,<code>mellona.exe</code>,<code>disable_defender.exe</code>. <a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a></li>
+<li>Lineage IOC note: treat these as cluster-lineage indicators, not standalone attribution proof; validate with current telemetry before blocking. <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a></li>
+</ul>
+
+<h3 id="december-2023-public-emergence-of-handala-persona">December 2023 (Public Emergence of Handala Persona)</h3>
+
+<ul>
+<li>[Reported] Early messaging already combined target naming and psychological pressure framing. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></li>
+<li>[Reported] Trellix places Handala emergence in December 2023, with first X post on December 18, 2023. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a></li>
+</ul>
+
+<p>TTPs (Reported)</p>
+
+<ul>
+<li>Information staging: taunting and victim-name publication patterns. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></li>
+<li>Persona/channel establishment (<code>T1585.001</code>): rapid setup/use of social and messaging channels. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a><a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a></li>
+</ul>
+
+<p>TTPs (Assessed)</p>
+
+<ul>
+<li>[Assessed] Communication infrastructure was built as an operational component, not as post-incident publicity. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></li>
+</ul>
+
+<p>Claims (Unverified)</p>
+
+<ul>
+<li>[Claimed] Early breach claims in this phase should be treated as directional until matched with victim telemetry. <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a><a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a></li>
+</ul>
+
+<p>IOC/Hunting Leads</p>
+
+<ul>
+<li>Monitor abrupt actor-branded victim naming bursts in channel timelines. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></li>
+<li><code>https://t.me/HANDALA_RSS</code> <a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a></li>
+</ul>
+
+<figure class="report-fig"><img src="assets/fig-003.png" alt="Figure 4" loading="lazy" /></figure>
+
+<h3 id="december-2023february-2024-early-claim-led-campaigning">December 2023–February 2024 (Early Claim-Led Campaigning)</h3>
+
+<ul>
+<li>[Reported] Cyberint described phishing/defacement/leak-claim activity with ideological framing. <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></li>
+</ul>
+
+<p>TTPs (Reported)</p>
+
+<ul>
+<li>Defacement signaling (<code>T1491</code>). <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></li>
+<li>Phishing/social engineering (<code>T1566</code>,<code>T1204</code>). <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></li>
+</ul>
+
+<p>TTPs (Assessed)</p>
+
+<ul>
+<li>[Assessed] Reputation-building through repeated claim cadence appears central in this period. <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></li>
+</ul>
+
+<p>Claims (Unverified)</p>
+
+<ul>
+<li>[Claimed] Leak assertions and partial-proof releases in this phase remain unevenly corroborated in public artifacts. <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></li>
+</ul>
+
+<p>IOC/Hunting Leads</p>
+
+<ul>
+<li>Soft indicators: defacement references, claim screenshots, teaser leak fragments. <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a><a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a></li>
+</ul>
+
+<h3 id="marchjune-2024-escalation-of-claimed-target-set">March–June 2024 (Escalation of Claimed Target Set)</h3>
+
+<ul>
+<li>[Reported] Additional claim campaigns expanded to defense/technology-adjacent targets and ransomware/leak assertions. <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></li>
+</ul>
+
+<p>TTPs (Reported)</p>
+
+<ul>
+<li>Narrative amplification through repeated victim rollups. <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></li>
+<li>Target-set expansion behaviors (<code>T1591</code>). <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></li>
+</ul>
+
+<p>TTPs (Assessed)</p>
+
+<ul>
+<li>[Assessed] Strategic effect in this phase relied more on coercive messaging tempo than on highly novel technical means. <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></li>
+</ul>
+
+<p>Claims (Unverified)</p>
+
+<ul>
+<li>[Claimed] Claimed compromises and extortion narratives in this window are primarily claim-led and require independent verification. <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></li>
+</ul>
+
+<p>IOC/Hunting Leads</p>
+
+<ul>
+<li>Soft indicators: synchronized “new victim list” waves across channels. <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a><a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a></li>
+</ul>
+
+<h3 id="may-2024-attribution-convergence-and-void-manticore-framing">May 2024 (Attribution Convergence and “Void Manticore” Framing)</h3>
+
+<ul>
+<li>[Reported] Sophos provides alias context for<code>COBALT MYSTIQUE</code> in overlap analysis with<code>Void Manticore</code> and<code>Storm-0842</code> naming. <a href="#ref-R11" class="ref-cite" title="Reference">[R11]</a></li>
+<li>[Reported] Check Point linked Israel-focused destructive activity to Void Manticore and described overlap with Scarred Manticore victim sets. <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a></li>
+</ul>
+
+<p>TTPs (Reported)</p>
+
+<ul>
+<li>Destructive endpoint operations (<code>T1485</code>,<code>T1561</code>,<code>T1490</code>). <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a></li>
+<li>Access-to-impact handoff model across cooperating clusters. <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R11" class="ref-cite" title="Reference">[R11]</a></li>
+</ul>
+
+<p>TTPs (Assessed)</p>
+
+<ul>
+<li>[Assessed] Cluster-level attribution confidence in this phase is stronger than incident-level certainty for every actor-branded claim. <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R11" class="ref-cite" title="Reference">[R11]</a></li>
+</ul>
+
+<p>Claims (Unverified)</p>
+
+<ul>
+<li>[Claimed] Actor-branded claims still require forensic closure even when cluster-level linkage is strong. <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></li>
+</ul>
+
+<p>IOC/Hunting Leads</p>
+
+<ul>
+<li>Reuse lineage IOCs (<code>cl.exe</code>,<code>rwdsk.sys</code>, listed hashes,<code>64.176.172.0/24</code> context) as hunt pivots. <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a></li>
+</ul>
+
+<h3 id="july-2024-crowdstrike-lure-wiper-campaign">July 2024 (CrowdStrike-Lure Wiper Campaign)</h3>
+
+<ul>
+<li>[Reported] BleepingComputer coverage reflects the same campaign pattern for defender dissemination. <a href="#ref-R14" class="ref-cite" title="Reference">[R14]</a></li>
+<li>[Reported; includes artifacts] Trellix documented the lure chain (<code>phishing/PDF</code>→<code>update.zip</code>→<code>CrowdStrike.exe</code>→ destructive stage). <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a></li>
+</ul>
+
+<p>TTPs (Reported)</p>
+
+<ul>
+<li>Exfiltration via web/messaging APIs (<code>T1567.002</code> pattern). <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a></li>
+<li>Destructive execution (<code>T1485</code>,<code>T1561</code>). <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a></li>
+<li>Payload staging (<code>T1105</code>): malicious payload hosted on Storj file share (<code>storjshare.io</code>). <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a></li>
+<li>Lure-driven initial access (<code>T1566</code>,<code>T1204</code>). <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R14" class="ref-cite" title="Reference">[R14]</a></li>
+</ul>
+
+<p>TTPs (Assessed)</p>
+
+<ul>
+<li>[Assessed] Current-events lure timing was used to compress defender decision time and improve execution probability. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R14" class="ref-cite" title="Reference">[R14]</a></li>
+</ul>
+
+<p>Claims (Unverified)</p>
+
+<ul>
+<li>[Claimed] No major additional claim-only elements dominate this phase relative to technical reporting.</li>
+</ul>
+
+<p>IOC/Hunting Leads</p>
+
+<ul>
+<li>Delivery infrastructure: Storj file share (<code>storjshare.io</code>) used for payload hosting in this campaign. Distinct from Mega file share used in the December 2024–January 2025 CRM-linked campaign.</li>
+<li>Artifacts (campaign-reported; enforce by hash/context where possible):<code>update.zip</code>,<code>CrowdStrike.exe</code>,<code>rwdsk.sys</code>,<code>RawDisk3</code>;<code>cl.exe</code> is context-dependent and should be treated as hard only with hash/driver/service corroboration. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a><a href="#ref-R14" class="ref-cite" title="Reference">[R14]</a></li>
+</ul>
+
+<h3 id="august-2024-platform-pressure-and-information-friction">August 2024 (Platform Pressure and Information Friction)</h3>
+
+<ul>
+<li>[Reported] ODNI/FBI/CISA issued election-influence statement on August 19, 2024 in the same period context. <a href="#ref-R20" class="ref-cite" title="Reference">[R20]</a></li>
+<li>[Reported] The Record documented X account suspension on August 21, 2024 and continuation via other channels. <a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a></li>
+</ul>
+
+<p>TTPs (Reported)</p>
+
+<ul>
+<li>Channel migration/resilience (<code>T1585.001</code>— operational use of alternate channels on both Telegram and X platform): Post-ban activity migrated to<code>@Handala_Backup</code> on X and continued via pre-existing Telegram infrastructure (<code>t.me/HANDALA_RSS</code>,<code>t.me/s/handala_backup_357</code>). These are separate platform assets, not a single unified channel. <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a><a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a><a href="#ref-R18" class="ref-cite" title="Reference">[R18]</a></li>
+</ul>
+
+<figure class="report-fig"><img src="assets/fig-004.png" alt="Figure 5" loading="lazy" /></figure>
+
+<p>TTPs (Assessed)</p>
+
+<ul>
+<li>[Assessed] Distribution-channel disruption increased friction but did not materially interrupt campaign continuity. <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a><a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a><a href="#ref-R18" class="ref-cite" title="Reference">[R18]</a></li>
+</ul>
+
+<p>Claims (Unverified)</p>
+
+<ul>
+<li>[Claimed] Post-ban actor messaging streams remain claim feeds unless corroborated by independent technical evidence. <a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R18" class="ref-cite" title="Reference">[R18]</a></li>
+</ul>
+
+<p>IOC/Hunting Leads</p>
+
+<ul>
+<li>Note: The Telegram channels and the X backup account are distinct infrastructure on separate platforms; do not conflate them as a single migration artifact.</li>
+<li>X (Twitter) backup account active post-ban:<code>@Handala_Backup</code> <a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a></li>
+<li>Telegram channels (active before and after X ban):<code>https://t.me/HANDALA_RSS</code> <a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a>,<code>https://t.me/s/handala_backup_357</code> <a href="#ref-R18" class="ref-cite" title="Reference">[R18]</a></li>
+</ul>
+
+<h3 id="septemberoctober-2024-high-impact-claims-against-strategic-targets">September–October 2024 (High-Impact Claims Against Strategic Targets)</h3>
+
+<ul>
+<li>[Reported] Press and ICT described claims against strategic Israeli targets, including large-volume theft assertions. <a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a><a href="#ref-R17" class="ref-cite" title="Reference">[R17]</a></li>
+</ul>
+
+<p>TTPs (Reported)</p>
+
+<ul>
+<li>Strategic victim signaling and coercive narrative framing. <a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a><a href="#ref-R17" class="ref-cite" title="Reference">[R17]</a></li>
+</ul>
+
+<p>TTPs (Assessed)</p>
+
+<ul>
+<li>[Assessed] This phase prioritized influence effects and symbolic target selection over publicly validated technical disclosure. <a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a><a href="#ref-R17" class="ref-cite" title="Reference">[R17]</a></li>
+</ul>
+
+<p>Claims (Unverified)</p>
+
+<ul>
+<li>[Claimed] Soreq/Shin Bet-adjacent compromise claims and 197GB exfil assertions remain claim-heavy in open sources. <a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a><a href="#ref-R17" class="ref-cite" title="Reference">[R17]</a></li>
+</ul>
+
+<p>IOC/Hunting Leads</p>
+
+<ul>
+<li>Soft IOC: claim bundles naming strategic institutions and high-volume theft assertions. <a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a><a href="#ref-R17" class="ref-cite" title="Reference">[R17]</a></li>
+</ul>
+
+<h3 id="december-2024january-2025-reutone-supply-chain-style-campaign">December 2024–January 2025 (ReutOne Supply-Chain Style Campaign)</h3>
+
+<ul>
+<li>[Reported] Check Point retrospective added technical chain detail: recipients were instructed to “back up” their files by downloading a malicious<code>.msi</code> installer hosted on Mega file share, followed by wiper behavior upon execution. <a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a></li>
+<li>[Reported] Check Point weekly reporting described Handala claims tied to ReutOne/CRM pathway. <a href="#ref-R3" class="ref-cite" title="Reference">[R3]</a></li>
+</ul>
+
+<p>TTPs (Reported)</p>
+
+<ul>
+<li>Valid Accounts abuse (<code>T1078</code>): compromised supplier/CRM account context used to increase delivery credibility. <a href="#ref-R3" class="ref-cite" title="Reference">[R3]</a><a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a></li>
+<li>Installer-led execution/destructive follow-on (<code>T1204</code>,<code>T1059</code>,<code>T1485</code>). <a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a></li>
+<li>Trusted-relationship abuse (<code>T1199</code>). <a href="#ref-R3" class="ref-cite" title="Reference">[R3]</a><a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a></li>
+</ul>
+
+<p>TTPs (Assessed)</p>
+
+<ul>
+<li>[Assessed] Authenticated business context increased delivery credibility and downstream blast radius risk. Hosting payload on Mega (a legitimate, widely trusted file-sharing service) further reduced recipient suspicion. <a href="#ref-R3" class="ref-cite" title="Reference">[R3]</a><a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a></li>
+</ul>
+
+<p>Claims (Unverified)</p>
+
+<ul>
+<li>[Claimed] Cross-country victim-scope claims in this phase require case-by-case forensic confirmation. <a href="#ref-R3" class="ref-cite" title="Reference">[R3]</a></li>
+</ul>
+
+<p>IOC/Hunting Leads</p>
+
+<ul>
+<li>Delivery infrastructure: malicious<code>.msi</code> hosted on Mega file share (<code>mega.nz</code> or<code>mega.io</code>). Monitor for<code>.msi</code> downloads originating from Mega in enterprise egress logs, particularly in combination with supplier/business-context email lures. Distinct from the Storj-based hosting observed in the July 2024 CrowdStrike-lure campaign. <a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a></li>
+<li>Hard IOC:<code>6eb7dbf27a25639c7f11c05fd88ea2a301e0ca93d3c3bdee1eb5917fc60a56ff</code>(<code>.msi</code>). <a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a></li>
+</ul>
+
+<h3 id="january-2025-kindergarten-siren-pa-system-incident">January 2025 (Kindergarten Siren/PA System Incident)</h3>
+
+<ul>
+<li>[Reported] The Record identified Maagar-Tec, an Israeli electronics firm operating panic button systems in schools, as the compromised provider through which the siren activation occurred. The company confirmed it disconnected affected systems and launched an investigation. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a></li>
+<li>[Reported] Press and weekly TI described panic-button/emergency audio abuse across approximately 20 educational sites and parallel intimidation messaging. <a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a><a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a><a href="#ref-R17" class="ref-cite" title="Reference">[R17]</a></li>
+</ul>
+
+<p>TTPs (Reported)</p>
+
+<p>⚠️ Caveat: The technical intrusion path for this incident is not fully resolved in public reporting (see Claims section below). The TTPs listed here describe observed operational effects and reported messaging behaviors, not a confirmed kill-chain. Do not treat these as documented attacker procedures without a validated intrusion path.</p>
+
+<ul>
+<li>Mass intimidation messaging. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a><a href="#ref-R17" class="ref-cite" title="Reference">[R17]</a></li>
+<li>Emergency communication workflow abuse. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a><a href="#ref-R17" class="ref-cite" title="Reference">[R17]</a></li>
+</ul>
+
+<p>TTPs (Assessed)</p>
+
+<ul>
+<li>[Assessed] The objective was high-visibility civilian psychological impact with limited need for complex malware tradecraft. <a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a><a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a></li>
+</ul>
+
+<p>Claims (Unverified)</p>
+
+<ul>
+<li>[Claimed] Handala claimed to have wiped Maagar-Tec systems following the siren activation; this wiper claim is unverified in public technical reporting and is not counted in the confirmed destructive/wiper phase total.</li>
+<li>[Claimed] Exact technical intrusion path and full scope remain partially unresolved in public reporting. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a><a href="#ref-R17" class="ref-cite" title="Reference">[R17]</a></li>
+</ul>
+
+<p>IOC/Hunting Leads</p>
+
+<ul>
+<li>Vendor/supplier pivot: Maagar-Tec (panic button / PA system vendor) identified as access point; any organizations using this vendor’s systems should validate access logs and system integrity for the January 2025 window. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a></li>
+<li>Soft IOCs: out-of-schedule siren/PA events with synchronized intimidation SMS bursts. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a><a href="#ref-R17" class="ref-cite" title="Reference">[R17]</a></li>
+</ul>
+
+<h3 id="february-2025-leak-and-pressure-operations-final-self-claimed-phase">February 2025 (Leak and Pressure Operations; Final Self-Claimed Phase)</h3>
+
+<ul>
+<li>[Reported] OP Innovate analysis indicates that Handala’s own public channels (including primary Telegram) went silent after approximately February 9, 2025, making this the last phase with confirmed actor self-claims via the group’s own infrastructure. <a href="#ref-R23a" class="ref-cite" title="Reference">[R23a]</a><a href="#ref-R23b" class="ref-cite" title="Reference">[R23b]</a></li>
+<li>[Reported] Additional leak campaigns referenced personal-data and weapons-holder data exposure themes. <a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a><a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a></li>
+</ul>
+
+<p>TTPs (Reported)</p>
+
+<ul>
+<li>Sustained release cadence across channels. <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a><a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a></li>
+<li>Doxing/exposure pressure behaviors. <a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a><a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a></li>
+</ul>
+
+<p>TTPs (Assessed)</p>
+
+<ul>
+<li>[Assessed] Campaign value in this period was primarily reputational and societal pressure amplification. <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a><a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a></li>
+</ul>
+
+<p>Claims (Unverified)</p>
+
+<ul>
+<li>[Claimed] Published leak-scope assertions remain variably corroborated by independent technical reporting. <a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a><a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a></li>
+</ul>
+
+<p>IOC/Hunting Leads</p>
+
+<ul>
+<li>Soft IOC: leak-drop waves tied to civilian registry themes. <a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a><a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a></li>
+</ul>
+
+<h3 id="june-2025-wiper-activity-during-iranisrael-escalation">June 2025 (Wiper Activity During Iran–Israel Escalation)</h3>
+
+<ul>
+<li>[Reported] This phase marks the resumption of Handala/Void Manticore cluster activity following the February–June 2025 communications gap on the group’s own public channels. <a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a><a href="#ref-R23a" class="ref-cite" title="Reference">[R23a]</a><a href="#ref-R23b" class="ref-cite" title="Reference">[R23b]</a></li>
+<li>[Reported] Check Point Research tracked a Handala Hack wiper event in June 2025, coinciding with the twelve-day Iran–Israel escalation period. This is the only primary-vendor-confirmed destructive technical activity listed for this phase; narrative/influence operations continued in parallel. <a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a></li>
+</ul>
+
+<p>TTPs (Reported)</p>
+
+<ul>
+<li>Destructive execution — wiper deployment (<code>T1485</code>): wiper activity tracked by Check Point Research in the June 2025 escalation window. <a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a></li>
+</ul>
+
+<p>TTPs (Assessed)</p>
+
+<ul>
+<li>[Assessed] Wiper deployment during a high-visibility kinetic escalation window is consistent with the cluster’s established doctrine of synchronizing technical disruption with geopolitical tension peaks. <a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a></li>
+</ul>
+
+<p>Claims (Unverified)</p>
+
+<ul>
+<li>[Assessed] Post-February 2025 Handala attributions represent researcher/vendor cluster-level attribution (Void Manticore / BANISHED KITTEN), not actor self-claims via the group’s own infrastructure. <a href="#ref-R23c" class="ref-cite" title="Reference">[R23c]</a><a href="#ref-R23d" class="ref-cite" title="Reference">[R23d]</a></li>
+<li>[Claimed] Specific victim claims and technical details for the June 2025 wiper have not been released publicly by Check Point at the time of this report’s evidence cutoff.</li>
+</ul>
+
+<p>IOC/Hunting Leads</p>
+
+<ul>
+<li>Technical pivot: Check Point Research has confirmed wiper activity in this phase <a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a>; consumers should request Check Point private intelligence for campaign-specific artifact details not yet released publicly. Treat the June 2025 window as a confirmed destructive-activity period when scoping retrospective hunt queries.</li>
+</ul>
+
+<h3 id="july-2025-hack-and-leak-against-iran-international">July 2025 (Hack-and-Leak Against Iran International)</h3>
+
+<ul>
+<li>[Reported] RRM Canada documented a Handala/BANISHED KITTEN hack-and-leak operation targeting Iran International, involving data exfiltration affecting five journalists. <a href="#ref-R23d" class="ref-cite" title="Reference">[R23d]</a><a href="#ref-R23f" class="ref-cite" title="Reference">[R23f]</a></li>
+</ul>
+
+<p>TTPs (Reported)</p>
+
+<ul>
+<li>Hack-and-leak with targeted journalist exposure (<code>T1591</code>,<code>T1567.002</code> pattern). <a href="#ref-R23d" class="ref-cite" title="Reference">[R23d]</a><a href="#ref-R23f" class="ref-cite" title="Reference">[R23f]</a></li>
+</ul>
+
+<p>TTPs (Assessed)</p>
+
+<ul>
+<li>[Assessed] Targeting Iran International — a prominent Persian-language media outlet — is consistent with MOIS operational interests and the cluster’s pattern of combining technical compromise with high-profile narrative pressure. <a href="#ref-R23d" class="ref-cite" title="Reference">[R23d]</a><a href="#ref-R23f" class="ref-cite" title="Reference">[R23f]</a></li>
+</ul>
+
+<p>Claims (Unverified)</p>
+
+<ul>
+<li>[Assessed] Post-February 2025 Handala attributions represent researcher/vendor cluster-level attribution, not actor self-claims via the group’s own infrastructure. <a href="#ref-R23c" class="ref-cite" title="Reference">[R23c]</a><a href="#ref-R23d" class="ref-cite" title="Reference">[R23d]</a></li>
+<li>[Claimed] Full scope of data accessed and actor self-claims require forensic validation.</li>
+</ul>
+
+<p>IOC/Hunting Leads</p>
+
+<ul>
+<li>Soft IOC: sudden publication of journalist personal data tied to Persian-language media organizations. <a href="#ref-R23d" class="ref-cite" title="Reference">[R23d]</a><a href="#ref-R23f" class="ref-cite" title="Reference">[R23f]</a></li>
+</ul>
+
+<h3 id="october-2025-international-airport-claim">October 2025 (International Airport Claim)</h3>
+
+<ul>
+<li>[Reported] Open-source claim tracking reported a Handala/BANISHED KITTEN-associated claim of access to Suvarnabhumi Airport (Bangkok) systems. <a href="#ref-R23g" class="ref-cite" title="Reference">[R23g]</a></li>
+</ul>
+
+<p>TTPs (Reported)</p>
+
+<ul>
+<li>High-profile infrastructure claim — aviation sector. <a href="#ref-R23g" class="ref-cite" title="Reference">[R23g]</a></li>
+</ul>
+
+<p>TTPs (Assessed)</p>
+
+<ul>
+<li>[Assessed] Aviation sector claims in non-Israeli geographies represent potential cluster expansion beyond primary targeting geography, possibly for international pressure effects. <a href="#ref-R23g" class="ref-cite" title="Reference">[R23g]</a></li>
+</ul>
+
+<p>Claims (Unverified)</p>
+
+<ul>
+<li>[Assessed] Post-February 2025 Handala attributions represent researcher/vendor cluster-level attribution. <a href="#ref-R23c" class="ref-cite" title="Reference">[R23c]</a><a href="#ref-R23d" class="ref-cite" title="Reference">[R23d]</a></li>
+<li>[Claimed] Airport access claim has not been independently confirmed by technical reporting at evidence cutoff.</li>
+</ul>
+
+<p>IOC/Hunting Leads</p>
+
+<ul>
+<li>Soft IOC: access claims naming international transport infrastructure. <a href="#ref-R23g" class="ref-cite" title="Reference">[R23g]</a></li>
+</ul>
+
+<h3 id="novemberdecember-2025-bennett-telegram-compromise-and-bibi-gate-wave">November–December 2025 (Bennett Telegram Compromise and “Bibi Gate” Wave)</h3>
+
+<ul>
+<li>[Reported] Secondary reporting citing KELA technical analysis of the Bennett/Braverman incident found that the majority of “1,900 chats” cited by the actor consisted of empty contact cards auto-generated by Telegram during phone contact synchronization; fewer than 40 messages with actual content were present. This indicates the actor materially overstated the data scope of the claimed compromise. <a href="#ref-R23i" class="ref-cite" title="Reference">[R23i]</a><a href="#ref-R23j" class="ref-cite" title="Reference">[R23j]</a></li>
+<li>[Reported] Israel Hayom/ICT described “Bibi Gate” claim escalation with mixed verified/unverified elements. <a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a><a href="#ref-R22" class="ref-cite" title="Reference">[R22]</a></li>
+<li>[Reported] JNS stated Bennett office confirmation of Telegram account compromise, without confirmed phone-level compromise. <a href="#ref-R21" class="ref-cite" title="Reference">[R21]</a></li>
+</ul>
+
+<p>TTPs (Reported)</p>
+
+<ul>
+<li>Rapid narrative amplification around elite targets. <a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a><a href="#ref-R22" class="ref-cite" title="Reference">[R22]</a></li>
+<li>High-profile account targeting/session compromise behavior. <a href="#ref-R21" class="ref-cite" title="Reference">[R21]</a></li>
+</ul>
+
+<p>TTPs (Assessed)</p>
+
+<ul>
+<li>[Assessed] Mixing authentic data with auto-generated Telegram artifacts increases verification burden and extends influence effects even when actual data volume is limited. <a href="#ref-R21" class="ref-cite" title="Reference">[R21]</a><a href="#ref-R22" class="ref-cite" title="Reference">[R22]</a><a href="#ref-R23i" class="ref-cite" title="Reference">[R23i]</a><a href="#ref-R23j" class="ref-cite" title="Reference">[R23j]</a></li>
+</ul>
+
+<p>Claims (Unverified)</p>
+
+<ul>
+<li>[Assessed] Post-February 2025 Handala attributions represent researcher/vendor cluster-level attribution. <a href="#ref-R23c" class="ref-cite" title="Reference">[R23c]</a><a href="#ref-R23d" class="ref-cite" title="Reference">[R23d]</a></li>
+<li>[Assessed] Secondary coverage of KELA analysis indicates the actor significantly overstated the data scope of the Bennett account compromise. Treat all claim-volume figures from actor channels as unverified until independently validated. <a href="#ref-R23i" class="ref-cite" title="Reference">[R23i]</a><a href="#ref-R23j" class="ref-cite" title="Reference">[R23j]</a></li>
+<li>[Claimed] Several political leak assertions in this period remained under review at publication time. <a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a><a href="#ref-R22" class="ref-cite" title="Reference">[R22]</a></li>
+</ul>
+
+<p>IOC/Hunting Leads</p>
+
+<ul>
+<li>Validation note: when actor claims specific data volumes from account compromises, independently verify before treating as confirmed scope. <a href="#ref-R23i" class="ref-cite" title="Reference">[R23i]</a><a href="#ref-R23j" class="ref-cite" title="Reference">[R23j]</a></li>
+<li>Account signals: unexpected Telegram sessions/device fingerprints/geolocations for high-profile users. <a href="#ref-R21" class="ref-cite" title="Reference">[R21]</a></li>
+</ul>
+
+<h3 id="february-2026-technical-consolidation-clalit-healthcare-campaign">February 2026 (Technical Consolidation; Clalit Healthcare Campaign)</h3>
+
+<ul>
+<li>[Reported] Handala/BANISHED KITTEN claimed an attack on Clalit, Israel’s largest healthcare organization, in February 2026. <a href="#ref-R23h" class="ref-cite" title="Reference">[R23h]</a></li>
+<li>[Reported] Check Point retrospective documented likely large-scale phishing, compromised CRM-linked sender path, malicious<code>.msi</code>, and destructive endpoint behavior. <a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a></li>
+</ul>
+
+<p>TTPs (Reported)</p>
+
+<ul>
+<li>Installer-led destructive behavior (<code>T1204</code>,<code>T1485</code>,<code>T1490</code>). <a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a></li>
+<li>Trusted sender compromise (<code>T1199</code>). <a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a></li>
+<li>Broad phishing distribution (<code>T1566</code>). <a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a></li>
+</ul>
+
+<p>TTPs (Assessed)</p>
+
+<ul>
+<li>[Assessed] Healthcare sector targeting (Clalit) is consistent with the cluster’s established pattern of selecting organizations with high civilian-impact leverage and symbolic value. <a href="#ref-R23h" class="ref-cite" title="Reference">[R23h]</a></li>
+<li>[Assessed] This phase provides one of the strongest public bridges between claim-layer activity and concrete technical procedures. <a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a></li>
+</ul>
+
+<p>Claims (Unverified)</p>
+
+<ul>
+<li>[Assessed] Post-February 2025 Handala attributions represent researcher/vendor cluster-level attribution. <a href="#ref-R23c" class="ref-cite" title="Reference">[R23c]</a><a href="#ref-R23d" class="ref-cite" title="Reference">[R23d]</a></li>
+<li>[Claimed] Clalit attack scope and technical details remain unverified in public primary-source reporting at evidence cutoff.</li>
+</ul>
+
+<p>IOC/Hunting Leads</p>
+
+<ul>
+<li>Hard IOC:<code>6eb7dbf27a25639c7f11c05fd88ea2a301e0ca93d3c3bdee1eb5917fc60a56ff</code>. <a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a></li>
+</ul>
+
+<h3 id="march-2026-regional-escalation-and-claimed-cross-border-activity">March 2026 (Regional Escalation and Claimed Cross-Border Activity)</h3>
+
+<ul>
+<li>[Reported] Unit 42 (published March 2, 2026) assessed elevated Iran-related cyber risk and included Handala among prominent personas in the operating environment. <a href="#ref-R6" class="ref-cite" title="Reference">[R6]</a></li>
+</ul>
+
+<p>TTPs (Reported)</p>
+
+<ul>
+<li>Influencer/public-figure intimidation campaign behavior. <a href="#ref-R6" class="ref-cite" title="Reference">[R6]</a></li>
+<li>Opportunistic sector targeting under escalation conditions. <a href="#ref-R6" class="ref-cite" title="Reference">[R6]</a></li>
+</ul>
+
+<p>TTPs (Assessed)</p>
+
+<ul>
+<li>[Assessed] Public claim velocity in escalation windows can outpace forensic closure and increase communications risk. <a href="#ref-R6" class="ref-cite" title="Reference">[R6]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></li>
+</ul>
+
+<p>Claims (Unverified)</p>
+
+<ul>
+<li>[Assessed] Post-February 2025 Handala attributions represent researcher/vendor cluster-level attribution. <a href="#ref-R23c" class="ref-cite" title="Reference">[R23c]</a><a href="#ref-R23d" class="ref-cite" title="Reference">[R23d]</a></li>
+<li>[Claimed] Energy/fuel and cross-border claim streams in this window require strict evidence separation before external confirmation. <a href="#ref-R6" class="ref-cite" title="Reference">[R6]</a><a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R18" class="ref-cite" title="Reference">[R18]</a></li>
+</ul>
+
+<p>IOC/Hunting Leads</p>
+
+<ul>
+<li>Soft IOC: rapid claim surges naming critical sectors/public figures; correlate with local telemetry windows before attribution decisions. <a href="#ref-R6" class="ref-cite" title="Reference">[R6]</a></li>
+</ul>
+
+<h3 id="timeline-synthesis">Timeline Synthesis</h3>
+
+<ul>
+<li>[Assessed] The February–June 2025 communications gap on the group’s own channels did not halt cluster operations; wiper activity (June 2025) and hack-and-leak operations (July 2025) continued under researcher attribution to the Void Manticore / BANISHED KITTEN cluster. <a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a><a href="#ref-R23a" class="ref-cite" title="Reference">[R23a]</a><a href="#ref-R23b" class="ref-cite" title="Reference">[R23b]</a><a href="#ref-R23d" class="ref-cite" title="Reference">[R23d]</a><a href="#ref-R23f" class="ref-cite" title="Reference">[R23f]</a></li>
+<li>[Assessed] This cycle reduces defender decision time and can produce strategic impact even when technical novelty is limited. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a><a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a></li>
+<li>[Assessed] Across 2023–2026, the recurring operational cycle is: opportunistic access → staging → disruptive/destructive or leak action → claim publication → amplification → repeat. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a><a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a></li>
+</ul>
+
+<h3 id="operational-model-text-diagram">Operational Model (Text Diagram)</h3>
+
+<p><code>Access → Stage Payload (via Storj / Mega / other commercial hosting) → Impact (Disrupt/Wipe/Leak) → Public Claim → Amplify Across Channels → Repeat</code></p>
+
+<figure class="report-fig"><img src="assets/fig-005.png" alt="Figure 6" loading="lazy" /></figure>
+
+<h2 id="confirmed-vs-claimed-matrix">Confirmed vs Claimed Matrix</h2>
+
+<h2 id="public-presence">Public Presence and Information Operations Footprint</h2>
+
+<ul>
+<li>[Assessed] Post-February 2025 framing: activity attributed to Handala after approximately February 9, 2025 is primarily vendor/researcher cluster attribution (Void Manticore / BANISHED KITTEN) rather than actor self-published claims. This does not reduce operational risk but affects how confidence should be calibrated for specific incidents. <a href="#ref-R23a" class="ref-cite" title="Reference">[R23a]</a><a href="#ref-R23b" class="ref-cite" title="Reference">[R23b]</a><a href="#ref-R23c" class="ref-cite" title="Reference">[R23c]</a><a href="#ref-R23d" class="ref-cite" title="Reference">[R23d]</a></li>
+<li>[Assessed] Operational implication: messaging infrastructure is an attack amplifier; channel output should remain unverified until corroborated by local telemetry. <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a><a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a></li>
+<li>[Reported] Forum footprint: OSINT reporting references BreachForums-linked persona activity, but forum-origin claims require independent validation. <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></li>
+<li>[Reported] Social media migration pattern: reported suspension on mainstream platform(s) followed by backup channel usage and renewed message distribution. <a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a></li>
+<li>[Reported] Telegram ecosystem: Handala-associated channels are repeatedly cited as primary leak/claim dissemination infrastructure, including both main and backup streams. Active self-claims via own channels through approximately February 9, 2025. <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a><a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R18" class="ref-cite" title="Reference">[R18]</a><a href="#ref-R23a" class="ref-cite" title="Reference">[R23a]</a><a href="#ref-R23b" class="ref-cite" title="Reference">[R23b]</a></li>
+</ul>
+
+<figure class="report-fig"><img src="assets/fig-006.png" alt="Figure 7" loading="lazy" /></figure>
+
+<h2 id="targeting-victimology">Targeting and Victimology</h2>
+
+<p>Observed victim focus in open reporting includes:</p>
+
+<ul>
+<li>[Reported] Critical sectors: escalation-period references to energy/fuel, nationally sensitive institutions, and international aviation. <a href="#ref-R6" class="ref-cite" title="Reference">[R6]</a><a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a><a href="#ref-R17" class="ref-cite" title="Reference">[R17]</a><a href="#ref-R23g" class="ref-cite" title="Reference">[R23g]</a></li>
+<li>[Reported] Political principals / public figures / media organizations: high-visibility individuals, affiliated communication channels, and Persian-language press (Iran International, July 2025). <a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a><a href="#ref-R21" class="ref-cite" title="Reference">[R21]</a><a href="#ref-R22" class="ref-cite" title="Reference">[R22]</a><a href="#ref-R23d" class="ref-cite" title="Reference">[R23d]</a><a href="#ref-R23f" class="ref-cite" title="Reference">[R23f]</a></li>
+<li>[Reported] Supplier and CRM ecosystem: third-party and trusted-sender pathways with downstream victim potential. <a href="#ref-R3" class="ref-cite" title="Reference">[R3]</a><a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a></li>
+<li>[Reported] Public services / civilian-impact organizations: education, emergency-communications-adjacent environments, healthcare (Clalit, February 2026). <a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a><a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a><a href="#ref-R17" class="ref-cite" title="Reference">[R17]</a><a href="#ref-R23h" class="ref-cite" title="Reference">[R23h]</a></li>
+</ul>
+
+<h2 id="ttps">Tactics, Techniques, and Procedures (Observed/Reported)</h2>
+
+<h3 id="initial-access-and-delivery">Initial Access and Delivery</h3>
+
+<ul>
+<li>[Reported] Commercial file-sharing services used for payload delivery: Storj (July 2024), Mega (December 2024–January 2025).</li>
+<li>[Reported] Distribution through trusted or semi-trusted channels (e.g., compromised provider accounts, CRM-linked sender paths).</li>
+<li>[Reported] Spearphishing and lure-based delivery (including current-event themed campaigns).</li>
+</ul>
+
+<h3 id="execution-and-operations">Execution and Operations</h3>
+
+<ul>
+<li>[Reported] Wiper-style destructive actions and operational disruption.</li>
+<li>[Reported] Use of common administrative and scripting paths.</li>
+<li>[Reported] Staged payload delivery (installer/script chain —<code>.zip</code>,<code>.msi</code>,<code>.ps1</code>).</li>
+</ul>
+
+<h3 id="impact-and-influence">Impact and Influence</h3>
+
+<ul>
+<li>[Assessed] Campaign framing designed to increase psychological pressure; actor claim volumes frequently overstated relative to confirmed data scope.</li>
+<li>[Reported] Emergency communication system abuse (PA/siren systems).</li>
+<li>[Reported] Defacement/intimidation messaging to amplify public impact.</li>
+<li>[Reported] Data theft plus timed publication (“hack-and-leak”).</li>
+</ul>
+
+<h2 id="attck-mapping">ATT&amp;CK-Oriented Mapping (Analyst View)</h2>
+
+<p>This table is a consolidated normalization from public reporting. Evidence label per entry matches the label assigned in the originating timeline phase.</p>
+
+<h2 id="detection-response-priorities">Detection and Response Priorities</h2>
+
+<ol>
+<li>Egress and API controls- Inspect unusual outbound API traffic from endpoints/servers.-Alert on unexpected outbound traffic to messaging-platform infrastructure and commercial file-sharing services.</li>
+<li>Influence-aware incident handling- Separate breach validation from social-media claims.- Prepare communications playbooks for “claim before proof” scenarios.- Apply claim-scope deflation: actor volume assertions are frequently overstated (see Bennett incident secondary coverage citing KELA analysis).</li>
+<li>Wiper-impact preparedness- Keep offline immutable backups.- Test restoration regularly under time constraints.- Monitor for mass overwrite/deletion behavior and suspicious service/driver installation.</li>
+<li>Supplier/partner trust controls- Enforce zero-trust assumptions for partner-originated updates/messages.- Add verification workflows for urgent “security update” requests.- Prioritize supply-chain exposure mapping for panic-button/PA vendors (Maagar-Tec and functional analogs), including emergency access workflows and delegated admin paths.- Monitor for<code>.msi</code> downloads from commercial file-sharing services (Storj, Mega) in combination with supplier-context email lures.</li>
+<li>Phishing resilience for current-event lures- Block newly observed lure themes quickly.- Increase SOC scrutiny during major geopolitical/technology events.</li>
+</ol>
+
+<h2 id="detection-engineering-pack">Detection Engineering Pack (SOC-Ready)</h2>
+
+<figure class="report-fig"><img src="assets/fig-007.png" alt="Figure 8" loading="lazy" /></figure>
+
+<ol>
+<li>Exchange mailbox collection spike- Data sources: Exchange audit logs, PowerShell logs, identity logs.- Logic: anomalous burst of mailbox-search/cmdlet activity (for example,<code>New-MailboxSearch</code>,<code>Get-Recipient</code>) from unusual admin context.- FP notes: planned compliance/eDiscovery operations.- Triage: verify requester, ticket, scope, and time window.- Response: suspend suspicious session, rotate credentials, initiate data-access impact scoping.</li>
+<li>IIS ASPX webshell deployment anomaly- Data sources: IIS logs, web-server file integrity monitoring, EDR file/process events.- Logic: new/modified<code>.aspx</code> files in unusual web directories (for example,<code>/scripts/</code>,<code>/images/</code>) combined with webshell-like child process behavior (for example,<code>w3wp.exe</code> spawning<code>cmd.exe</code>/<code>powershell.exe</code>).- FP notes: legitimate web application updates and admin uploads.- Triage: compare against deployment baseline and signed release artifacts.- Response: isolate web node, preserve web root + logs, hunt for lateral movement from web tier.</li>
+<li>High-profile account compromise proxy detection (endpoint-first)- Data sources: endpoint telemetry (process/file/network), browser credential/session events, enterprise proxy logs, identity provider signals.- Logic: suspicious token/session artifacts or credential export behavior from endpoint context associated with high-profile users (for example, unexpected Telegram Desktop local database access/copy, abnormal browser cookie/session theft patterns, non-messaging processes initiating Telegram API/domain connections).- FP notes: legitimate client upgrades, profile migration, approved forensic collection.- Triage: validate process ancestry, signer reputation, first-seen prevalence, and user-confirmed activity timeline.- Response: session revocation, credential reset, token invalidation, endpoint isolation if theft patterns are present. Note: actor-claimed chat volume is not a reliable scope proxy without forensic validation.</li>
+<li>Emergency communication workflow anomaly- Data sources: OT/system admin logs, telecom/provider logs.- Logic: out-of-schedule siren/PA activation paired with suspicious access/session events.- FP notes: drills and planned tests.- Triage: confirm authorized schedule and operator identity.- Response: fail-safe fallback, credential rotation, incident bridge with facility/security teams.</li>
+<li>Channel-claim vs telemetry mismatch alert- Data sources: threat intel monitoring + SIEM.- Logic: actor claim names an organization/system but no matching local compromise indicators appear in expected window.- FP notes: delayed telemetry ingestion.- Triage: verify collection health and time sync.- Response: classify as unverified claim, continue focused hunting. Note: actor claim volumes are frequently overstated; mismatch between claim scope and local evidence is expected and should not itself be treated as confirmation.</li>
+<li>Telegram/API egress anomaly from enterprise assets- Data sources: proxy logs, firewall egress, DNS logs.- Logic: new outbound patterns to Telegram/web API endpoints from non-messaging servers/endpoints immediately post execution.- FP notes: legitimate user messaging traffic.- Triage: map destination to host role and recent process ancestry.- Response: temporary egress containment + targeted packet/log retention.</li>
+<li>Security-process kill-list behavior- Data sources: process termination logs.- Logic: repeated termination attempts targeting AV/EDR process names in short interval.- FP notes: endpoint security upgrades/removals by IT.- Triage: verify admin actor and approved maintenance.- Response: host isolation and credential reset for initiating context.</li>
+<li>Mass file overwrite/deletion burst- Data sources: EDR file telemetry, filesystem events.- Logic: abnormal high-rate writes/renames/deletions across many directories after suspicious installer/script execution.- FP notes: backup agents, bulk migration jobs.- Triage: correlate with signed maintenance windows.- Response: network isolate and preserve forensic timeline.</li>
+<li>Driver/service pattern consistent with raw-disk tooling- Data sources: Windows service creation logs, driver-load events.- Logic: creation/loading behavior consistent with<code>rwdsk.sys</code>,<code>RawDisk3</code>, and related destructive chain context.- FP notes: low expected baseline in standard enterprise fleets.- Triage: confirm signer metadata and prevalence.- Response: contain endpoint cluster and trigger destructive-impact playbook.</li>
+<li>Potential destructive pre-impact sequence- Data sources: endpoint command-line telemetry.- Logic: command combinations such as<code>vssadmin Delete Shadows</code>,<code>bcdedit /set ... recoveryenabled No</code>,<code>bootstatuspolicy ignoreallfailures</code>.- FP notes: rare but possible admin recovery operations.- Triage: identify initiator account/process ancestry.- Response: isolate host, revoke active credentials, snapshot volatile evidence.</li>
+<li>Unusual<code>.msi</code> execution from supplier/business context or commercial file share- Data sources: EDR process telemetry, email metadata, identity logs, proxy/egress logs.- Logic:<code>.msi</code> launched from mail attachment path combined with sender-account anomaly (new geolocation/device/time pattern), OR<code>.msi</code> download from Mega (<code>mega.nz</code>,<code>mega.io</code>) or Storj (<code>storjshare.io</code>) immediately preceding installer execution.- FP notes: approved software rollouts.- Triage: verify change ticket and deployment source.- Response: block hash, suspend suspicious sender account, enforce recipient-side detonation flow.</li>
+<li>Current-event lure + archive/installer chain- Data sources: secure email gateway, M365/Google mail logs, endpoint process tree.- Logic: event-themed message → user opens archive/PDF → execution of uncommon installer (<code>.zip</code>/NSIS/<code>.msi</code>) from user temp/download path.- FP notes: internal IT broadcasts during genuine global outages.- Triage: validate sender trust history, attachment lineage, first-seen prevalence.- Response: quarantine artifact, isolate host, search enterprise-wide for same hash/filename.</li>
+</ol>
+
+<h2 id="wiper-first-30-minutes">Wiper First 30 Minutes (Defensive Mini-Playbook)</h2>
+
+<figure class="report-fig"><img src="assets/fig-008.png" alt="Figure 9" loading="lazy" /></figure>
+
+<ol>
+<li>Begin enterprise-wide sweep for known destructive command and artifact patterns.</li>
+<li>Trigger communications guardrails: separate verified impact from public claims; do not accept actor claim volumes at face value.</li>
+<li>Validate backup integrity and launch clean-room restore decision path.</li>
+<li>Freeze risky automated actions (software deployment jobs, admin scripts) pending validation.</li>
+<li>Preserve volatile artifacts (process tree, command-line, loaded drivers, active connections).</li>
+<li>Disable suspicious privileged accounts/tokens used in preceding 24 hours.</li>
+<li>Isolate impacted hosts/subnets; block east-west movement where feasible.</li>
+<li>Declare destructive-activity severity and open incident command.</li>
+</ol>
+
+<h2 id="controls-mapping">Controls Mapping (NIST CSF-Lite)</h2>
+
+<h2 id="ioc-compendium">Comprehensive IOC Compendium (Public Reporting)</h2>
+
+<p>Use this IOC set as a correlation and triage baseline, not as standalone attribution proof. Lineage IOCs (MOIS/Void Manticore context) do not independently prove Handala attribution; validate with current telemetry before blocking. [<a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a>](https://www.trellix.com/en-gb/blogs/research/handalas-wiper-targets-israel/) [<a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a>](https://research.checkpoint.com/2024/bad-karma-no-justice-void-manticore-destructive-activities-in-israel/) [<a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a>](https://research.checkpoint.com/2026/2025-the-untold-stories-of-check-point-research/) [<a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a>](https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-264a)</p>
+
+<p>IOC tagging model:<code>evidence_tag</code>—<code>hard</code>(cryptographic/sample-level) ·<code>near-hard</code>(campaign-specific but reusable) ·<code>soft</code>(contextual/behavioral) ·<code>benign-context</code>(legitimate service seen in chain)<code>freshness_tag</code>—<code>stable_tracking</code>(long-lived) ·<code>active_monitor</code>(monitor continuously) ·<code>volatile</code>·<code>maybe_expired</code>(infrastructure likely rotated) ·<code>durable_pattern</code>(behavioral pattern)</p>
+
+<h3 id="network-iocs-ip-cidr">Network IOCs (IP/CIDR)</h3>
+
+<p>Type: Near-hard · Shelf life: Medium — revalidate against passive DNS and ASN movement · Action: Hunt + conditional block after environment impact validation</p>
+
+<p><code>64.176.169.22</code> Evidence:<code>near-hard</code>· Freshness:<code>maybe_expired</code>· Action: Hunt; conditional block after local validation · [<a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a>](https://research.checkpoint.com/2024/bad-karma-no-justice-void-manticore-destructive-activities-in-israel/)</p>
+
+<p><code>64.176.172.235</code> Evidence:<code>near-hard</code>· Freshness:<code>maybe_expired</code>· Action: Hunt; conditional block after local validation · [<a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a>](https://research.checkpoint.com/2024/bad-karma-no-justice-void-manticore-destructive-activities-in-israel/)</p>
+
+<p><code>64.176.172.165</code> Evidence:<code>near-hard</code>· Freshness:<code>maybe_expired</code>· Action: Hunt; conditional block after local validation · [<a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a>](https://research.checkpoint.com/2024/bad-karma-no-justice-void-manticore-destructive-activities-in-israel/)</p>
+
+<p><code>64.176.173.77</code> Evidence:<code>near-hard</code>· Freshness:<code>maybe_expired</code>· Action: Hunt; conditional block after local validation · [<a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a>](https://research.checkpoint.com/2024/bad-karma-no-justice-void-manticore-destructive-activities-in-israel/)</p>
+
+<p><code>64.176.172.101</code> Evidence:<code>near-hard</code>· Freshness:<code>maybe_expired</code>· Action: Hunt; conditional block after local validation · [<a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a>](https://research.checkpoint.com/2024/bad-karma-no-justice-void-manticore-destructive-activities-in-israel/)</p>
+
+<p><code>64.176.172.0/24</code>(reported range context) Evidence:<code>near-hard</code>· Freshness:<code>maybe_expired</code>· Action: Hunt; conditional block after local validation · [<a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a>](https://research.checkpoint.com/2024/bad-karma-no-justice-void-manticore-destructive-activities-in-israel/)</p>
+
+<h3 id="url-and-infrastructure-iocs">URL and Infrastructure IOCs</h3>
+
+<p>Type: Mixed (Near-hard + benign-but-used-in-chain) · Shelf life: Short to medium · Action: Delivery paths — monitor + temporary block + detonation/hunt. Benign/commercial references — hunt-only / behavioral correlation. Never blocklist<code>icanhazip.com</code> or<code>microsoft.com</code> in isolation.</p>
+
+<p><code>hxxps://link-target[.]net/jfby32</code> Evidence:<code>near-hard</code>· Freshness:<code>maybe_expired</code>· Action: Monitor + detonation + temporary block in campaign window · [<a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a>](https://www.trellix.com/en-gb/blogs/research/handalas-wiper-targets-israel/)</p>
+
+<p><code>hxxps://storjshare[.]io/s/jv4ftpt67w5zw2b2wqj4v4zffviq/...update.zip</code> Evidence:<code>near-hard</code>· Freshness:<code>maybe_expired</code>· Action: Monitor + detonation + temporary block in campaign window · [<a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a>](https://www.trellix.com/en-gb/blogs/research/handalas-wiper-targets-israel/)</p>
+
+<p><code>mega[.]nz</code>/<code>mega[.]io</code> Evidence:<code>benign-context</code>· Freshness:<code>active_monitor</code>· Action: Hunt-only in supplier-lure +<code>.msi</code> execution context (Dec 2024–Jan 2025 CRM campaign delivery platform); never block in isolation · [<a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a>](https://research.checkpoint.com/2026/2025-the-untold-stories-of-check-point-research/)</p>
+
+<p><code>hxxps://www[.]icanhazip[.]com</code> Evidence:<code>benign-context</code>· Freshness:<code>stable_tracking</code>· Action: Behavior correlation only; never block in isolation · [<a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a>](https://www.trellix.com/en-gb/blogs/research/handalas-wiper-targets-israel/)</p>
+
+<p><code>hxxps://www[.]microsoft[.]com</code> Evidence:<code>benign-context</code>· Freshness:<code>stable_tracking</code>· Action: Behavior correlation only; never block in isolation · [<a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a>](https://www.trellix.com/en-gb/blogs/research/handalas-wiper-targets-israel/)</p>
+
+<h3 id="actor-channel-and-messaging-iocs">Actor Channel and Messaging IOCs</h3>
+
+<p>Type: Soft IOC · Shelf life: Short · Action: Monitor + correlate only; not attribution proof by itself</p>
+
+<p><code>https://t.me/HANDALA_RSS</code>(primary monitored channel) Evidence:<code>soft</code>· Freshness:<code>volatile</code>· Action: Monitor + timeline correlation only · [<a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a>](https://t.me/HANDALA_RSS)</p>
+
+<p><code>https://t.me/s/handala_backup_357</code>(backup monitored stream) Evidence:<code>soft</code>· Freshness:<code>volatile</code>· Action: Monitor + timeline correlation only · [<a href="#ref-R18" class="ref-cite" title="Reference">[R18]</a>](https://t.me/s/handala_backup_357)</p>
+
+<p><code>@Handala_Backup</code>(X/Twitter backup, post-August 2024 ban) Evidence:<code>soft</code>· Freshness:<code>volatile</code>· Action: Monitor + timeline correlation only · [<a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a>](https://therecord.media/handala-x-account-banned-twitter-palestine-iran)</p>
+
+<p>Volatile bot token/chat ID indicators (Telegram bot token and chat ID observed in malware workflow) are documented in Appendix B only. See Appendix B for handling guidance, redaction recommendations, and distribution-risk notes before sharing beyond TLP:WHITE scope.</p>
+
+<h3 id="file-service-and-artifact-iocs">File, Service, and Artifact IOCs</h3>
+
+<p>Type: Mixed (Hard + Near-hard) · Shelf life: Medium · Action: Hunt + block where validated; keep lineage tagging in SIEM</p>
+
+<h3 id="core-delivery-impact-artifacts">Core delivery/impact artifacts</h3>
+
+<p><code>update.zip</code> Evidence:<code>near-hard</code>· Freshness:<code>maybe_expired</code>· Action: Hunt + detonation + quarantine if re-observed · [<a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a>](https://www.trellix.com/en-gb/blogs/research/handalas-wiper-targets-israel/)</p>
+
+<p><code>CrowdStrike.exe</code> Evidence:<code>near-hard</code>· Freshness:<code>maybe_expired</code>· Action: Hunt + detonation + quarantine if re-observed · [<a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a>](https://www.trellix.com/en-gb/blogs/research/handalas-wiper-targets-israel/)</p>
+
+<p><code>OpenFileFinder.dll</code> Evidence:<code>near-hard</code>· Freshness:<code>maybe_expired</code>· Action: Hunt + detonation + quarantine if re-observed · [<a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a>](https://www.trellix.com/en-gb/blogs/research/handalas-wiper-targets-israel/)</p>
+
+<p><code>Champion.pif</code> Evidence:<code>near-hard</code>· Freshness:<code>maybe_expired</code>· Action: Hunt + detonation + quarantine if re-observed · [<a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a>](https://www.trellix.com/en-gb/blogs/research/handalas-wiper-targets-israel/)</p>
+
+<p><code>Careol.zip</code>(variant spelling as appearing in Trellix report text) Evidence:<code>near-hard</code>· Freshness:<code>maybe_expired</code>· Action: Hunt + detonation + quarantine if re-observed · [<a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a>](https://www.trellix.com/en-gb/blogs/research/handalas-wiper-targets-israel/)</p>
+
+<p><code>Carrol.zip</code>(alternate spelling in same report; treat as same artifact — possible OCR/transcription variant) Evidence:<code>near-hard</code>· Freshness:<code>maybe_expired</code>· Action: Hunt + detonation + quarantine if re-observed · [<a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a>](https://www.trellix.com/en-gb/blogs/research/handalas-wiper-targets-israel/)</p>
+
+<p><code>Carrol.cmd</code> Evidence:<code>near-hard</code>· Freshness:<code>maybe_expired</code>· Action: Hunt + process-lineage correlation · [<a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a>](https://www.trellix.com/en-gb/blogs/research/handalas-wiper-targets-israel/)</p>
+
+<p><code>Ukraine</code>(wiper stage artifact name) Evidence:<code>near-hard</code>· Freshness:<code>maybe_expired</code>· Action: Hunt + process-lineage correlation · [<a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a>](https://www.trellix.com/en-gb/blogs/research/handalas-wiper-targets-israel/)</p>
+
+<p><code>Phase3.ps1</code> Evidence:<code>near-hard</code>· Freshness:<code>maybe_expired</code>· Action: Hunt + script block telemetry correlation · [<a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a>](https://www.trellix.com/en-gb/blogs/research/handalas-wiper-targets-israel/)</p>
+
+<p><code>UploadDataToTelegram</code>(project identifier in malware logic) Evidence:<code>near-hard</code>· Freshness:<code>durable_pattern</code>· Action: Hunt in malware/project strings + process ancestry · [<a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a>](https://www.trellix.com/en-gb/blogs/research/handalas-wiper-targets-israel/)</p>
+
+<h3 id="wiper-and-destructive-lineage-artifacts">Wiper and destructive lineage artifacts</h3>
+
+<p><code>cl.exe</code> Evidence:<code>near-hard</code>· Freshness:<code>durable_pattern</code>· Action: Hunt with hash + service/driver correlation · [<a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a>](https://research.checkpoint.com/2024/bad-karma-no-justice-void-manticore-destructive-activities-in-israel/) [<a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a>](https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-264a)</p>
+
+<p><code>rwdsk.sys</code> Evidence:<code>near-hard</code>· Freshness:<code>durable_pattern</code>· Action: Hunt with hash + driver-load correlation · [<a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a>](https://research.checkpoint.com/2024/bad-karma-no-justice-void-manticore-destructive-activities-in-israel/) [<a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a>](https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-264a)</p>
+
+<p><code>GoXML.exe</code> Evidence:<code>near-hard</code>· Freshness:<code>durable_pattern</code>· Action: Hunt + sandbox + lineage mapping · [<a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a>](https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-264a)</p>
+
+<p><code>do.zip</code>/<code>Do.exe</code> Evidence:<code>near-hard</code>· Freshness:<code>maybe_expired</code>· Action: Hunt + detonation + process-lineage · [<a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a>](https://research.checkpoint.com/2024/bad-karma-no-justice-void-manticore-destructive-activities-in-israel/)</p>
+
+<p><code>RawDisk3</code>(service label) Evidence:<code>near-hard</code>· Freshness:<code>durable_pattern</code>· Action: Service/driver analytics + response playbook trigger · [<a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a>](https://research.checkpoint.com/2024/bad-karma-no-justice-void-manticore-destructive-activities-in-israel/)</p>
+
+<p><code>reGeorge</code>(webshell family) Evidence:<code>near-hard</code>· Freshness:<code>durable_pattern</code>· Action: Web-tier hunt + child-process analytics · [<a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a>](https://research.checkpoint.com/2024/bad-karma-no-justice-void-manticore-destructive-activities-in-israel/)</p>
+
+<p><code>error4.aspx</code>,<code>ClientBin.aspx</code>,<code>pickers.aspx</code> Evidence:<code>near-hard</code>· Freshness:<code>durable_pattern</code>· Action: Web root diff + IIS/EDR correlation · [<a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a>](https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-264a)</p>
+
+<p><code>mellona.exe</code>,<code>disable_defender.exe</code> Evidence:<code>near-hard</code>· Freshness:<code>durable_pattern</code>· Action: Hunt + AV-kill/defense-evasion correlation · [<a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a>](https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-264a)</p>
+
+<h3 id="hash-iocs-sha-256">Hash IOCs (SHA-256)</h3>
+
+<p>Type: Hard IOC · Shelf life: Long for sample tracking; medium for blocking efficacy · Action: Block + retro-hunt + sandbox triage · All hashes normalized to lowercase.</p>
+
+<p><code>6eb7dbf27a25639c7f11c05fd88ea2a301e0ca93d3c3bdee1eb5917fc60a56ff</code> Context: CRM-linked malicious<code>.msi</code>· Evidence:<code>hard</code>· Freshness:<code>stable_tracking</code>· [<a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a>](https://research.checkpoint.com/2026/2025-the-untold-stories-of-check-point-research/)</p>
+
+<p><code>e1204ebbd8f15dbf5f2e41dddc5337e3182fc4daf75b05acc948b8b965480ca0</code> Context:<code>cl.exe</code>· Evidence:<code>hard</code>· Freshness:<code>stable_tracking</code>· [<a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a>](https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-264a)</p>
+
+<p><code>3c9dc8ada56adf9cebfc501a2d3946680dcb0534a137e2e27a7fcb5994cd9de6</code> Context:<code>rwdsk.sys</code>· Evidence:<code>hard</code>· Freshness:<code>stable_tracking</code>· [<a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a>](https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-264a)</p>
+
+<p><code>d0c03d40772cd468325bbc522402f7b737f18b8f37a89bacc5c8a00c2b87bfc6</code> Context: Lineage · Evidence:<code>hard</code>· Freshness:<code>stable_tracking</code>· [<a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a>](https://research.checkpoint.com/2024/bad-karma-no-justice-void-manticore-destructive-activities-in-israel/)</p>
+
+<p><code>deeaf85b2725289d5fc262b4f60dda0c68ae42d8d46d0dc19b9253b451aea25a</code> Context: Lineage · Evidence:<code>hard</code>· Freshness:<code>stable_tracking</code>· [<a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a>](https://research.checkpoint.com/2024/bad-karma-no-justice-void-manticore-destructive-activities-in-israel/)</p>
+
+<p><code>87f0a902d6b2e2ae3647f10ea214d19db9bd117837264ae15d622b5314ff03a5</code> Context: Lineage · Evidence:<code>hard</code>· Freshness:<code>stable_tracking</code>· [<a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a>](https://research.checkpoint.com/2024/bad-karma-no-justice-void-manticore-destructive-activities-in-israel/)</p>
+
+<p><code>85fa58cc8c4560adb955ba0ae9b9d6cab2c381d10dbd42a0bceb8b62a92b7636</code> Context: Lineage · Evidence:<code>hard</code>· Freshness:<code>stable_tracking</code>· [<a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a>](https://research.checkpoint.com/2024/bad-karma-no-justice-void-manticore-destructive-activities-in-israel/)</p>
+
+<p><code>74d8d60e900f931526a911b7157511377c0a298af986d42d373f51aac4f362f6</code> Context: Lineage · Evidence:<code>hard</code>· Freshness:<code>stable_tracking</code>· [<a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a>](https://research.checkpoint.com/2024/bad-karma-no-justice-void-manticore-destructive-activities-in-israel/)</p>
+
+<p><code>cc77e8ab73b577de1924e2f7a93bcfd852b3c96c6546229bc8b80bf3fd7bf24e</code> Context: Lineage · Evidence:<code>hard</code>· Freshness:<code>stable_tracking</code>· [<a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a>](https://research.checkpoint.com/2024/bad-karma-no-justice-void-manticore-destructive-activities-in-israel/)</p>
+
+<p><code>40417eb9ca90af12129f7bcf6e7b2f250f4919f1c5ea59d2f4fc9c96c7f819e3</code> Context: Check Point YARA metadata · Evidence:<code>hard</code>· Freshness:<code>stable_tracking</code>· [<a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a>](https://research.checkpoint.com/2024/bad-karma-no-justice-void-manticore-destructive-activities-in-israel/)</p>
+
+<h3 id="hash-iocs-md5">Hash IOCs (MD5)</h3>
+
+<p>Type: Hard IOC (legacy format) · Shelf life: Medium · Action: Hunt + correlation; avoid MD5-only blocking decisions.</p>
+
+<p><code>2bf14f4d28ea8e80f227873de0a4f367</code> Context: Campaign · Evidence:<code>hard</code>· Freshness:<code>stable_tracking</code>· [<a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a>](https://www.trellix.com/en-gb/blogs/research/handalas-wiper-targets-israel/)</p>
+
+<p><code>7b1602dcf39d2f564008e3abbb2f2f6a</code> Context: Campaign · Evidence:<code>hard</code>· Freshness:<code>stable_tracking</code>· [<a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a>](https://www.trellix.com/en-gb/blogs/research/handalas-wiper-targets-israel/)</p>
+
+<p><code>57fbfeb55f8332f6413f31bb310ed7f9</code> Context: Campaign · Evidence:<code>hard</code>· Freshness:<code>stable_tracking</code>· [<a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a>](https://www.trellix.com/en-gb/blogs/research/handalas-wiper-targets-israel/)</p>
+
+<p><code>1476f9f4f13db0a7179fd4dc0825765d</code> Context: Campaign · Evidence:<code>hard</code>· Freshness:<code>stable_tracking</code>· [<a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a>](https://www.trellix.com/en-gb/blogs/research/handalas-wiper-targets-israel/)</p>
+
+<p><code>81e123351eb80e605ad73268a5653ff3</code> Context: Lineage · Evidence:<code>hard</code>· Freshness:<code>stable_tracking</code>· [<a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a>](https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-264a)</p>
+
+<p><code>a9fa6cfdba41c57d8094545e9b56db36</code> Context: Lineage · Evidence:<code>hard</code>· Freshness:<code>stable_tracking</code>· [<a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a>](https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-264a)</p>
+
+<p><code>8f766dea3afd410ebcd5df5994a3c571</code> Context: Lineage · Evidence:<code>hard</code>· Freshness:<code>stable_tracking</code>· [<a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a>](https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-264a)</p>
+
+<p><code>7b71764236f244ae971742ee1bc6b098</code> Context:<code>cl.exe</code>· Evidence:<code>hard</code>· Freshness:<code>stable_tracking</code>· [<a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a>](https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-264a)</p>
+
+<p><code>bbe983dba3bf319621b447618548b740</code> Context:<code>GoXML.exe</code>· Evidence:<code>hard</code>· Freshness:<code>stable_tracking</code>· [<a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a>](https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-264a)</p>
+
+<p><code>8f6e7653807ebb57ecc549cef991d505</code> Context:<code>rwdsk.sys</code>· Evidence:<code>hard</code>· Freshness:<code>stable_tracking</code>· [<a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a>](https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-264a)</p>
+
+<p><code>78562ba0069d4235f28efd01e3f32a82</code> Context: Lineage · Evidence:<code>hard</code>· Freshness:<code>stable_tracking</code>· [<a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a>](https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-264a)</p>
+
+<p><code>60afb1e62ac61424a542b8c7b4d2cf01</code> Context: Lineage · Evidence:<code>hard</code>· Freshness:<code>stable_tracking</code>· [<a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a>](https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-264a)</p>
+
+<h3 id="command-line-and-behavioral-iocs">Command-Line and Behavioral IOCs</h3>
+
+<p>Type: Soft to Near-hard (behavioral) · Shelf life: Medium to long · Action: Detection/hunting priority; do not use alone for attribution</p>
+
+<p><code>vssadmin Delete Shadows /all /quiet</code> Evidence:<code>soft</code>· Freshness:<code>durable_pattern</code>· Action: High-priority detection + destructive playbook trigger · [<a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a>](https://research.checkpoint.com/2024/bad-karma-no-justice-void-manticore-destructive-activities-in-israel/)</p>
+
+<p><code>bcdedit /set {default} recoveryenabled No</code> Evidence:<code>soft</code>· Freshness:<code>durable_pattern</code>· Action: High-priority detection + destructive playbook trigger · [<a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a>](https://research.checkpoint.com/2024/bad-karma-no-justice-void-manticore-destructive-activities-in-israel/)</p>
+
+<p><code>bcdedit /set {default} bootstatuspolicy ignoreallfailures</code> Evidence:<code>soft</code>· Freshness:<code>durable_pattern</code>· Action: High-priority detection + destructive playbook trigger · [<a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a>](https://research.checkpoint.com/2024/bad-karma-no-justice-void-manticore-destructive-activities-in-israel/)</p>
+
+<p><code>ping 4.2.2.4 -n 5 > Nul</code>(execution-timing / flow-control pattern) Evidence:<code>soft</code>· Freshness:<code>durable_pattern</code>· Action: Correlate with installer/script ancestry · [<a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a>](https://www.trellix.com/en-gb/blogs/research/handalas-wiper-targets-israel/)</p>
+
+<p>Wiper invocation argument:<code>confirmdeletefiles</code> Evidence:<code>near-hard</code>· Freshness:<code>durable_pattern</code>· Action: Hunt + command-line correlation · [<a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a>](https://www.trellix.com/en-gb/blogs/research/handalas-wiper-targets-israel/)</p>
+
+<p>Security-process kill-list —<code>wrsa.exe</code>,<code>msmpeng.exe</code>,<code>ccsvchst.exe</code>,<code>tmccsf.exe</code>,<code>aswidsagent.exe</code>,<code>avp.exe</code>,<code>savservice.exe</code>,<code>fssm32.exe</code>,<code>coreServiceShell.exe</code>,<code>V3Svc.exe</code>,<code>V3LITE.EXE</code>,<code>V3Main.exe</code> Evidence:<code>soft</code>· Freshness:<code>durable_pattern</code>· Action: Correlate with kill-burst + anti-recovery behavior · [<a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a>](https://www.trellix.com/en-gb/blogs/research/handalas-wiper-targets-israel/)</p>
+
+<p>Exchange mailbox collection cmdlets:<code>New-MailboxSearch</code>,<code>Get-Recipient</code> Evidence:<code>near-hard</code>· Freshness:<code>durable_pattern</code>· Action: Hunt in Exchange/PowerShell audit logs · [<a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a>](https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-264a)</p>
+
+<h3 id="defender-usage-notes">Defender Usage Notes</h3>
+
+<ul>
+<li>Actor claim volumes are frequently overstated relative to confirmed data scope; do not use claimed exfiltration size as a proxy for confirmed impact.</li>
+<li>Revalidate all network indicators against current blocklists and passive-DNS before production blocking.</li>
+<li>Treat channel/claim-only indicators as soft IOCs until telemetry confirms compromise.</li>
+<li>Prioritize multi-signal correlation — IOC hit + behavior + campaign context — instead of one-indicator decisions.</li>
+</ul>
+
+<h2 id="overall-statistics">Overall Statistics, Common Patterns, and Cross-Group Correlation</h2>
+
+<h2 id="quantitative-snapshot">Quantitative Snapshot</h2>
+
+<figure class="report-fig"><img src="assets/fig-009.png" alt="Figure 10" loading="lazy" /></figure>
+
+<h3 id="common-operational-patterns">Common Operational Patterns</h3>
+
+<ol>
+<li>[Assessed] Communications gap ≠ operational halt. The silence of Handala’s own public channels from approximately February 9 to July 2025 did not prevent cluster operations; wiper activity (June 2025) and hack-and-leak operations (July 2025) continued under vendor cluster attribution. <a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a><a href="#ref-R23a" class="ref-cite" title="Reference">[R23a]</a><a href="#ref-R23b" class="ref-cite" title="Reference">[R23b]</a><a href="#ref-R23d" class="ref-cite" title="Reference">[R23d]</a><a href="#ref-R23f" class="ref-cite" title="Reference">[R23f]</a></li>
+<li>[Assessed] Attribution is strongest at cluster/workflow level. Multiple independent primary sources (Check Point, CrowdStrike, Microsoft, Sophos, Recorded Future) converge on strong cluster-level identity between the Handala Hack persona and MOIS-linked Void Manticore / BANISHED KITTEN / Storm-0842 cluster. <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a><a href="#ref-R11" class="ref-cite" title="Reference">[R11]</a><a href="#ref-R19" class="ref-cite" title="Reference">[R19]</a><a href="#ref-R23c" class="ref-cite" title="Reference">[R23c]</a><a href="#ref-R23d" class="ref-cite" title="Reference">[R23d]</a><a href="#ref-R23e" class="ref-cite" title="Reference">[R23e]</a></li>
+<li>[Assessed] Supplier/partner pathways are a recurring risk amplifier. Compromised trusted senders and CRM-linked channels are repeatedly highlighted in 2025 reporting. <a href="#ref-R3" class="ref-cite" title="Reference">[R3]</a><a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a></li>
+<li>[Assessed] Influence operations are not a side effect; they are part of the attack design. Telegram and mirror channels function as force multipliers for reputational and psychological damage. Actor claim volumes are frequently overstated. <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a><a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a><a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a><a href="#ref-R23i" class="ref-cite" title="Reference">[R23i]</a><a href="#ref-R23j" class="ref-cite" title="Reference">[R23j]</a></li>
+<li>[Assessed] Tradecraft is operationally effective but technically pragmatic. Public reporting points to phishing, social engineering, webshell lineage, known destructive utilities, and commercial file-sharing infrastructure (Storj, Mega) rather than dependency on novel 0-days in every campaign. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a><a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></li>
+<li>[Assessed] Access → impact → narrative cycle is persistent. Handala-linked operations repeatedly progress from initial compromise into destructive or leak action, then immediately into public claim/disinformation pressure. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></li>
+</ol>
+
+<figure class="report-fig"><img src="assets/fig-010.png" alt="Figure 11" loading="lazy" /></figure>
+
+<h2 id="confidence-gaps">Confidence and Gaps</h2>
+
+<h3 id="confidence">Confidence</h3>
+
+<ul>
+<li>Low: Specific operational claims posted by actor channels without independent forensic corroboration. Per methodology: claim-led, single-source, no independent technical corroboration; confidence floor is “Low.”</li>
+<li>Medium-High: Individual incident attribution for post-February 2025 activity — attributions are researcher/vendor cluster-level and do not represent actor self-claims.</li>
+<li>High (cluster level): Multiple independent primary sources (Check Point, CrowdStrike, Sophos, Microsoft, Recorded Future) directly link the Handala Hack persona to the Void Manticore / BANISHED KITTEN / Storm-0842 MOIS-aligned cluster.</li>
+<li>High: Handala has conducted repeated disruptive, destructive, and influence-oriented campaigns against Israeli targets across at least six confirmed wiper-phase events and multiple hack-and-leak operations.</li>
+</ul>
+
+<h3 id="gaps">Gaps</h3>
+
+<ul>
+<li>June 2025 wiper artifacts: Campaign-specific artifact details for the June 2025 wiper event have not been publicly released by Check Point at evidence cutoff. <a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a></li>
+<li>Actor claim-volume reliability: Secondary reporting citing KELA analysis of the December 2025 Bennett incident demonstrated that the actor materially overstated data scope (claimed 1,900 chats; fewer than 40 contained real messages). This pattern likely applies across other claim-volume assertions in the dataset. <a href="#ref-R23i" class="ref-cite" title="Reference">[R23i]</a><a href="#ref-R23j" class="ref-cite" title="Reference">[R23j]</a></li>
+<li>Operational interpretation of the gap: current evidence supports a working hypothesis of pause/reduction in influence-channel output rather than pause in intrusion capability. The June 2025 wiper event during the channel-silence window supports continuity of intrusion operations despite communications disruption or tradecraft shift. <a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a><a href="#ref-R23a" class="ref-cite" title="Reference">[R23a]</a><a href="#ref-R23b" class="ref-cite" title="Reference">[R23b]</a><a href="#ref-R23d" class="ref-cite" title="Reference">[R23d]</a></li>
+<li>Post-February 2025 communications gap: Handala’s own public channels went silent after approximately February 9, 2025, before resuming in approximately July 2025. Activity attributed to Handala in the interim (June 2025 wiper) and subsequent phases represents researcher/vendor cluster-level attribution (Void Manticore / BANISHED KITTEN) rather than actor self-claims. Consumers should distinguish between cluster-level attribution by researchers and actor self-claimed operations when assessing post-February 2025 incidents. <a href="#ref-R23a" class="ref-cite" title="Reference">[R23a]</a><a href="#ref-R23b" class="ref-cite" title="Reference">[R23b]</a><a href="#ref-R23d" class="ref-cite" title="Reference">[R23d]</a></li>
+<li>Multi-actor overlap in the same theater complicates precise operation-level attribution.</li>
+<li>Public reporting remains uneven on confirmed victim impact in several high-profile claims.</li>
+</ul>
+
+<h2 id="practical-defensive-actions">Practical Defensive Actions (Next 30 Days)</h2>
+
+<ol>
+<li>Train comms + legal + SOC on claim-driven influence operations; establish a claim-scope deflation process before any public statement.</li>
+<li>Expand monitoring for destructive pre-encryption behavior.</li>
+<li>Deploy and test a wiper-specific IR playbook.</li>
+<li>Add emergency controls for unsigned or unusual<code>.msi</code> execution, including downloads from commercial file-sharing services (Mega, Storj).</li>
+<li>Run a focused supplier-risk review for CRM/IT service dependencies.</li>
+</ol>
+
+<h2 id="references">References</h2>
+
+<ul>
+<li>Evidence handling note: No direct public URL to a standalone KELA primary technical write-up for the Bennett/Braverman scope finding was located at evidence cutoff. KELA-dependent statements in this report are therefore treated as secondary-reported (<code>Reported</code>), not<code>Observed</code>.</li>
+<li id="ref-R23j"><a href="https://cyberpress.org/telegram-account-compromise/" class="ref-link">[R23j]</a> CyberPress, Telegram Account Compromise Used by Handala Hackers Against Israeli Officials. Published: January 2, 2026. Accessed: March 5, 2026. <a href="https://cyberpress.org/telegram-account-compromise/">https://cyberpress.org/telegram-account-compromise/</a></li>
+<li id="ref-R23i"><a href="https://www.esecurityplanet.com/threats/handala-leak-shows-telegram-account-risk-not-iphone-hacks/" class="ref-link">[R23i]</a> eSecurity Planet, Handala Leak Shows Telegram Account Risk, Not iPhone Hacks. Published: January 29, 2026. Accessed: March 5, 2026. <a href="https://www.esecurityplanet.com/threats/handala-leak-shows-telegram-account-risk-not-iphone-hacks/">https://www.esecurityplanet.com/threats/handala-leak-shows-telegram-account-risk-not-iphone-hacks/</a></li>
+<li id="ref-R23h"><a href="https://www.jpost.com/israel-news/article-887911/" class="ref-link">[R23h]</a> The Jerusalem Post, reporting on Handala claim targeting Clalit systems. Published: February 25, 2026. Accessed: March 5, 2026. <a href="https://www.jpost.com/israel-news/article-887911/">https://www.jpost.com/israel-news/article-887911/</a></li>
+<li id="ref-R23g"><a href="https://irancybernews.org/en/handala-hacking-group-exposes-confidential-access-to-suvarnabhumi-airport/" class="ref-link">[R23g]</a> ICNA (Iran Cyber News Agency), reporting on Handala claim targeting Suvarnabhumi Airport systems (claim-tracking/OSINT context, not forensic confirmation). Published: October 2, 2025. Accessed: March 5, 2026. <a href="https://irancybernews.org/en/handala-hacking-group-exposes-confidential-access-to-suvarnabhumi-airport/">https://irancybernews.org/en/handala-hacking-group-exposes-confidential-access-to-suvarnabhumi-airport/</a></li>
+<li id="ref-R23f"><a href="https://www.iranintl.com/202507086458" class="ref-link">[R23f]</a> Iran International, reporting on Handala/BANISHED KITTEN operation against journalists (Persian-language source cited by RRM Canada). Published: July 8, 2025. Accessed: March 5, 2026. <a href="https://www.iranintl.com/202507086458">https://www.iranintl.com/202507086458</a></li>
+<li id="ref-R23e"><a href="https://www.recordedfuture.com/blog/retaliation-window-middle-east-escalation" class="ref-link">[R23e]</a> Recorded Future News, The Retaliation Window: How State and Non-state Actors Could Exploit Escalation in the Middle East. Published: September 10, 2025. Accessed: March 5, 2026. <a href="https://www.recordedfuture.com/blog/retaliation-window-middle-east-escalation">https://www.recordedfuture.com/blog/retaliation-window-middle-east-escalation</a></li>
+<li id="ref-R23d"><a href="https://www.international.gc.ca/transparency-transparence/rapid-response-mechanism-mecanisme-reponse-rapide/iran-hack-piratage-iranien.aspx?lang=eng" class="ref-link">[R23d]</a> Global Affairs Canada (RRM Canada), Backgrounder: Iran-linked hacker group doxes journalists and amplifies leaked information through AI chatbots. Published: September 12, 2025. Accessed: March 5, 2026. <a href="https://www.international.gc.ca/transparency-transparence/rapid-response-mechanism-mecanisme-reponse-rapide/iran-hack-piratage-iranien.aspx?lang=eng">https://www.international.gc.ca/transparency-transparence/rapid-response-mechanism-mecanisme-reponse-rapide/iran-hack-piratage-iranien.aspx?lang=eng</a></li>
+<li id="ref-R23c"><a href="https://www.crowdstrike.com/en-us/adversaries/banished-kitten/" class="ref-link">[R23c]</a> CrowdStrike, BANISHED KITTEN adversary profile. Accessed: March 5, 2026. <a href="https://www.crowdstrike.com/en-us/adversaries/banished-kitten/">https://www.crowdstrike.com/en-us/adversaries/banished-kitten/</a></li>
+<li id="ref-R23b"><a href="https://op-c.net/blog/did-op-innovate-disrupt-handala-cyber-threat/" class="ref-link">[R23b]</a> OP Innovate, Did OP Innovate Disrupt Handala Cyber Threat? Published: February 28, 2025. Accessed: March 5, 2026. <a href="https://op-c.net/blog/did-op-innovate-disrupt-handala-cyber-threat/">https://op-c.net/blog/did-op-innovate-disrupt-handala-cyber-threat/</a></li>
+<li id="ref-R23a"><a href="https://op-c.net/blog/unpacking-handala/" class="ref-link">[R23a]</a> OP Innovate, Unpacking Handala. Published: February 18, 2025. Accessed: March 5, 2026. <a href="https://op-c.net/blog/unpacking-handala/">https://op-c.net/blog/unpacking-handala/</a></li>
+<li id="ref-R22"><a href="https://www.israelhayom.com/2025/12/28/handala-hackers-iranian-cyber-attacks-israel-officials/" class="ref-link">[R22]</a> Israel Hayom, Handala hackers: Iranian cyber attacks on Israeli officials. Published: December 28, 2025. Accessed: March 5, 2026. <a href="https://www.israelhayom.com/2025/12/28/handala-hackers-iranian-cyber-attacks-israel-officials/">https://www.israelhayom.com/2025/12/28/handala-hackers-iranian-cyber-attacks-israel-officials/</a></li>
+<li id="ref-R21"><a href="https://www.jns.org/iranians-claim-they-hacked-former-israeli-pm-bennetts-phone/" class="ref-link">[R21]</a> JNS, Iranians claim they hacked former Israeli PM Bennett’s phone. Published: (publication date not available; accessed March 5, 2026). <a href="https://www.jns.org/iranians-claim-they-hacked-former-israeli-pm-bennetts-phone/">https://www.jns.org/iranians-claim-they-hacked-former-israeli-pm-bennetts-phone/</a></li>
+<li id="ref-R20"><a href="https://www.dni.gov/index.php/newsroom/press-releases/press-releases-2024/3981-joint-odni-fbi-and-cisa-statement-on-iranian-election-influence-efforts" class="ref-link">[R20]</a> ODNI/FBI/CISA, Joint ODNI, FBI, and CISA Statement on Iranian Election Influence Efforts. Published: August 19, 2024. Accessed: March 5, 2026. <a href="https://www.dni.gov/index.php/newsroom/press-releases/press-releases-2024/3981-joint-odni-fbi-and-cisa-statement-on-iranian-election-influence-efforts">https://www.dni.gov/index.php/newsroom/press-releases/press-releases-2024/3981-joint-odni-fbi-and-cisa-statement-on-iranian-election-influence-efforts</a></li>
+<li id="ref-R19"><a href="https://www.microsoft.com/en-us/security/security-insider/threat-landscape/iran-surges-cyber-enabled-influence-operations-in-support-of-hamas/" class="ref-link">[R19]</a> Microsoft Security Insider, Iran surges cyber-enabled influence operations in support of Hamas. Published: February 26, 2024. Accessed: March 5, 2026. <a href="https://www.microsoft.com/en-us/security/security-insider/threat-landscape/iran-surges-cyber-enabled-influence-operations-in-support-of-hamas/">https://www.microsoft.com/en-us/security/security-insider/threat-landscape/iran-surges-cyber-enabled-influence-operations-in-support-of-hamas/</a></li>
+<li id="ref-R18"><a href="https://t.me/s/handala_backup_357" class="ref-link">[R18]</a> Telegram backup stream (monitoring lead). Accessed: March 5, 2026. Note: Volatile source; content can change; use as monitoring lead only. <a href="https://t.me/s/handala_backup_357">https://t.me/s/handala_backup_357</a></li>
+<li id="ref-R17"><a href="https://www.timesofisrael.com/iranian-hackers-broadcast-rocket-sirens-odes-to-terrorism-in-some-20-kindergartens/" class="ref-link">[R17]</a> Times of Israel, reporting on Iranian hackers broadcasting sirens in kindergartens. Published: January 26, 2025. Accessed: March 5, 2026. <a href="https://www.timesofisrael.com/iranian-hackers-broadcast-rocket-sirens-odes-to-terrorism-in-some-20-kindergartens/">https://www.timesofisrael.com/iranian-hackers-broadcast-rocket-sirens-odes-to-terrorism-in-some-20-kindergartens/</a></li>
+<li id="ref-R16"><a href="https://ict.org.il/bibi-gate-handala-hack-team-a-mask-for-iranian-psychological-warfare/" class="ref-link">[R16]</a> International Institute for Counter-Terrorism (ICT), Bibi Gate: Handala Hack Team — A Mask for Iranian Psychological Warfare. Published: December 31, 2025. Accessed: March 5, 2026. <a href="https://ict.org.il/bibi-gate-handala-hack-team-a-mask-for-iranian-psychological-warfare/">https://ict.org.il/bibi-gate-handala-hack-team-a-mask-for-iranian-psychological-warfare/</a> <a href="https://ict.org.il/wp-content/uploads/2025/12/Download.pdf">https://ict.org.il/wp-content/uploads/2025/12/Download.pdf</a></li>
+<li>Editorial note: Paywalled; used as contextual reference for the February 2025 leak/pressure operations phase. Specific claim supported: reporting on personal-data and weapons-holder data exposure themes attributed to Iran-linked actors. No unique technical artifacts or IOCs are sourced exclusively from this reference.</li>
+<li id="ref-R15"><a href="https://www.wsj.com/world/middle-east/iran-hacks-former-israeli-prime-minister-in-new-tehran-linked-cyberattack-f1a959ca" class="ref-link">[R15]</a> The Wall Street Journal, Iran-linked cyberattack reporting involving former Israeli PM. Accessed: March 5, 2026. Note: paywalled. <a href="https://www.wsj.com/world/middle-east/iran-hacks-former-israeli-prime-minister-in-new-tehran-linked-cyberattack-f1a959ca">https://www.wsj.com/world/middle-east/iran-hacks-former-israeli-prime-minister-in-new-tehran-linked-cyberattack-f1a959ca</a></li>
+<li id="ref-R14"><a href="https://www.bleepingcomputer.com/news/security/fake-crowdstrike-fixes-target-companies-with-malware-data-wipers/" class="ref-link">[R14]</a> BleepingComputer, Fake CrowdStrike fixes target companies with malware/data wipers. Published: July 21, 2024. Accessed: March 5, 2026. <a href="https://www.bleepingcomputer.com/news/security/fake-crowdstrike-fixes-target-companies-with-malware-data-wipers/">https://www.bleepingcomputer.com/news/security/fake-crowdstrike-fixes-target-companies-with-malware-data-wipers/</a></li>
+<li id="ref-R13"><a href="https://therecord.media/hackers-hijack-sirens-iran-israel" class="ref-link">[R13]</a> The Record, Hackers hijack sirens in Israeli kindergartens. Published: January 27, 2025. Accessed: March 5, 2026. <a href="https://therecord.media/hackers-hijack-sirens-iran-israel">https://therecord.media/hackers-hijack-sirens-iran-israel</a></li>
+<li id="ref-R12"><a href="https://therecord.media/handala-x-account-banned-twitter-palestine-iran" class="ref-link">[R12]</a> The Record, Handala’s X account banned; backup channel activity continued. Published: August 21, 2024. Accessed: March 5, 2026. <a href="https://therecord.media/handala-x-account-banned-twitter-palestine-iran">https://therecord.media/handala-x-account-banned-twitter-palestine-iran</a></li>
+<li>Note: COBALT MYSTIQUE is used here as a public alias-crosswalk anchor in relation to Void Manticore (Check Point naming) and Storm-0842 (Microsoft naming).</li>
+<li id="ref-R11"><a href="https://www.sophos.com/en-us/threat-profiles/cobalt-mystique" class="ref-link">[R11]</a> Sophos Threat Profiles, COBALT MYSTIQUE (alias crosswalk context). Accessed: March 5, 2026. <a href="https://www.sophos.com/en-us/threat-profiles/cobalt-mystique">https://www.sophos.com/en-us/threat-profiles/cobalt-mystique</a></li>
+<li id="ref-R10"><a href="https://t.me/HANDALA_RSS" class="ref-link">[R10]</a> Telegram channel (monitoring lead). Accessed: March 5, 2026. Note: Volatile source; content can change; use as monitoring lead only. <a href="https://t.me/HANDALA_RSS">https://t.me/HANDALA_RSS</a></li>
+<li id="ref-R9"><a href="https://cyberint.com/blog/threat-intelligence/handala-hack-what-we-know-about-the-rising-threat-actor/" class="ref-link">[R9]</a> Cyberint, Handala Hack: What We Know About the Rising Threat Actor. First published: July 16, 2024; updated: February 20, 2025. Accessed: March 5, 2026. <a href="https://cyberint.com/blog/threat-intelligence/handala-hack-what-we-know-about-the-rising-threat-actor/">https://cyberint.com/blog/threat-intelligence/handala-hack-what-we-know-about-the-rising-threat-actor/</a></li>
+<li id="ref-R8"><a href="https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-264a" class="ref-link">[R8]</a> CISA/FBI, AA22–264A Iranian State Actors Conduct Cyber Operations Against the Government of Albania. Published: September 21, 2022. Accessed: March 5, 2026. <a href="https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-264a">https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-264a</a></li>
+<li id="ref-R7"><a href="https://www.microsoft.com/en-us/security/blog/2022/09/08/microsoft-investigates-iranian-attacks-against-the-albanian-government/" class="ref-link">[R7]</a> Microsoft Security Blog, Microsoft investigates Iranian attacks against the Albanian government. Published: September 8, 2022. Accessed: March 5, 2026. <a href="https://www.microsoft.com/en-us/security/blog/2022/09/08/microsoft-investigates-iranian-attacks-against-the-albanian-government/">https://www.microsoft.com/en-us/security/blog/2022/09/08/microsoft-investigates-iranian-attacks-against-the-albanian-government/</a></li>
+<li id="ref-R6"><a href="https://unit42.paloaltonetworks.com/iranian-cyberattacks-2026/" class="ref-link">[R6]</a> Unit 42, Threat Brief: March 2026 Escalation of Cyber Risk Related to Iran. Published: March 2, 2026. Accessed: March 5, 2026. <a href="https://unit42.paloaltonetworks.com/iranian-cyberattacks-2026/">https://unit42.paloaltonetworks.com/iranian-cyberattacks-2026/</a></li>
+<li id="ref-R5"><a href="https://research.checkpoint.com/2026/2025-the-untold-stories-of-check-point-research/" class="ref-link">[R5]</a> Check Point Research, 2025: The Untold Stories of Check Point Research. Published: February 23, 2026. Accessed: March 5, 2026. <a href="https://research.checkpoint.com/2026/2025-the-untold-stories-of-check-point-research/">https://research.checkpoint.com/2026/2025-the-untold-stories-of-check-point-research/</a></li>
+<li id="ref-R4"><a href="https://research.checkpoint.com/2025/3rd-february-threat-intelligence-report/" class="ref-link">[R4]</a> Check Point Research, 3rd February — Threat Intelligence Report. Published: February 3, 2025. Accessed: March 5, 2026. <a href="https://research.checkpoint.com/2025/3rd-february-threat-intelligence-report/">https://research.checkpoint.com/2025/3rd-february-threat-intelligence-report/</a></li>
+<li id="ref-R3"><a href="https://research.checkpoint.com/2025/6th-january-threat-intelligence-report/" class="ref-link">[R3]</a> Check Point Research, 6th January — Threat Intelligence Report. Published: January 6, 2025. Accessed: March 5, 2026. <a href="https://research.checkpoint.com/2025/6th-january-threat-intelligence-report/">https://research.checkpoint.com/2025/6th-january-threat-intelligence-report/</a></li>
+<li id="ref-R2"><a href="https://research.checkpoint.com/2024/bad-karma-no-justice-void-manticore-destructive-activities-in-israel/" class="ref-link">[R2]</a> Check Point Research, Bad Karma, No Justice: Void Manticore Destructive Activities in Israel. Published: May 20, 2024. Accessed: March 5, 2026. <a href="https://research.checkpoint.com/2024/bad-karma-no-justice-void-manticore-destructive-activities-in-israel/">https://research.checkpoint.com/2024/bad-karma-no-justice-void-manticore-destructive-activities-in-israel/</a></li>
+<li id="ref-R1"><a href="https://www.trellix.com/en-gb/blogs/research/handalas-wiper-targets-israel/" class="ref-link">[R1]</a> Trellix, Handala’s Wiper Targets Israel. Published: July 26, 2024. Accessed: March 5, 2026. <a href="https://www.trellix.com/en-gb/blogs/research/handalas-wiper-targets-israel/">https://www.trellix.com/en-gb/blogs/research/handalas-wiper-targets-israel/</a></li>
+</ul>
+
+<p>Editorial note — References with unconfirmed publication dates: One reference used in this report lacks a confirmed publication date: <a href="#ref-R21" class="ref-cite" title="Reference">[R21]</a> (JNS, date not available in public metadata). Claims sourced from this reference carry uncertain temporal anchoring and should be treated as accessed-date-only.</p>
+
+<p><a href="https://medium.com/tag/handala?source=post_page-----ddbdd294cfb8---------------------------------------">Handala</a></p>
+
+<p><a href="https://medium.com/tag/cybersecurity?source=post_page-----ddbdd294cfb8---------------------------------------">Cybersecurity</a></p>
+
+<p><a href="https://medium.com/tag/threat-intelligence?source=post_page-----ddbdd294cfb8---------------------------------------">Threat Intelligence</a></p>
+
+<p><a href="https://medium.com/tag/cyber-threat-intelligence?source=post_page-----ddbdd294cfb8---------------------------------------">Cyber Threat Intelligence</a></p>
+
+<p><a href="https://medium.com/tag/hacker?source=post_page-----ddbdd294cfb8---------------------------------------">Hacker</a></p>
+
+  <footer class="back-top">
+    <a href="#table-of-contents">↑ Table of Contents</a> · <a href="#top">↑ Top</a>
+  </footer>
+</body>
+</html>

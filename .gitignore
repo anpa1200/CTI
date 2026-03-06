@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.Python
+
+# Article source (optional, for regeneration)
+**/article_source.txt
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+*.swp
+*~
+*.bak
+
+# Large source PDFs (Medium export); built report PDFs are in report dirs
+*_medium.pdf
