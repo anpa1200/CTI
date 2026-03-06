@@ -9,6 +9,9 @@ venv/
 # Article source (optional, for regeneration)
 **/article_source.txt
 
+# Build scripts (keep locally for regeneration, do not publish)
+**/build_html.py
+
 # Editor / OS
 .DS_Store
 Thumbs.db
