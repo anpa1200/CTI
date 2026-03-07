@@ -19,5 +19,12 @@ Thumbs.db
 *~
 *.bak
 
-# Large source PDFs (Medium export); built report PDFs are in report dirs
+# Source PDFs (Medium exports; built report PDFs stay in repo)
 *_medium.pdf
+*Medium*.pdf
+
+# Temporary / working files
+*.tmp
+*.temp
+*.log
+.cache/
