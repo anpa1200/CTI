@@ -11,6 +11,7 @@ Repository of **threat intelligence reports**, **malware analysis**, and **rever
 | Report | Description | Medium |
 |--------|-------------|--------|
 | [**Handala Hack Group**](handala-hack-group/) | Evidence-labeled assessment and SOC guidance (Handala Hack Team / Void Manticore). Dec 2023–Mar 2026. | [Read on Medium →](https://medium.com/@1200km/cti-research-handala-hack-group-aka-handala-hack-team-ddbdd294cfb8) |
+| [**Sandworm / APT44**](sandworm-apt44/) | Evidence-labeled assessment and SOC guidance (GRU GTsST, 2009–Mar 2026). | [Read on Medium →](https://medium.com/@1200km/cti-research-sandworm-apt44-649332e8af44) |
 
 *(More reports will be added as separate directories.)*
 

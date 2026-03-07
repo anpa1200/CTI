@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CTI Research: Sandworm / APT44</title>
+  <meta name="description" content="Evidence-labeled threat intelligence assessment and SOC defensive guidance on Sandworm / APT44 (2009 — March 2026).">
+  <meta name="author" content="Andrey Pautov">
+  <link rel="canonical" href="https://medium.com/@1200km/cti-research-sandworm-apt44-649332e8af44">
+  <style>
+    :root {
+      font-family: "Georgia", "Times New Roman", serif;
+      line-height: 1.6;
+      color: #1a1a1a;
+      --toc-bg: #f8f9fa;
+      --border: #dee2e6;
+      --link: #0a5eb2;
+      --link-visited: #551a8b;
+    }
+    body { margin: 0; padding: 0; max-width: 52rem; margin-left: auto; margin-right: auto; padding: 2rem 1.5rem 3rem; }
+    .doc-meta { font-family: system-ui, -apple-system, sans-serif; font-size: 0.875rem; color: #495057; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+    .doc-meta a { color: var(--link); }
+    h1 { font-size: 1.75rem; font-weight: 700; margin-top: 0; margin-bottom: 0.5rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; }
+    h2 { font-size: 1.35rem; margin-top: 2.5rem; margin-bottom: 0.75rem; scroll-margin-top: 1rem; }
+    h3 { font-size: 1.15rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+    nav.toc { background: var(--toc-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1rem 1.5rem; margin: 1.5rem 0 2rem; }
+    nav.toc ul { list-style: none; padding-left: 0; margin: 0; }
+    nav.toc li { margin: 0.4rem 0; }
+    nav.toc a { color: var(--link); text-decoration: none; }
+    nav.toc a:hover { text-decoration: underline; }
+    a { color: var(--link); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    a:visited { color: var(--link-visited); }
+    a.ref-cite { font-weight: 600; }
+    a.ref-link { font-weight: 600; }
+    code { font-family: "Consolas", "Monaco", monospace; background: #f1f3f4; padding: 0.15em 0.4em; border-radius: 3px; font-size: 0.9em; }
+    ul, ol { margin: 0.75rem 0 1.25rem 1.5rem; padding-left: 1.5rem; }
+    li { margin: 0.35rem 0; }
+    figure.report-fig { margin: 1.5rem 0; text-align: center; }
+    figure.report-fig img { max-width: 100%; height: auto; border: 1px solid var(--border); border-radius: 4px; }
+    .back-top { margin-top: 2.5rem; font-size: 0.9rem; color: #6c757d; }
+    @media print { body { padding: 1rem; } nav.toc { break-inside: avoid; } a.ref-cite { color: #0a5eb2; } }
+  </style>
+</head>
+<body>
+  <header class="doc-meta">
+    <p>Evidence-Labeled Threat Intelligence Assessment and SOC Defensive Guidance (2009 — March 2026). Author: <a href="https://medium.com/@1200km">Andrey Pautov</a>. Evidence cutoff: March 5, 2026. <a href="https://medium.com/@1200km/cti-research-sandworm-apt44-649332e8af44">Original article (Medium)</a>.</p>
+  </header>
+  <a id="top"></a>
+<h1 id="top">CTI Research: Sandworm / APT44</h1>
+
+<h2 id="evidence-labeled-threat-intelligence-assessment-and-soc-defensive-guidance-2009-march-2026">Evidence-Labeled Threat Intelligence Assessment and SOC Defensive Guidance (2009 — March 2026)</h2>
+
+
+
+
+
+
+
+
+<h2 id="table-of-contents">Table of Contents</h2>
+<nav class="toc" aria-label="Table of contents"><ul>
+<li><a href="#report-metadata">Report Metadata</a></li>
+<li><a href="#methodology-evidence-labels">Methodology &amp; Evidence Labels</a></li>
+<li><a href="#confidence-what-changes">Confidence &amp; What Changes Confidence</a></li>
+<li><a href="#executive-summary">Executive Summary</a></li>
+<li><a href="#actor-overview">Actor Overview</a></li>
+<li><a href="#alias-cluster-crosswalk">Alias / Cluster Crosswalk</a></li>
+<li><a href="#key-judgments">Key Judgments</a></li>
+<li><a href="#attribution-assessment">Attribution Assessment</a></li>
+<li><a href="#activity-timeline">Activity Timeline (2009–2026)</a></li>
+<li><a href="#confirmed-vs-claimed-matrix">Confirmed vs Claimed Matrix</a></li>
+<li><a href="#targeting-victimology">Targeting and Victimology</a></li>
+<li><a href="#operational-doctrine">Operational Doctrine: Evolution</a></li>
+<li><a href="#initial-access-and-privilege-escalation">Initial Access and Privilege Escalation Patterns</a></li>
+<li><a href="#malware-and-tooling-portfolio">Malware and Tooling Portfolio</a></li>
+<li><a href="#deep-technical-analysis">Deep Technical Analysis of Key Families</a></li>
+<li><a href="#detection-response-priorities">Detection and Response Priorities</a></li>
+<li><a href="#detection-engineering-pack">Detection Engineering Pack (SOC-Ready)</a></li>
+<li><a href="#wiper-ot-first-30-minutes">Wiper/OT First 30 Minutes (Defensive Mini-Playbook)</a></li>
+<li><a href="#controls-mapping">Controls Mapping (NIST CSF-Lite)</a></li>
+<li><a href="#common-patterns">Common Patterns and Cross-Group Correlation</a></li>
+<li><a href="#collection-gaps">Collection Gaps and Unresolved Questions</a></li>
+<li><a href="#practical-defensive-actions">Practical Defensive Actions (Next 30 Days)</a></li>
+<li><a href="#appendix-a-ioc-compendium">Appendix A: IOC Compendium (Public Reporting)</a></li>
+<li><a href="#appendix-b-attck-mapping">Appendix B: ATT&amp;CK-Oriented Mapping (Analyst View)</a></li>
+<li><a href="#references">References</a></li>
+</ul></nav>
+<h2 id="report-metadata">Report Metadata</h2>
+
+<ul>
+<li>Analytic intent: Convert public-source reporting into evidence-labeled, SOC-actionable CTI.</li>
+<li>Evidence cutoff (collection freeze): March 5, 2026 (UTC)</li>
+<li>Assessment window: 2009 — March 2026</li>
+<li>Date: March 6, 2026</li>
+<li>Author: Andrey Pautov</li>
+<li>Document classification: Public-release CTI product. All sources are open and publicly available.</li>
+</ul>
+
+<h2 id="methodology-evidence-labels">Methodology &amp; Evidence Labels</h2>
+
+<p>This document uses five evidence labels applied consistently to every factual claim.</p>
+
+<p>Observed means directly documented technical evidence in primary technical, government, or legal reporting — for example, malware behavior, sample metadata, protocol usage, or deployment mechanics.</p>
+
+<p>Reported means described by reputable external sources with strong credibility but without full victim-side telemetry disclosure.</p>
+
+<p>Assessed means analytic inference synthesized from multiple Observed or Reported items; it is not standalone proof.</p>
+
+<p>Claimed means actor or persona assertions without sufficient independent technical corroboration.</p>
+
+<p>Partially corroborated is used in the Confirmed vs Claimed section when at least one technical artifact exists but the complete incident kill-chain is not public. Press-only narratives do not qualify.</p>
+
+<p>Analytic rule: Vendor naming overlap indicates cluster convergence, not guaranteed incident-level identity.</p>
+
+<h2 id="confidence-what-changes">Confidence &amp; What Changes Confidence</h2>
+
+<p>High confidence requires independent multi-source convergence across both technical and legal/government evidence.</p>
+
+<p>Medium-High confidence reflects strong convergence with minor incident-level artifact gaps.</p>
+
+<p>Medium confidence reflects partially convergent data with unresolved contradictions.</p>
+
+<p>Low confidence applies to claim-led narratives lacking technical corroboration.</p>
+
+<p>What increases confidence: victim telemetry, full malware samples, infrastructure reuse with temporal overlap, legal attribution, and corroborated OT forensics.</p>
+
+<p>What decreases confidence: single-source claims, circular citation loops, and unresolved source conflicts.</p>
+
+<h2 id="executive-summary">Executive Summary</h2>
+
+<p>Mandiant formally designated Sandworm as APT44 on April 17, 2024. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a> The cluster is assessed as one of the most capable and risk-tolerant cyber sabotage actors linked to the Russian military intelligence system — specifically the GRU Main Center for Special Technologies (GTsST — Главный центр специальных технологий), Military Unit 74455. The operational profile integrates espionage, destructive IT/OT disruption, and influence operations into a unified wartime playbook. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></p>
+
+<p>Note on organizational structure: GTsST is a Centre (organizational unit) subordinate to the Main Directorate of the General Staff of the Armed Forces of the Russian Federation (GU), commonly referred to in the West as the GRU. The correct formal hierarchy is: GTsST → GU (Main Directorate) → General Staff. GTsST is not itself a “directorate.”</p>
+
+<p>Historically, the cluster has demonstrated repeated cyber-physical impact against energy infrastructure and broad collateral effects through destructive malware campaigns. Landmark operations include the Ukraine grid attacks (2015/2016), NotPetya (2017), the Olympic Destroyer operation (2018), and the April 2022 Industroyer2 attack chain. Wartime-era adaptation has emphasized edge-device access, Active Directory abuse, and wiper deployment tempo. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a><a href="#ref-R6" class="ref-cite" title="Reference">[R6]</a><a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></p>
+
+<p>Recent reporting (2024–2026) reveals four parallel trends:</p>
+
+<ul>
+<li>Influence-front integration: [Reported] Mandiant’s September 2022 report initially assessed with moderate confidence that Telegram personas (XakNet Team, Infoccentr, CyberArmyofRussia_Reborn) coordinated with GRU-sponsored actors, with the supporting intrusion activity at that time attributed to APT28. In April 2024, Mandiant re-analyzed the incident data and re-attributed the relevant intrusion activity (formerly tracked as UNC3810) to APT44 with high confidence, after parsing overlapping APT28 and APT44 activity in the same network. Persona-level organizational affiliation with GRU operators remains moderate-confidence. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R25" class="ref-cite" title="Reference">[R25]</a></li>
+<li>Expanded battlespace: Android military targeting (Infamous Chisel), Signal and Telegram message exfiltration from captured battlefield devices (WaveSign tool), drone supply-chain targeting, telecom-disruption tooling (AcidPour), Bellingcat attribution, and globally distributed access operations (BadPilot subgroup). <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R14" class="ref-cite" title="Reference">[R14]</a><a href="#ref-R28" class="ref-cite" title="Reference">[R28]</a></li>
+<li>Tooling continuity with iteration: from Industroyer/Industroyer2 to Kapeka/KnuckleTouch (2022+), SwiftSlicer (2023), ZEROLOT (2024–2025), Sting, ZOV, DynoWiper, and LazyWiper (2025–2026), with code and logic overlap patterns in several cases. <a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a><a href="#ref-R21" class="ref-cite" title="Reference">[R21]</a><a href="#ref-R22" class="ref-cite" title="Reference">[R22]</a><a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a><a href="#ref-R27" class="ref-cite" title="Reference">[R27]</a><a href="#ref-R30" class="ref-cite" title="Reference">[R30]</a></li>
+<li>Operational scaling through edge misconfiguration targeting: Amazon Threat Intelligence (December 2025) assessed with high confidence that a campaign active since at least 2021, consistent with Sandworm/APT44 tradecraft and infrastructure overlap, pivoted away from zero-day exploitation toward systematically targeting misconfigured customer network edge devices as primary initial access vectors. Credential harvesting via passive packet interception was the assessed collection method, with subsequent replay against victim online services. <a href="#ref-R29" class="ref-cite" title="Reference">[R29]</a></li>
+</ul>
+
+<p>Bottom line: APT44 remains a persistent, high-severity threat to critical infrastructure and strategic sectors globally. Defenders need architecture-level controls (edge, AD, OT segmentation) and behavior-based detection of administrative abuse — not IOC-only postures.</p>
+
+<h2 id="actor-overview">Actor Overview</h2>
+
+<p>Primary designation: Sandworm / APT44</p>
+
+<p>Attribution core: GRU Main Center for Special Technologies (GTsST — Главный центр специальных технологий), Military Unit 74455, supported by legal and government attribution and long-horizon technical continuity. <a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a><a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></p>
+
+<p>Operational identity: Sabotage-forward, full-spectrum actor with demonstrated willingness to accept operational exposure for strategic impact.</p>
+
+<p>Mission pillars (assessed):</p>
+
+<ol>
+<li>Influence signaling and narrative amplification — persona ecosystem, public claims, information confrontation doctrine <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></li>
+<li>Destructive and disruptive cyber operations — IT and OT, kinetically coordinated in select cases</li>
+<li>Espionage and pre-positioning — access development, credential and network intelligence, battlefield targeting data</li>
+</ol>
+
+<h2 id="alias-cluster-crosswalk">Alias / Cluster Crosswalk</h2>
+
+
+<p>APT44 is tracked under a large number of designations across vendors and government agencies. The following covers all publicly documented labels.</p>
+
+<p>Sandworm Team — Historical/public label. Longstanding designation in government and vendor reporting. <a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></p>
+
+<p>APT44 — Mandiant normalized cluster label. Formalized April 17, 2024. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a></p>
+
+<p>Seashell Blizzard / IRIDIUM / Voodoo Bear — Vendor naming variants. Microsoft and cross-vendor alias ecosystem. <a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R24" class="ref-cite" title="Reference">[R24]</a></p>
+
+<p>FROZENBARENTS — Vendor naming variant. Used in Google/Mandiant internal tracking taxonomy alongside APT44; appears in cross-vendor correlation contexts. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a></p>
+
+<p>Iron Viking — Vendor naming variant. Secureworks (CTU) tracking designation for overlapping Sandworm-era activity.</p>
+
+<p>Quedagh — Historical label. Used by F-Secure (2014) in early BlackEnergy/Sandworm tracking context; one of the oldest documented aliases. Not widely used in current reporting.</p>
+
+<p>Blue Echidna — Vendor naming variant. Dragos tracking designation for Sandworm/APT44 industrial-focused activity cluster.</p>
+
+<p>TEMP.Noble — Vendor naming variant. Google/Mandiant internal pre-APT designation used in historical tracking before formal APT44 graduation. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a></p>
+
+<p>UAC-0082 / UAC-0113 — CERT-UA tracking identifiers. Ukrainian CERT-UA identifiers for Sandworm-attributed activity clusters. Appear frequently in CERT-UA bulletins; critical for analysts working in Ukrainian operational context.</p>
+
+<p>UAC-0125 / UAC-0133 — CERT-UA tracking identifiers. Additional CERT-UA cluster identifiers associated with Sandworm-adjacent activity in Ukrainian incident reporting.</p>
+
+<p>Hades — Operation-level tracking label. Used by select vendors as a tracking label for the Olympic Destroyer operation (2018). Not a standalone threat actor designation in MITRE ATT&CK or most vendor frameworks — Mandiant now attributes the underlying activity to APT44. Does not imply a separate actor cluster.</p>
+
+<p>Telebots / Electrum / BlackEnergy-era labels — Historical labels in vendor-era reporting. Associated in some reporting with overlapping Sandworm-era activity; not strict synonyms across vendor taxonomies. <a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a><a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a><a href="#ref-R24" class="ref-cite" title="Reference">[R24]</a></p>
+
+<p>GTsST / Unit 74455 — Organizational attribution. GRU military unit designation tied to operations through legal and government sources. <a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a><a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></p>
+
+<p>Note: “Olympic Destroyer” is the name of the 2018 Winter Games disruption operation, not a standalone APT44 alias. Some vendors tracked it as a sub-cluster; Mandiant now attributes the underlying activity to APT44. <a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a><a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a></p>
+
+<p>[Assessed] Cross-vendor labels represent tracking-model differences around an overlapping operational ecosystem centered on GTsST/Unit 74455.</p>
+
+<h2 id="key-judgments">Key Judgments</h2>
+
+<p>KJ1 — APT44 is a full-spectrum military cyber actor. It blends access, disruption, and influence into one unified doctrine rather than operating as a pure espionage cluster. Confidence: High. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></p>
+
+<p>KJ2 — Cyber-kinetic synchronization is a recurring pattern. Reported operations repeatedly align with broader Russian military pressure windows (e.g., the October 2022 OT disruption coordinated with kinetic strikes on Ukraine’s energy grid). Cyber-kinetic synchronization: the alignment of cyber disruption operations with conventional military actions to achieve combined operational effect. Confidence: High. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R3" class="ref-cite" title="Reference">[R3]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a><a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a></p>
+
+<p>KJ3 — Tradecraft has evolved toward scalable disruption. Edge compromise + Living-off-the-Land (LotL) + GPO deployment patterns reduce dependency on bespoke ICS/OT-layer malware per operation. Note: This refers specifically to reduced dependency on bespoke ICS/OT payloads. Bespoke IT-layer destructive tooling (wipers) continues to be developed, as addressed in KJ4. Confidence: High. <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R21" class="ref-cite" title="Reference">[R21]</a><a href="#ref-R29" class="ref-cite" title="Reference">[R29]</a></p>
+
+<p>KJ4 — Destructive capability remains active and iterating in 2025–2026. ZEROLOT/Sting/ZOV/DynoWiper/LazyWiper reporting indicates continued wiper development tempo; the tooling family is operationally iterative, not static. Confidence: Medium-High. <a href="#ref-R20" class="ref-cite" title="Reference">[R20]</a><a href="#ref-R21" class="ref-cite" title="Reference">[R21]</a><a href="#ref-R22" class="ref-cite" title="Reference">[R22]</a><a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a><a href="#ref-R30" class="ref-cite" title="Reference">[R30]</a></p>
+
+<p>KJ5 — Attribution is strongest at cluster level; individual incidents may be contested. The December 2025 Poland event is a material case of inter-vendor attribution divergence. Confidence: Medium-High (cluster), Medium (incident-specific). <a href="#ref-R22" class="ref-cite" title="Reference">[R22]</a><a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>KJ6 — Influence personas are an assessed support layer, not a proven command-integrated branch. “Telegraphing success” behavior can outpace forensic closure and force premature response decisions. Confidence: Medium. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R25" class="ref-cite" title="Reference">[R25]</a></p>
+
+<p>KJ7 — Edge management exposure and weak identity controls remain high-leverage recurring weaknesses. Public incident data shows repeated reliance on exposed management interfaces, weak/default credentials, and absent MFA as initial enablers for high-impact sabotage chains. Confidence: High. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a><a href="#ref-R26" class="ref-cite" title="Reference">[R26]</a><a href="#ref-R29" class="ref-cite" title="Reference">[R29]</a></p>
+
+<p>KJ8 — APT44 demonstrates a doctrinal shift toward tactical battlefield support. Since at least 2023, operations have included provisioning Signal/Telegram exfiltration infrastructure for Russian ground forces, drone supply-chain targeting, and battlefield device exploitation — a qualitative expansion beyond strategic disruption. Confidence: High. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R28" class="ref-cite" title="Reference">[R28]</a></p>
+
+<p>KJ9 — Criminal ecosystem integration is an established pattern. APT44 has increasingly sourced tools and bulletproof hosting infrastructure from criminal marketplaces, treating them as a disposable capability layer. Confidence: Medium-High. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a></p>
+
+<h2 id="attribution-assessment">Attribution Assessment</h2>
+
+<p>Attribution to the GRU Main Center for Special Technologies (GTsST — Главный центр специальных технологий), Military Unit 74455, is among the strongest in modern public cyber-intelligence for a destructive actor cluster.</p>
+
+
+<p>Note: GTsST (Главный центр специальных технологий) is a Centre (organizational unit) within the Main Directorate of the General Staff of the Armed Forces of the Russian Federation (GU), commonly referred to in the West as the GRU. The correct formal structure is: GTsST → GU (Main Directorate) → General Staff. GTsST is not itself a “directorate” — it is a subordinate Centre within GU/GRU.</p>
+
+
+<h3 id="attribution-pillars">Attribution Pillars</h3>
+
+<p>Legal attribution: U.S. DOJ indictment (October 19, 2020) charging six Unit 74455 officers for multiple campaigns — Ukraine grid incidents, NotPetya, Olympic-related operations, and others. <a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a><a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a></p>
+
+<p>Government attribution convergence: UK statements and profiles repeatedly linking major incidents to Unit 74455/GTsST, including BlackEnergy, Industroyer, NotPetya, BadRabbit, the Georgia defacements, and Olympic Destroyer. <a href="#ref-R6" class="ref-cite" title="Reference">[R6]</a><a href="#ref-R7" class="ref-cite" title="Reference">[R7]</a><a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></p>
+
+<p>Technical continuity: Malware and procedure lineage from BlackEnergy/Industroyer-era tradecraft through Kapeka, current destructive wiper families, and edge/LotL operational methods. <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a><a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a><a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a><a href="#ref-R22" class="ref-cite" title="Reference">[R22]</a><a href="#ref-R27" class="ref-cite" title="Reference">[R27]</a></p>
+
+<p>Vendor convergence: Mandiant APT44 framing + Microsoft Seashell Blizzard tracking + ESET long-horizon destructive campaign evidence + Amazon Threat Intelligence 2025 campaign assessment. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R20" class="ref-cite" title="Reference">[R20]</a><a href="#ref-R21" class="ref-cite" title="Reference">[R21]</a><a href="#ref-R22" class="ref-cite" title="Reference">[R22]</a><a href="#ref-R29" class="ref-cite" title="Reference">[R29]</a></p>
+
+<h3 id="legal-attribution-granularity-observed">Legal Attribution Granularity (Observed)</h3>
+
+<p>The DOJ indictment <a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a> names six GRU Unit 74455 officers tied to disruptive operations:</p>
+
+<ul>
+<li>Petr Nikolayevich Pliskin</li>
+<li>Artem Valeryevich Ochichenko</li>
+<li>Anatoliy Sergeyevich Kovalev</li>
+<li>Pavel Valeryevich Frolov</li>
+<li>Sergey Vladimirovich Detistov</li>
+<li>Yuriy Sergeyevich Andrienko</li>
+</ul>
+
+<p>[Assessed] This level of public legal granularity materially strengthens attribution confidence versus vendor-only clustering, especially for long-horizon historical campaigns.</p>
+
+
+<h2 id="important-caveat-incident-level-attribution">Important Caveat: Incident-Level Attribution</h2>
+
+<p>December 2025 Poland incident: ESET attributes DynoWiper to Sandworm with medium confidence; CERT Polska reports stronger overlap with infrastructure historically tracked as: Berserk Bear (CrowdStrike), Ghost Blizzard (Microsoft), Dragonfly / TEMP.Isotope (Symantec/Secureworks), and Static Tundra (less widely used). These labels represent different vendor tracking models for an overlapping activity cluster, not a single formally attributed group. <a href="#ref-R22" class="ref-cite" title="Reference">[R22]</a><a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>Assessment: This is a material attribution divergence and must be represented explicitly in confidence modeling for that incident.</p>
+
+<h2 id="activity-timeline">Activity Timeline (2009–2026)</h2>
+
+<p>Timeline entries are [Reported] unless explicitly marked [Assessed] or [Observed/Reported].</p>
+
+
+<h3 id="20092014-pre-blackout-development-period">2009–2014 (Pre-Blackout Development Period)</h3>
+
+<ul>
+<li>[Reported] Sandworm exploited a Windows zero-day <a href="https://nvd.nist.gov/vuln/detail/CVE-2014-4114">(CVE-2014–4114)</a> via weaponized Microsoft Office documents, affecting Windows Vista through 8.1. This was the first publicly documented Sandworm zero-day.</li>
+<li>[Reported] ICS-targeting preparatory activity and BlackEnergy-lineage compromise patterns observed over multi-year periods. <a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a></li>
+<li>[Reported] Unit 74455/GTsST tracked as active since at least 2009 in destructive/disruptive ecosystem context. <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></li>
+</ul>
+
+
+<h3 id="december-2015-ukraine-grid-disruption">December 2015 (Ukraine Grid Disruption)</h3>
+
+<ul>
+<li>[Assessed] Marked operational shift from intrusion to strategic critical infrastructure impact with deliberate kinetic effect.</li>
+<li>[Reported] BlackEnergy/KillDisk-linked disruption affecting electricity service to approximately 225,000 customers across three distribution companies. <a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a><a href="#ref-R7" class="ref-cite" title="Reference">[R7]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></li>
+</ul>
+
+<h3 id="december-2016-kyiv-grid-industroyer">December 2016 (Kyiv Grid / Industroyer)</h3>
+
+<ul>
+<li>[Observed/Reported] Industroyer framework deployed for ICS protocol-level operations in electric infrastructure; linked to the Kyiv (Pivnichna substation) outage event on December 17, 2016. <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a><a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a></li>
+</ul>
+
+<h3 id="2017-notpetya-and-badrabbit">2017 (NotPetya and BadRabbit)</h3>
+
+<ul>
+<li>[Reported — Medium confidence] BadRabbit disruptive ransomware-style event (October 2017). The UK government profile <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a> includes BadRabbit in its list of Unit 74455 operations without qualification; however, independent technical corroboration across vendors (ESET, Kaspersky) remains at medium confidence, attributing it to Telebots/Sandworm. Per this document’s confidence model, High confidence requires multi-source convergence across both technical and legal/government evidence. Government attribution alone does not elevate BadRabbit to High confidence; the absence of full technical convergence keeps this assessment at Medium. Treat as [Reported — Medium confidence] pending additional technical corroboration.</li>
+<li>[Reported] NotPetya destructive campaign launched on June 27, 2017 — timed to coincide with Ukraine’s Constitution Day — with global collateral effects far beyond the initial Ukrainian theater. NotPetya was distributed via the update mechanism of M.E.Doc, a widely used Ukrainian accounting software package, enabling simultaneous delivery to all M.E.Doc users. <a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a><a href="#ref-R6" class="ref-cite" title="Reference">[R6]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></li>
+</ul>
+
+<h3 id="2018-olympic-destroyer-and-novichok-linked-intrusions">2018 (Olympic Destroyer and Novichok-Linked Intrusions)</h3>
+
+<ul>
+<li>[Reported] Attempted intrusions against entities linked to Novichok investigations (OPCW/DSTL context). <a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></li>
+<li>[Reported] Olympic Destroyer operation disrupted the opening ceremony of the 2018 Pyeongchang Winter Olympics in response to Russia’s doping ban, employing notable false-flag tradecraft elements designed to mislead attribution. <a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a><a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></li>
+</ul>
+
+<h3 id="2019-georgia-defacement-campaign">2019 (Georgia Defacement Campaign)</h3>
+
+<ul>
+<li>[Reported] Large-scale disruptive defacement of approximately 15,000 Georgian websites and interruption of broadcast services attributed by UK/NCSC to GRU unit ecosystem. <a href="#ref-R7" class="ref-cite" title="Reference">[R7]</a><a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a></li>
+</ul>
+
+<h3 id="20192022-kapeka-knuckletouch-backdoor-development">2019–2022 (Kapeka/KnuckleTouch Backdoor Development)</h3>
+
+<ul>
+<li>[Reported] Kapeka was likely used in intrusions that led to the deployment of Prestige ransomware in late 2022, which targeted transportation and logistics companies in Ukraine and Poland. <a href="#ref-R27" class="ref-cite" title="Reference">[R27]</a></li>
+<li>[Reported] Kapeka backdoor (tracked by Microsoft as KnuckleTouch) deployed in targeted attacks against Eastern Europe — including Ukraine and Estonia — since at least mid-2022. WithSecure attributes Kapeka to Sandworm/APT44 based on configuration and code overlaps with GreyEnergy (a prior APT44 tool) and Prestige ransomware. Kapeka is assessed as a likely successor to GreyEnergy in Sandworm’s modular espionage toolkit. <a href="#ref-R27" class="ref-cite" title="Reference">[R27]</a></li>
+</ul>
+
+<h3 id="20212025-edge-misconfiguration-focused-access-campaign">2021–2025 (Edge Misconfiguration-Focused Access Campaign)</h3>
+
+<ul>
+<li>[Reported] ATI identified infrastructure overlap with “Curly COMrades” — a cluster tracked by Bitdefender employing post-exploitation techniques including Hyper-V abuse for EDR evasion and custom implants CurlyShell and CurlCat. ATI assesses these may represent complementary operations within a broader GRU campaign (one cluster focused on initial access/network pivot, the other on host-based persistence). <a href="#ref-R29" class="ref-cite" title="Reference">[R29]</a></li>
+<li>[Reported] Amazon Threat Intelligence (ATI), published December 15, 2025, assessed with high confidence that a sustained GRU-associated campaign active since at least 2021 pivoted from vulnerability exploitation toward targeting misconfigured customer network edge devices as primary initial access vectors. The campaign targeted energy sector organizations, critical infrastructure providers, and telecom companies in North America and Europe. Assessed collection method: passive packet interception of authentication traffic on compromised devices, followed by credential replay against victim online services. <a href="#ref-R29" class="ref-cite" title="Reference">[R29]</a></li>
+</ul>
+
+<h3 id="february-2022-cyclops-blink-public-exposure-wiper-wave">February 2022 (Cyclops Blink Public Exposure + Wiper Wave)</h3>
+
+<ul>
+<li>[Reported] Microsoft documented early wartime wiper malware targeting Ukrainian organizations beginning in January 2022. <a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a></li>
+<li>[Observed/Reported] Cyclops Blink framework exposed by NCSC/CISA/NSA/FBI joint advisory as a modular SOHO/edge malware with firmware-update persistence and TLS-based C2. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a><a href="#ref-R26" class="ref-cite" title="Reference">[R26]</a></li>
+</ul>
+
+<h3 id="april-2022-industroyer2-multi-wiper-attack-chain">April 2022 (Industroyer2 + Multi-Wiper Attack Chain)</h3>
+
+<ul>
+<li>[Observed/Reported] Industroyer2 attempt against a Ukrainian energy provider; companion wipers (CaddyWiper, ORCSHRED, SOLOSHRED, AWFULSHRED) deployed in coordinated fashion across Windows, Linux, and Solaris ecosystems simultaneously. <a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a><a href="#ref-R17" class="ref-cite" title="Reference">[R17]</a></li>
+</ul>
+
+<h3 id="october-2022-microscada-native-binary-disruption">October 2022 (MicroSCADA Native-Binary Disruption)</h3>
+
+<ul>
+<li>[Assessed] High-signal example of OT LotL (Living-off-the-Land) execution — reducing payload footprint and accelerating operational execution against industrial targets.</li>
+<li>[Observed/Reported] Mandiant documented an OT disruption attempt using native MicroSCADA tooling (<code>scilc.exe</code>) and staged scripts/ISO artifacts, executed during Russia's winter military campaign of strikes against Ukraine's energy grid. <a href="#ref-R3" class="ref-cite" title="Reference">[R3]</a></li>
+</ul>
+
+<h3 id="20222023-battlefield-intelligence-and-tactical-support-expansion">2022–2023 (Battlefield Intelligence and Tactical Support Expansion)</h3>
+
+<ul>
+<li>[Reported] APT44 targeted Bellingcat and other investigative journalism entities in a phishing campaign between December 2023 and January 2024 — first public attribution of this targeting to APT44. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a></li>
+<li>[Reported] APT44 conducted a supply-chain attack against a software developer, resulting in the downstream compromise of critical infrastructure networks in Eastern Europe and Central Asia and the deployment of wiper malware. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a></li>
+<li>[Reported] APT44 targeted the drone supply chain — including manufacturing, logistics, and Ukrainian military training programs (spear-phishing campaign impersonating a drone warfare training school, exploiting CVE-2023–38831). <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R28" class="ref-cite" title="Reference">[R28]</a></li>
+<li>[Reported] A lethal kinetic strike on Ukraine’s 128th Mountain Assault Brigade in November 2023 was traced to the penetration of a soldier’s Signal account, illustrating the operational consequences of this intelligence capability. <a href="#ref-R28" class="ref-cite" title="Reference">[R28]</a></li>
+<li>[Reported] Since at least April 2023, APT44 provisioned dedicated infrastructure and produced Russian-language instructions to enable Russian ground forces to extract Signal and Telegram communications from mobile devices captured on the battlefield. APT44 deployed the WaveSign tool — a lightweight Windows batch script — to periodically query and exfiltrate Signal messages from a victim’s local Signal database. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R28" class="ref-cite" title="Reference">[R28]</a></li>
+</ul>
+
+<h3 id="20222024-hacktivist-persona-coordination-layer">2022–2024 (Hacktivist-Persona Coordination Layer)</h3>
+
+<ul>
+<li>[Reported] In March 2024, CARR claimed disruption of energy generation at a French hydroelectric facility by manipulating water levels. Verifiable causal link remains unconfirmed. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a></li>
+<li>[Reported] CyberArmyofRussia_Reborn (CARR) posted videos on January 17–18, 2024, claiming manipulation of HMI panels at water utilities in Poland and the United States. A U.S. local official subsequently confirmed a system malfunction causing a tank overflow at one claimed facility. Exact causal link to CARR/APT44 not fully established. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a></li>
+<li>[Reported] In September 2022, Mandiant initially attributed the intrusion activity supporting Telegram personas (XakNet Team, Infoccentr, CyberArmyofRussia_Reborn) to APT28, based on observed network co-habitation. In April 2024, re-analysis of the incident data allowed Mandiant to parse overlapping APT28 and APT44 activity and link the CyberArmyofRussia_Reborn-associated intrusion activity to APT44 with high confidence. Persona-level organizational affiliation with GRU remains moderate-confidence. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R25" class="ref-cite" title="Reference">[R25]</a></li>
+</ul>
+
+<h3 id="2023-doctrine-formalization-mobile-expansion">2023 (Doctrine Formalization + Mobile Expansion)</h3>
+
+<ul>
+<li>[Reported] SwiftSlicer wiper deployed against Ukrainian targets in 2023 — an additional destructive family in Sandworm’s iterative wiper portfolio. <a href="#ref-R30" class="ref-cite" title="Reference">[R30]</a></li>
+<li>[Observed/Reported] Infamous Chisel Android malware documented against Ukrainian military devices, providing Tor-backed access, modified Dropbear SSH, local network scanning, and data exfiltration of battlefield management app data. <a href="#ref-R14" class="ref-cite" title="Reference">[R14]</a></li>
+<li>[Reported] Mandiant published the GRU disruptive playbook model: edge foothold → LotL → GPO abuse → disruptive payload → claim amplification. <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a></li>
+</ul>
+
+<h3 id="2024-apt44-naming-expanded-tooling-telecom-disruption">2024 (APT44 Naming + Expanded Tooling + Telecom Disruption)</h3>
+
+<ul>
+<li>[Reported] APT44 increasingly sourced tools and bulletproof hosting from criminal marketplaces as a disposable operational layer. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a></li>
+<li>[Reported] APT44 continued large-scale credential theft targeting public and private sector mail servers globally (Exim, Zimbra, Exchange), dating back to at least 2019. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a></li>
+<li>[Reported] APT44 has experimented with ransomware deployment against European transportation and logistics networks — an operational expansion beyond pure sabotage/espionage. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a></li>
+<li>[Reported] AcidPour (AcidRain variant) observed with expanded destructive capability against Linux UBI/device-mapper storage topologies; attributed to a Sandworm-linked subcluster by SentinelOne based on infrastructure overlap with the Solntsepek persona. Treat as [Reported], medium confidence. <a href="#ref-R19" class="ref-cite" title="Reference">[R19]</a></li>
+<li>[Reported] Kapeka/KnuckleTouch formally tracked and publicly reported by WithSecure and Microsoft; attributed to APT44/Seashell Blizzard. <a href="#ref-R27" class="ref-cite" title="Reference">[R27]</a></li>
+<li>[Reported] Mandiant formally graduated Sandworm to APT44, citing global scope and military integration across the full spectrum of espionage, attack, and influence. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a></li>
+</ul>
+
+<h3 id="2025-high-tempo-wiper-period-edge-pivot-confirmation">2025 (High-Tempo Wiper Period + Edge Pivot Confirmation)</h3>
+
+<ul>
+<li>[Reported] Amazon Threat Intelligence campaign confirmed sustained focus on edge-device targeting through end of 2025; APT44 maintained this posture while reducing N-day/zero-day exploitation investment. <a href="#ref-R29" class="ref-cite" title="Reference">[R29]</a></li>
+<li>[Reported] Microsoft documents continued global access operations by Seashell Blizzard/BadPilot subgroup, including exploitation of U.S./UK internet-facing systems. <a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a></li>
+<li>[Reported] ESET notes UAC-0099 initial-access handoff to Sandworm for follow-on operations. <a href="#ref-R21" class="ref-cite" title="Reference">[R21]</a></li>
+<li>[Reported] ESET reports Sandworm deployment of ZEROLOT and Sting against Ukrainian government, energy, logistics, and grain sectors. <a href="#ref-R20" class="ref-cite" title="Reference">[R20]</a><a href="#ref-R21" class="ref-cite" title="Reference">[R21]</a></li>
+</ul>
+
+<h3 id="december-2025-january-2026-poland-energy-industrial-incident">December 2025 — January 2026 (Poland Energy/Industrial Incident)</h3>
+
+<ul>
+<li>[Assessed] Attribution for this incident remains contested (ESET vs. CERT Polska) and should remain medium confidence pending additional corroboration.</li>
+<li>[Observed/Reported] Enterprise escalation chain: LSASS dumping, NTDS.dit/SAM/SYSTEM theft, Kerberos ticket abuse (Diamond Ticket), domain-wide GPO/scheduled-task wiper rollout. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></li>
+<li>[Observed/Reported] OT impact mechanics: RTU firmware sabotage (inserted bytes causing reboot loops), device-level destructive commands, attacker-performed factory reset of edge appliances to hinder restoration and erase traces. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></li>
+<li>[Observed/Reported] Recurring preconditions across affected sites: FortiGate VPN exposed to the internet without MFA and extensive credential reuse risk. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></li>
+<li>[Reported] ESET attributes DynoWiper to Sandworm with medium confidence and documents ZOV/DynoWiper logic overlap. <a href="#ref-R22" class="ref-cite" title="Reference">[R22]</a></li>
+<li>[Observed/Reported] CERT Polska reports coordinated destructive attacks across more than 30 renewable energy sites, a CHP entity, and a manufacturing target; IT+OT impact attempts including firmware tampering and wiper deployment. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></li>
+</ul>
+
+<h3 id="timeline-synthesis">Timeline Synthesis</h3>
+
+<ul>
+<li>[Assessed] 2025–2026 reporting indicates sustained destructive capability rather than de-escalation.</li>
+<li>[Assessed] Concurrent with destructive operations, APT44 has pursued a qualitative expansion into tactical battlefield support, signal intelligence collection, and criminal marketplace integration.</li>
+<li>[Assessed] APT44 evolved from selective high-impact bespoke attacks into repeatable, scalable disruption operations integrating edge access + privileged orchestration + rapid destructive payloading.</li>
+</ul>
+
+<h2 id="confirmed-vs-claimed-matrix">Confirmed vs Claimed Matrix</h2>
+
+<p>Each entry records the corroboration status of a significant reported operation or activity.</p>
+
+
+<h3 id="2015-2016-ukraine-grid-disruptions">2015/2016 Ukraine grid disruptions</h3>
+
+<p>Source type: Gov/legal/vendor technical. Status: Corroborated. Evidence: Multi-source attribution; malware and protocol evidence across multiple independent investigations. Limitation: Some victim-side forensic detail remains non-public. Defensive action: Maintain OT protocol anomaly and relay analytics.</p>
+
+<h3 id="notpetya-2017">NotPetya (2017)</h3>
+
+<p>Source type: Gov/legal/vendor. Status: Corroborated. Evidence: Strong legal and technical convergence; DOJ indictment names responsible officers. Limitation: Global spillover complicates exact per-victim intent. Defensive action: Enforce software supply-chain trust controls.</p>
+
+<h3 id="2022-microscada-native-tool-disruption">2022 MicroSCADA native-tool disruption</h3>
+
+<p>Source type: Vendor technical. Status: Partially corroborated. Evidence: Procedure chain, command artifacts, OT context documented by Mandiant. Limitation: Full initial-access path not fully public. Defensive action: Monitor OT-native binary invocations.</p>
+
+<h3 id="kapeka-knuckletouch-deployment-2022">Kapeka/KnuckleTouch deployment (2022+)</h3>
+
+<p>Source type: Multi-vendor (WithSecure, Microsoft). Status: Partially corroborated. Evidence: GreyEnergy and Prestige lineage overlap; victim targeting pattern. Limitation: Limited public sample set. Defensive action: Hunt for GreyEnergy-lineage backdoor TTPs.</p>
+
+<h3 id="2025-ukraine-wiper-waves-zerolot-sting">2025 Ukraine wiper waves (ZEROLOT/Sting)</h3>
+
+<p>Source type: Vendor periodic APT reporting. Status: Partially corroborated. Evidence: Campaign pattern, sectors, deployment context documented by ESET. Limitation: Not all samples public. Defensive action: Strengthen wiper and AD/GPO hunting.</p>
+
+<h3 id="december-2025-poland-energy-incident">December 2025 Poland energy incident</h3>
+
+<p>Source type: CSIRT technical + vendor attribution. Status: Contested / Partially corroborated. Evidence: CERT Polska technical report and ESET DynoWiper attribution. Limitation: Inter-vendor attribution divergence (ESET attributes to Sandworm; CERT Polska notes overlap with Berserk Bear / Ghost Blizzard cluster). Defensive action: Treat TTP set as high-priority regardless of final attribution label.</p>
+
+<h3 id="signal-telegram-battlefield-interception">Signal/Telegram battlefield interception</h3>
+
+<p>Source type: Multi-source (Mandiant, RUSI, NCSC, SBU). Status: Corroborated. Evidence: Infrastructure provisioned and documented, WaveSign tool technically analyzed, lethal strike case publicly reported. Limitation: Exact exfiltration volumes non-public. Defensive action: Enforce device encryption, battlefield mobile device policy.</p>
+
+<h3 id="carr-hmi-manipulation-claims-2024">CARR/HMI manipulation claims (2024)</h3>
+
+<p>Source type: Persona channels plus partial official confirmation. Status: Partially corroborated. Evidence: U.S. local official confirmed malfunction at one claimed facility; videos published by CARR. Limitation: Full causal chain not independently verified. Defensive action: Treat exposed HMI interfaces as critical risk.</p>
+
+<p>Persona-layer “success” claims (general) Source type: Persona channels and media echo. Status: Claim-heavy. Evidence: Output visibility only. Limitation: Not independently verified compromise evidence. Defensive action: Maintain claim-vs-telemetry workflow.</p>
+
+<h2 id="targeting-victimology">Targeting and Victimology</h2>
+
+<p>Observed targeting concentration:</p>
+
+
+<ul>
+<li>[Assessed] NATO-adjacent and global expansion: opportunistic access campaigns create latent options beyond immediate conflict zones; ATI campaign documented targeting in North America, Western Europe, Eastern Europe, and the Middle East. <a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R29" class="ref-cite" title="Reference">[R29]</a></li>
+<li>[Reported] Democratic processes and election infrastructure: APT44 has attempted to interfere with democratic processes in multiple countries through data leaks and election system access. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a></li>
+<li>[Reported] Civil society, investigative journalism, and NGOs: Bellingcat, OPCW-linked entities, and similar organizations targeted for influence-related purposes. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a></li>
+<li>[Reported] Edge and identity control plane assets: VPN gateways, firewall management surfaces, domain controllers, and identity infrastructure repeatedly appear as decisive enabling layers. <a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a><a href="#ref-R26" class="ref-cite" title="Reference">[R26]</a><a href="#ref-R29" class="ref-cite" title="Reference">[R29]</a></li>
+<li>[Reported] Logistics/transport/manufacturing/grain/drone supply chain: strategic economy pressure and operational friction; APT44 has directly targeted drone manufacturing, training, and logistics. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R21" class="ref-cite" title="Reference">[R21]</a></li>
+<li>[Reported] Telecommunications: disruption and intelligence leverage against communications environments, including interception of battlefield communications. <a href="#ref-R19" class="ref-cite" title="Reference">[R19]</a><a href="#ref-R28" class="ref-cite" title="Reference">[R28]</a></li>
+<li>[Reported] Government and military-adjacent institutions: strategic state pressure, wartime support functions, battlefield command-and-control systems. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a><a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a></li>
+<li>[Reported] Energy and utilities (IT+OT): grid operations, substations, CHP, renewable interconnect points, hydroelectric facilities. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R3" class="ref-cite" title="Reference">[R3]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a><a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></li>
+</ul>
+
+<h2 id="operational-doctrine">Operational Doctrine: Evolution</h2>
+
+<h3 id="phase-1-bespoke-high-impact-disruption-20152018">Phase 1: Bespoke High-Impact Disruption (2015–2018)</h3>
+
+<p>Heavy focus on custom destructive tooling and strategic signaling events. Strong OT specialization with Industroyer-class capabilities. False-flag tradecraft deployed in Olympic Destroyer to complicate attribution. <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a><a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a></p>
+
+<h3 id="phase-2-blended-sabotage-deniability-20192022">Phase 2: Blended Sabotage + Deniability (2019–2022)</h3>
+
+<p>Continued destructive operations with increased use of public-facing cover narratives, hacktivist personas, and expanded edge-device persistence. <a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a><a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a></p>
+
+<p>Phases 3 and 4 are concurrent, not sequential — they represent parallel operational tracks from 2022 onward.</p>
+
+<h3 id="phase-3-tactical-scaled-wartime-playbook-2022present">Phase 3 (Tactical): Scaled Wartime Playbook (2022–Present)</h3>
+
+<p>Repeatable operational cycle emphasizing speed, scalability, and survivability. As described by Mandiant <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a>:</p>
+
+<ol>
+<li>Telegraphing success — persona-layer claim amplification</li>
+<li>Disrupt and deny — wiper and OT payload deployment</li>
+<li>Going for GPO / privileged orchestration — domain-wide reach</li>
+<li>Living off the land — LotL execution with native tooling</li>
+<li>Living on the edge — initial access via exposed or misconfigured edge devices</li>
+</ol>
+
+<h3 id="phase-4-influence-layer-distributed-amplification-and-attribution-friction-2022present">Phase 4 (Influence Layer): Distributed Amplification and Attribution Friction (2022–Present)</h3>
+
+<p>Persona-layer messaging assessed as coordinated or adjacent in selected cases; can increase perceived impact before forensic closure. Analysts must separate tactical defensive response (TTP-driven) from unresolved incident-level attribution disputes. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a><a href="#ref-R25" class="ref-cite" title="Reference">[R25]</a></p>
+
+<h3 id="phase-5-battlefield-integration-tactical-intelligence-and-kinetic-support-2023present">Phase 5 (Battlefield Integration): Tactical Intelligence and Kinetic Support (2023–Present)</h3>
+
+<p>Qualitative doctrinal expansion documented in 2024 Mandiant APT44 report and RUSI analysis: direct support to Russian ground forces through Signal/Telegram exfiltration infrastructure, WaveSign tooling, drone supply-chain targeting, and battlefield management system penetration. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R28" class="ref-cite" title="Reference">[R28]</a></p>
+
+<p>[Assessed] The doctrinal arc runs from “single flagship capability” → “repeatable campaign system” → “integrated battlefield intelligence support service.” Each phase expands APT44’s operational mandate rather than replacing prior capabilities.</p>
+
+<h2 id="initial-access-and-privilege-escalation">Initial Access and Privilege Escalation Patterns (Observed 2021–2026)</h2>
+
+<ul>
+<li>[Observed/Reported] Post-compromise escalation: LSASS credential dumping, NTDS.dit/SAM/SYSTEM extraction, Kerberos ticket abuse (Diamond Ticket) to sustain privileged domain control. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></li>
+<li>[Observed/Reported] CERT Polska incident: initial footholds via FortiGate VPN surfaces without MFA; account takeover and privilege escalation into AD/OT management layers. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></li>
+<li>[Reported] Amazon Threat Intelligence 2025 campaign: primary initial access vector shifted to misconfigured customer network edge devices (routers, VPN concentrators, network appliances) rather than active vulnerability exploitation — passive packet interception assessed as credential collection method. <a href="#ref-R29" class="ref-cite" title="Reference">[R29]</a></li>
+<li>[Reported] Microsoft documents BadPilot campaign exploiting vulnerabilities in ConnectWise ScreenConnect (<a href="https://nvd.nist.gov/vuln/detail/cve-2024-1709">CVE-2024-1709</a>), Fortinet FortiClient EMS (<a href="https://nvd.nist.gov/vuln/detail/cve-2023-48788">CVE-2023-48788</a>), Microsoft Exchange (<a href="https://nvd.nist.gov/vuln/detail/cve-2021-34473">CVE-2021-34473</a>), Zimbra (<a href="https://nvd.nist.gov/vuln/detail/cve-2022-41352">CVE-2022-41352</a>), WatchGuard (<a href="https://nvd.nist.gov/vuln/detail/cve-2022-26318">CVE-2022-26318</a>), and Confluence (<a href="https://nvd.nist.gov/vuln/detail/cve-2021-26084">CVE-2021-26084</a>, <a href="https://nvd.nist.gov/vuln/detail/cve-2023-22518">CVE-2023-22518</a>). <a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R29" class="ref-cite" title="Reference">[R29]</a></li>
+</ul>
+
+<h2 id="malware-and-tooling-portfolio">Malware and Tooling Portfolio</h2>
+
+<p>Each entry gives the category, name, function, earliest confirmed date in scope, and linkage confidence.</p>
+
+<p>Industroyer / Industroyer2 — ICS/OT sabotage. ICS protocol modules (IEC 60870–5–101, IEC 60870–5–104, IEC 61850, OPC DA) for grid protocol abuse, plus SIPROTEC DoS module (CVE-2015–5374). Earliest confirmed: 2016 / 2022. Confidence: High.</p>
+
+<p>Cyclops Blink — Edge persistence. Modular Linux ELF; firmware-update persistence; TLS-based C2 with random server fallback; process masquerading. Earliest confirmed: 2019+ (publicly exposed 2022). Confidence: High.</p>
+
+<p>Kapeka / KnuckleTouch — Modular espionage backdoor. Windows DLL backdoor; GreyEnergy successor; dropper + persistence; AES-256 C2 config; credential theft; custom payload execution. Earliest confirmed: 2022+ (formally tracked 2024). Confidence: Medium-High.</p>
+
+<p>WaveSign — Signal/Telegram interception. Windows batch script; periodically queries and exfiltrates Signal messages from local Signal database; used with captured battlefield devices. Earliest confirmed: 2023+. Confidence: High.</p>
+
+<p>Infamous Chisel — Mobile military targeting. Android malware; Tor hidden service; modified Dropbear SSH; local network scanning; battlefield app data exfiltration. Earliest confirmed: 2023. Confidence: High.</p>
+
+<p>CaddyWiper / ZEROLOT / Sting / ZOV / DynoWiper — IT destructive (fast). Rapid file/system/volume destruction; GPO-distributed. Earliest confirmed: 2022–2026. Confidence: Medium-High.</p>
+
+<p>LazyWiper (KB284726.ps1) — IT destructive (slow/PS). PowerShell-based wiper; slower destruction model. Earliest confirmed: 2025. Confidence: Medium-High. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>SwiftSlicer — IT destructive. Wiper family deployed against Ukrainian targets 2023. Earliest confirmed: 2023. Confidence: Medium-High.</p>
+
+<p>AcidRain / AcidPour — Telecom/embedded destructive. Modem/storage destructive operations (AcidRain: MIPS-targeted; AcidPour: UBI/device-mapper/Linux support). Earliest confirmed: 2022 / 2024. Confidence: Medium-High.</p>
+
+<p>⚠️ Attribution caveat for AcidPour: Attributed to a Sandworm-linked subcluster by SentinelOne, based on infrastructure overlap with the Solntsepek Telegram persona previously associated with APT44 operations. Treat as [Reported], medium confidence, pending independent technical corroboration. <a href="#ref-R19" class="ref-cite" title="Reference">[R19]</a> ⚠️ Circular citation risk: The attribution chain for AcidPour passes through a Telegram persona (Solntsepek), which per this document’s methodology falls under the “Claimed” category (actor/persona assertions without sufficient independent technical corroboration). Analysts should treat this attribution with additional caution and not use it to reinforce other persona-based attributions in a circular fashion.</p>
+
+<p>Prestige (+ unnamed variants) — Ransomware (experimental). Ransomware deployed against transport/logistics; Kapeka precursor operations; European transport targets 2022/2024. Earliest confirmed: 2022+. Confidence: Medium.</p>
+
+<p>CurlyShell / CurlCat — Post-exploitation cluster. Custom implants; Hyper-V abuse for EDR evasion; used by Curly COMrades cluster assessed as complementary GRU campaign. Earliest confirmed: 2024+. Confidence: Medium.</p>
+
+<p>GPO scripts, scheduled tasks, admin utilities, PsExec — Orchestration. Domain-scale deployment of destructive payloads. Earliest confirmed: 2022+. Confidence: High.</p>
+
+<p>BlockBit command set / native RTU actions — OT destructive command abuse. Device-level destructive commands; firmware sabotage; reboot loops against RTU-facing environments. Earliest confirmed: 2025. Confidence: Medium-High.</p>
+
+<h2 id="deep-technical-analysis">Deep Technical Analysis of Key Families</h2>
+
+<h3 id="industroyer-industroyer2">Industroyer / Industroyer2</h3>
+
+<ul>
+<li>[Assessed] The reduced modularity of Industroyer2 versus the original Industroyer suggests operators possessed highly specific target intelligence, reducing the need for broad protocol flexibility.</li>
+<li>[Observed/Reported] Industroyer2 showed more target-tailored, hardcoded behavior (reduced modularity) and was deployed in a coordinated attack chain with CaddyWiper/ORCSHRED/SOLOSHRED/AWFULSHRED. <a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a><a href="#ref-R17" class="ref-cite" title="Reference">[R17]</a></li>
+<li>[Observed/Reported] Industroyer also includes a fifth module: a Denial-of-Service tool targeting Siemens SIPROTEC 4 and Compact protective relay devices via CVE-2015–5374. The module sends a crafted 18-byte UDP packet to port 50000, placing the device into “firmware update” mode and rendering it unresponsive until manually rebooted. This directly disables substation protection functions (“Loss of Protection” impact), meaning the grid loses automatic fault isolation capability — amplifying the physical impact of the attack beyond the outage itself. SIPROTEC relays are widely deployed in substations globally. <a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a></li>
+<li>[Observed/Reported] Industroyer framework includes ICS protocol-specific modules: IEC 60870–5–101, IEC 60870–5–104, IEC 61850, and OPC DA — designed to send malicious commands directly to substation equipment over legitimate industrial protocols. <a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a></li>
+</ul>
+
+<p>Full reports here:</p>
+
+<h2 id="industroyer-biggest-threat-to-industrial-control-systems-since-stuxnet">Industroyer: Biggest threat to industrial control systems since Stuxnet</h2>
+
+<h3 id="eset-has-analyzed-a-sophisticated-and-extremely-dangerous-malware-known-as-industroyer-which-is-designed-to-disrupt">ESET has analyzed a sophisticated and extremely dangerous malware, known as Industroyer, which is designed to disrupt…</h3>
+
+<p><a href="https://www.welivesecurity.com/2017/06/12/industroyer-biggest-threat-industrial-control-systems-since-stuxnet/?source=post_page-----649332e8af44---------------------------------------">www.welivesecurity.com</a></p>
+
+<h2 id="industroyer2-industroyer-reloaded">Industroyer2: Industroyer reloaded</h2>
+
+<h3 id="eset-researchers-have-responded-to-a-cyber-incident-that-affected-an-energy-provider-in-ukraine-and-involved">ESET researchers have responded to a cyber-incident that affected an energy provider in Ukraine and involved…</h3>
+
+<p><a href="https://www.welivesecurity.com/2022/04/12/industroyer2-industroyer-reloaded/?source=post_page-----649332e8af44---------------------------------------">www.welivesecurity.com</a></p>
+
+<h3 id="cyclops-blink">Cyclops Blink</h3>
+
+<ul>
+<li>[Assessed] Cyclops Blink materially improves long-term edge resilience compared to opportunistic one-off footholds; its firmware-persistence model is specifically designed to outlast standard incident response.</li>
+<li>[Observed] Module extensibility at runtime allows capability updates without full redeployment. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a></li>
+<li>[Observed] NCSC malware analysis describes a modular Linux ELF framework with: firmware-update persistence (survives device resets), custom C2 over TLS with random server/port fallback logic, process masquerading (<code>[kworker:0/1]</code> kernel-thread style), and iptables rule injection to open attacker-controlled ports. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a></li>
+</ul>
+
+<p>Full report here: <a href="https://www.ncsc.gov.uk/files/Cyclops-Blink-Malware-Analysis-Report.pdf">https://www.ncsc.gov.uk/files/Cyclops-Blink-Malware-Analysis-Report.pdf</a></p>
+
+<h3 id="kapeka-knuckletouch">Kapeka / KnuckleTouch</h3>
+
+<ul>
+<li>[Assessed] Kapeka’s infrequent sightings and bespoke targeting indicate deliberate conservation of an expensive custom tool — consistent with APT44’s documented preference for protecting high-cost capabilities.</li>
+<li>[Reported] Assessed as a likely successor to GreyEnergy; GreyEnergy itself succeeded BlackEnergy in Sandworm’s arsenal. This represents a documented three-generation toolchain. <a href="#ref-R27" class="ref-cite" title="Reference">[R27]</a></li>
+<li>[Reported] Overlaps with GreyEnergy include: identical custom data-structuring algorithm for C2 traffic, DLL format with masqueraded extension, and creation of a “Microsoft” folder in the AppData path. Key differences: Kapeka uses Windows API and registry for fingerprinting (GreyEnergy used WMI); Kapeka persists C2 config in registry (GreyEnergy used on-disk file). <a href="#ref-R27" class="ref-cite" title="Reference">[R27]</a></li>
+<li>[Reported] Kapeka is a 32-bit/64-bit Windows DLL backdoor with a self-removing dropper. Persistence is established via either a scheduled task or autorun registry key depending on privilege level. C2 configuration is AES-256-encrypted and persisted in the registry. C2 communication uses JSON. <a href="#ref-R27" class="ref-cite" title="Reference">[R27]</a></li>
+</ul>
+
+<p>Full report here:</p>
+
+<h2 id="kapeka-a-novel-backdoor-spotted-in-eastern-europe">Kapeka: A novel backdoor spotted in Eastern Europe</h2>
+
+<h3 id="this-report-provides-an-in-depth-technical-analysis-of-the-backdoor-and-its-capabilities-and-analyzes-the-connection">This report provides an in-depth technical analysis of the backdoor and its capabilities, and analyzes the connection…</h3>
+
+<p><a href="https://labs.withsecure.com/publications/kapeka?source=post_page-----649332e8af44---------------------------------------">labs.withsecure.com</a></p>
+
+<h3 id="infamous-chisel">Infamous Chisel</h3>
+
+<ul>
+<li>[Assessed] Supports tactical intelligence collection directly relevant to battlefield decision cycles; the documented linkage to a lethal strike on Ukrainian forces illustrates concrete operational consequences. <a href="#ref-R14" class="ref-cite" title="Reference">[R14]</a><a href="#ref-R28" class="ref-cite" title="Reference">[R28]</a></li>
+<li>[Observed] NCSC Five Eyes Malware Analysis Report documents Android malware targeting military-use devices: Tor hidden service C2, modified Dropbear SSH server, local network scanning, and timed exfiltration of battlefield management app data, Signal messages, WhatsApp data, and Starlink terminal information. <a href="#ref-R14" class="ref-cite" title="Reference">[R14]</a></li>
+</ul>
+
+<p>Full report here:</p>
+
+<h2 id="infamous-chisel-malware-analysis-report-cisa">Infamous Chisel Malware Analysis Report | CISA</h2>
+
+<h3 id="infamous-chisel-is-a-collection-of-components-targeting-android-devices-this-malware-is-associated-with-sandworm">Infamous Chisel is a collection of components targeting Android devices. This malware is associated with Sandworm…</h3>
+
+<p><a href="https://www.cisa.gov/news-events/analysis-reports/ar23-243a?source=post_page-----649332e8af44---------------------------------------">www.cisa.gov</a></p>
+
+<h3 id="wavesign-signal-interception-tool">WaveSign (Signal Interception Tool)</h3>
+
+<ul>
+<li>[Assessed] Represents a purpose-built, low-complexity tool designed for rapid operational deployment at scale — consistent with APT44’s pattern of maintaining simple, disposable tools alongside complex bespoke capabilities.</li>
+<li>[Reported] A lightweight Windows batch script used by APT44/Seashell Blizzard to periodically query the Signal desktop message database on a victim’s machine and exfiltrate the most recent messages. Used in conjunction with infrastructure provisioned for Russian ground forces to exploit captured battlefield devices. <a href="#ref-R28" class="ref-cite" title="Reference">[R28]</a></li>
+</ul>
+
+<p>Full report here:</p>
+
+<h2 id="signals-of-trouble-multiple-russia-aligned-threat-actors-actively-targeting-signal-messenger">Signals of Trouble: Multiple Russia-Aligned Threat Actors Actively Targeting Signal Messenger |…</h2>
+
+<h3 id="russia-state-aligned-threat-actors-target-signal-messenger-accounts-used-by-individuals-of-interest-to-russias">Russia state-aligned threat actors target Signal Messenger accounts used by individuals of interest to Russia&#x27;s…</h3>
+
+<p><a href="https://cloud.google.com/blog/topics/threat-intelligence/russia-targeting-signal-messenger?source=post_page-----649332e8af44---------------------------------------">cloud.google.com</a></p>
+
+<h3 id="acidrain-acidpour">AcidRain / AcidPour</h3>
+
+<ul>
+<li>[Assessed] Indicates continued investment in telecom/embedded destructive capability targeting civilian communications infrastructure.</li>
+<li>[Reported] AcidRain associated with the KA-SAT satellite modem disruption (February 24, 2022); AcidPour extends destructive support to UBI and device-mapper storage targets across broader Linux environments. <a href="#ref-R18" class="ref-cite" title="Reference">[R18]</a><a href="#ref-R19" class="ref-cite" title="Reference">[R19]</a></li>
+</ul>
+
+<p>Full report here:</p>
+
+<p><a href="https://www.sentinelone.com/labs/acidpour-new-embedded-wiper-variant-of-acidrain-appears-in-ukraine/">https://www.sentinelone.com/labs/acidpour-new-embedded-wiper-variant-of-acidrain-appears-in-ukraine/</a></p>
+
+<h3 id="zerolot-sting-zov-dynowiper-lazywiper-20252026">ZEROLOT / Sting / ZOV / DynoWiper / LazyWiper (2025–2026)</h3>
+
+<ul>
+<li>[Assessed] Design philosophy prioritizes speed, broad operational effect, and GPO-scalable deployment over obfuscation depth.</li>
+<li>[Observed] LazyWiper (<code>KB284726.ps1</code>): PowerShell-based, slower recursive destruction model; deployed alongside DynoWiper. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></li>
+<li>[Observed] CERT Polska: two-stage deployment via<code>dynacom_update.ps1</code>→<code>exp1.ps1</code>→<code>schtask.exe</code> via domain GPO. PowerShell logging suppression active. Anti-forensics: edge appliance factory resets, file deletion. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></li>
+<li>[Observed/Reported] DynoWiper: selective overwrite logic (separate handling for small vs. large files for speed optimization) and forced reboot completion behavior; ZOV code similarity noted by ESET. <a href="#ref-R22" class="ref-cite" title="Reference">[R22]</a></li>
+<li>[Reported] ESET documents repeated wiper deployment in 2025 against Ukrainian sectors. <a href="#ref-R20" class="ref-cite" title="Reference">[R20]</a><a href="#ref-R21" class="ref-cite" title="Reference">[R21]</a><a href="#ref-R22" class="ref-cite" title="Reference">[R22]</a></li>
+</ul>
+
+<p>Full report here:</p>
+
+<h2 id="zerolot-analysis-inside-sandworms-destructive-new-wiper">ZEROLOT Analysis: Inside Sandworm&#x27;s Destructive New Wiper</h2>
+
+<h3 id="this-blog-post-is-a-technical-analysis-of-the-zerolot-malware-examining-its-internal-mechanics-and-destructive">This blog post is a technical analysis of the ZEROLOT malware, examining its internal mechanics and destructive…</h3>
+
+<p><a href="https://www.immersivelabs.com/resources/c7-blog/zerolot-analysis-inside-sandworms-destructive-new-wiper?source=post_page-----649332e8af44---------------------------------------">www.immersivelabs.com</a></p>
+
+<h3 id="blockbit-and-ot-device-level-sabotage-2025-poland-incident">BlockBit and OT Device-Level Sabotage (2025 Poland Incident)</h3>
+
+<ul>
+<li>[Assessed] Demonstrates a practical IT-to-OT handoff: generic enterprise compromise translated into industrial operational impact via purpose-built OT sabotage commands — confirming the doctrinal integration described in the GRU Disruptive Playbook. <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></li>
+<li>[Observed] CERT Polska documents<code>blockbit</code> tooling used for automated destructive actions against RTU-facing environments: interface disablement, reboot commands, storage destruction calls, and corrupted firmware with inserted bytes causing persistent reboot loops. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></li>
+</ul>
+
+<p>Full report here:</p>
+
+<p><a href="https://cert.pl/uploads/docs/CERT_Polska_Energy_Sector_Incident_Report_2025.pdf">https://cert.pl/uploads/docs/CERT_Polska_Energy_Sector_Incident_Report_2025.pdf</a></p>
+
+<h2 id="detection-response-priorities">Detection and Response Priorities</h2>
+
+<ol>
+<li>Protect mobile and messaging security for sensitive personnel. Enforce Signal/Telegram device-link auditing, restrict device pairing on operational devices, and maintain battlefield mobile device policy.</li>
+<li>Detect passive credential interception patterns. Audit edge devices for packet capture utilities, unexpected file writes, and authentication relay attempts following device compromise.</li>
+<li>Eliminate default credentials; enforce MFA universally on edge/OT remote paths. Treat “internet-exposed + password-only authentication” as a critical-risk misconfiguration requiring immediate remediation.</li>
+<li>Operate claim-vs-telemetry workflows. Treat persona narratives and hacktivist claims as early warning only; require local evidence before compromise declaration.</li>
+<li>Harden the OT remote-access boundary. Explicit allowlisting for OT-native administrative binaries and argument sets; command logging on all OT management endpoints.</li>
+<li>Detect destructive precursor behavior. Anti-recovery commands, high-rate file overwrite patterns, abnormal scheduled-task rollout velocity, and PowerShell logging suppression.</li>
+<li>Instrument AD/GPO abuse pathways. Alert on SYSVOL modifications, GPO scheduled-task creation, and unusual domain-controller script execution. Integrate with change-management ticketing for immediate anomaly detection.</li>
+<li>Control the edge attack surface. Mandatory MFA, restricted management-plane exposure, firmware integrity verification, and emergency remediation workflows for all internet-facing edge devices.</li>
+</ol>
+
+<h2 id="detection-engineering-pack">Detection Engineering Pack (SOC-Ready)</h2>
+
+<h3 id="rule-1-edge-admin-plane-anomaly">Rule 1: Edge Admin-Plane Anomaly</h3>
+
+<p>Data sources: Firewall/VPN/appliance logs. Logic: New admin source IP or unexpected geolocation + configuration change + no approved change ticket. Response: Lock account, isolate management interface, snapshot current config.</p>
+
+<h3 id="rule-2-fortigate-vpn-credential-abuse">Rule 2: FortiGate/VPN Credential Abuse</h3>
+
+<p>Data sources: Auth logs, SIEM identity correlation. Logic: Sequential login attempts across multiple sites using credential overlap patterns. Response: Force credential rotation; block external management access pending triage.</p>
+
+<h3 id="rule-3-gpo-based-destructive-rollout">Rule 3: GPO-Based Destructive Rollout</h3>
+
+<p>Data sources: AD audit, Sysmon, EDR. Logic: Creation of new scheduled tasks/scripts targeting large endpoint scope within short window. Response: Disable malicious GPO; isolate domain controller if further escalation observed.</p>
+
+<h3 id="rule-4-domain-controller-script-execution-anomaly">Rule 4: Domain-Controller Script Execution Anomaly</h3>
+
+<p>Data sources: PowerShell logs (Script Block Logging), process telemetry. Logic: Unsigned script writes to SYSVOL, startup task paths, or Default Domain Policy XML files. Response: Suspend privileged session; preserve all script artifacts for forensic analysis.</p>
+
+<h3 id="rule-5-wiper-overwrite-behavior-analytics">Rule 5: Wiper Overwrite Behavior Analytics</h3>
+
+<p>Data sources: File telemetry (EDR). Logic: Repeated partial overwrite patterns at high velocity + forced reboot scheduling. Response: Isolate affected host clusters; trigger destructive-incident IR playbook.</p>
+
+<h3 id="rule-6-powershell-anti-forensics-detection">Rule 6: PowerShell Anti-Forensics Detection</h3>
+
+<p>Data sources: PowerShell ScriptBlock logs, Module logs. Logic:<code>Set-PSReadLineOption -HistorySaveStyle SaveNothing</code> or equivalent history-suppression commands on admin hosts. Response: Flag as destructive precursor; escalate to incident queue.</p>
+
+<h3 id="rule-7-linux-process-masquerading-cyclops-blink-pattern">Rule 7: Linux Process Masquerading (Cyclops Blink Pattern)</h3>
+
+<p>Data sources: EDR process + path metadata. Logic: Kernel-thread-style process names (e.g.,<code>[kworker:0/1]</code>) originating from user-space executables or non-kernel paths. Response: Quarantine binary; hunt for sibling deployments across estate.</p>
+
+<h3 id="rule-8-firewall-iptables-rule-injection">Rule 8: Firewall/iptables Rule Injection</h3>
+
+<p>Data sources: Linux auditd, appliance command logs. Logic: Unexpected iptables rule additions opening non-standard ports; rule changes without a corresponding change ticket. Response: Rollback policy; preserve full rule-change timeline for forensic review.</p>
+
+<h3 id="rule-9-tor-linked-c2-from-non-approved-assets">Rule 9: Tor-Linked C2 from Non-Approved Assets</h3>
+
+<p>Data sources: DNS/proxy/firewall egress logs. Logic: Tor relay or onion-resolution indicators from server/appliance segments. Response: Temporary egress block; forensic packet retention on affected segment.</p>
+
+<h3 id="rule-10-ot-native-command-misuse-scilcexe-pattern">Rule 10: OT-Native Command Misuse (scilc.exe Pattern)</h3>
+
+<p>Data sources: OT endpoint command telemetry. Logic:<code>scilc.exe</code> invoked with non-maintenance argument sets; execution outside approved maintenance windows. Response: Immediate OT incident bridge with operations team; manual override preparation.</p>
+
+<h3 id="rule-11-firmware-tamper-reset-storm">Rule 11: Firmware Tamper / Reset Storm</h3>
+
+<p>Data sources: RTU/IED logs, maintenance management systems. Logic: Clustered firmware reset or config-wipe events across multiple substations or RTUs in short time window. Response: Shift to manual operational fallback; isolate all remote management channels.</p>
+
+<h3 id="rule-12-mobile-tactical-exfil-infamous-chisel-wavesign-pattern">Rule 12: Mobile Tactical Exfil (Infamous Chisel / WaveSign Pattern)</h3>
+
+<p>Data sources: Mobile EDR/MDM, network telemetry, DNS. Logic: Tor process activity + SSH tunnel establishment + high-frequency file staging on Android/Windows endpoints; unexpected Signal database reads. Response: Device isolation; credential/session revocation; assess linked-device exposure.</p>
+
+<h3 id="rule-13-claim-vs-telemetry-mismatch-queue">Rule 13: Claim-vs-Telemetry Mismatch Queue</h3>
+
+<p>Data sources: TI monitoring platform + SOC SIEM. Logic: High-profile persona claim with no matching local indicators in the expected detection window. Response: Classify as unverified; continue targeted hunt; do not initiate response actions on claim alone.</p>
+
+<h3 id="rule-14-kerberos-ticket-forgery-diamond-ticket-detection">Rule 14: Kerberos Ticket Forgery / Diamond Ticket Detection</h3>
+
+<p>Data sources: Domain controller security logs, Kerberos telemetry, EDR identity analytics. Logic: Anomalous TGT issuance patterns; unusual service-ticket lifetimes; privileged account usage inconsistent with baseline; tickets with atypical PAC attributes. Response: Revoke suspicious tickets/sessions; rotate KRBTGT (double rotation per Microsoft recommendation); isolate compromised admin endpoints.</p>
+
+<h3 id="rule-15-ntds-sam-system-theft-sequence">Rule 15: NTDS/SAM/SYSTEM Theft Sequence</h3>
+
+<p>Data sources: DC file access logs, Sysmon (EventID 11/15), PowerShell logs. Logic: Access/copy of<code>NTDS.dit</code>+ registry hive exports (<code>SAM</code>,<code>SYSTEM</code>) from unusual process ancestry (not backup agents or authorized admin tooling). Response: Immediate identity-tier incident escalation; enterprise credential reset wave; forensic preservation of all DC artifacts.</p>
+
+<h3 id="rule-16-edge-device-packet-capture-file-detection">Rule 16: Edge Device Packet Capture File Detection</h3>
+
+<p>Data sources: EDR on network appliances, SIEM file telemetry. Logic: Creation of<code>.pcap</code> files or invocation of<code>tcpdump</code>/<code>tshark</code> equivalents on router/VPN/firewall hosts outside maintenance windows. Response: Treat as potential credential-interception staging; audit all authentication traffic through device; initiate credential rotation for all accounts transiting the device.</p>
+
+<h2 id="wiper-ot-first-30-minutes">Wiper/OT First 30 Minutes (Defensive Mini-Playbook)</h2>
+
+<ol>
+<li>Preserve all edge appliance logs before attacker-initiated factory resets can complete.</li>
+<li>Activate OT manual operational fallback procedures if remote management channels are compromised.</li>
+<li>Trigger enterprise-wide sweep for known destructive precursor patterns (Rules 5, 6, 14, 15).</li>
+<li>Separate verified impact evidence from persona/claim-layer narratives in all communications.</li>
+<li>Validate immutable backup path integrity; initiate clean-room restoration protocol.</li>
+<li>Freeze automated deployment channels: GPO, software distribution, patch management.</li>
+<li>Preserve volatile evidence: process tree, active services, command history, network sessions.</li>
+<li>Disable suspicious privileged identities and invalidate all active tokens/sessions.</li>
+<li>Isolate impacted hosts/subnets and all OT remote management pathways.</li>
+<li>Declare destructive incident severity and open unified command bridge (IT + OT + Comms).</li>
+</ol>
+
+<h2 id="controls-mapping">Controls Mapping (NIST CSF-Lite)</h2>
+
+<p>Each entry maps a risk to its control, owner, SLA, and success measure.</p>
+
+<h3 id="risk-edge-foothold-persistence">Risk: Edge foothold persistence</h3>
+
+<p>Control: Management-plane isolation + MFA + firmware attestation + packet-capture file monitoring. Owner: NetSec. SLA: 14 days. Measure: Percentage of edge devices with verified firmware baseline and MFA enforced.</p>
+
+<h3 id="risk-domain-wide-wiper-spread">Risk: Domain-wide wiper spread</h3>
+
+<p>Control: Tiered admin + GPO approval workflow + DC hardening. Owner: IAM/AD. SLA: 7 days. Measure: Unauthorized GPO change MTTR.</p>
+
+<h3 id="risk-ot-remote-abuse">Risk: OT remote abuse</h3>
+
+<p>Control: OT jump-host controls + command allowlisting + maintenance-window enforcement. Owner: OT Security. SLA: 30 days. Measure: Percentage of OT admin actions that are ticket-linked.</p>
+
+<h3 id="risk-rapid-destructive-impact">Risk: Rapid destructive impact</h3>
+
+<p>Control: Immutable backups + regular restoration exercises. Owner: Infra + IR. SLA: 30 days. Measure: Recovery time objective attainment rate.</p>
+
+<h3 id="risk-battlefield-messaging-exposure">Risk: Battlefield messaging exposure</h3>
+
+<p>Control: Device-link auditing + mobile policy enforcement for sensitive personnel. Owner: IT Security + Ops. SLA: 14 days. Measure: Percentage of operational devices with active link audit.</p>
+
+<h3 id="risk-narrative-pressure">Risk: Narrative pressure</h3>
+
+<p>Control: Evidence-gated communications runbook. Owner: Comms + Legal + IR. SLA: Immediate. Measure: Time to validated status memo.</p>
+
+<h2 id="common-patterns">Common Patterns and Cross-Group Correlation</h2>
+
+<h3 id="common-operational-patterns">Common Operational Patterns</h3>
+
+<ol>
+<li>[Assessed] Tactical battlefield support represents a doctrinal expansion — APT44 is no longer solely a strategic disruptor but an operational intelligence support asset for conventional forces.</li>
+<li>[Assessed] Criminal ecosystem integration is an established force-multiplier — sourcing disposable tools and hosting from criminal markets reduces operational exposure and development cost.</li>
+<li>[Assessed] Anti-forensics is integrated, not optional — factory resets, logging suppression, and cleanup actions are standard in documented incident chains.</li>
+<li>[Assessed] Identity and edge misconfiguration are the recurring high-leverage entry points in successful destructive chains.</li>
+<li>[Assessed] Narrative operations are fused with technical action to maximize psychological and political impact.</li>
+<li>[Assessed] Wiper tooling is iterative, not one-off — families are renamed, retooled, and redeployed across campaigns.</li>
+<li>[Assessed] OT disruption increasingly combines native tool abuse with targeted destructive payloads to reduce ICS-specific malware exposure.</li>
+<li>[Assessed] Privileged AD abuse is the enterprise force multiplier for domain-wide destructive effects.</li>
+<li>[Assessed] Edge footholds are strategic enablers, not merely tactical access — they enable long-dwell credential collection and later destructive staging.</li>
+</ol>
+
+<h3 id="cross-group-correlation">Cross-Group Correlation</h3>
+
+<p>The December 2025 Poland incident demonstrates that destructive TTP overlap can cross historical cluster-attribution boundaries in public models. The Kapeka toolchain (BlackEnergy → GreyEnergy → Kapeka) illustrates multi-generation tool succession across nearly a decade. Analysts must keep TTP-led defensive response independent from unresolved actor-naming disputes.</p>
+
+<h2 id="collection-gaps">Collection Gaps and Unresolved Questions</h2>
+
+<ul>
+<li>The relationship between APT44 ransomware experiments (European transport/logistics) and broader strategic intent is underdetermined.</li>
+<li>The full operational scope of the WaveSign/Signal-interception program and the volume of battlefield communications successfully compromised is not publicly quantified.</li>
+<li>Attribution divergence in the December 2025 Poland case requires additional independent technical reconciliation.</li>
+<li>The current extent of dormant pre-positioning in Western critical infrastructure outside active conflict theaters remains uncertain.</li>
+<li>Public forensic depth is uneven across post-2024 incidents.</li>
+<li>The exact organizational relationship between GTsST/Unit 74455 and documented subgroups (BadPilot, Curly COMrades) is not fully characterized in public reporting.</li>
+<li>Full internal tasking boundaries among Russian military cyber units (Units 74455, 26165, 161) remain opaque in open sources.</li>
+</ul>
+
+<h2 id="practical-defensive-actions">Practical Defensive Actions (Next 30 Days)</h2>
+
+<ol>
+<li>IR tabletop: conduct a joint IT/OT destructive-scenario exercise incorporating the CERT Polska Poland incident chain — edge access → AD escalation → GPO wiper rollout → OT firmware sabotage.</li>
+<li>Claim-vs-telemetry process: establish formal documented workflow separating persona/hacktivist claims from local incident evidence; enforce evidence-gated communications.</li>
+<li>Battlefield mobile policy: audit Signal and Telegram device-link settings on operational devices; enforce device security policy for personnel with access to sensitive communications.</li>
+<li>OT command allowlisting: document and enforce allowlisted invocation patterns for OT-native administrative binaries; instrument anomaly alerting for deviations.</li>
+<li>Wiper behavior analytics: build or validate detections for fast file-overwrite patterns, anti-recovery commands, PowerShell history suppression, and forced reboot scheduling.</li>
+<li>AD/GPO detection deployment: implement high-severity detection rules for SYSVOL modifications, new scheduled tasks, and Default Domain Policy changes; route to IR immediately.</li>
+<li>Credential hygiene sprint: force rotation on all accounts that transit edge/VPN/OT management devices; audit for credential reuse across facilities.</li>
+<li>Emergency edge device audit: inventory all internet-facing management interfaces; verify MFA enforcement; check for unexpected packet capture files; assess firmware integrity.</li>
+</ol>
+
+<h2 id="appendix-a-ioc-compendium">Appendix A: IOC Compendium (Public Reporting)</h2>
+
+<p>Use these IOCs for correlation and triage only, not standalone attribution.</p>
+
+<p>IOC tagging model:</p>
+
+<ul>
+<li><code>freshness_tag</code>:<code>stable_tracking</code>|<code>durable_pattern</code>|<code>maybe_expired</code>|<code>volatile</code></li>
+<li><code>evidence_tag</code>:<code>hard</code>|<code>near-hard</code>|<code>soft</code></li>
+</ul>
+
+<h3 id="network-ioc-shelf-life-warning">⚠️ Network IOC Shelf-Life Warning</h3>
+
+<p>IP addresses from incident-specific reporting (especially the December 2025 Poland incident chain) have a short operational validity window. These addresses should be considered potentially reassigned or repurposed within weeks to months of publication. Do NOT implement as long-term blocklist entries without continuous revalidation. Use for retrospective correlation and short-term triage only.</p>
+
+<h3 id="network-indicators-december-2025-poland-incident-chain">Network Indicators (December 2025 Poland Incident Chain)</h3>
+
+<p><code>185.200.177.10</code>— near-hard / maybe_expired. VPN/M365 logins in incident chain. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p><code>195.26.87.225</code>— near-hard / maybe_expired. Renewables-sector login source. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p><code>146.190.211.75</code>— near-hard / maybe_expired. FortiGate management abuse. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p><code>128.140.34.155</code>— near-hard / maybe_expired. FortiGate management abuse. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p><code>95.85.114.66</code>— near-hard / maybe_expired. C2 / tool retrieval infrastructure. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p><code>95.85.114.74</code>— near-hard / maybe_expired. C2 / tool retrieval infrastructure. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p><code>31.172.71.5</code>— near-hard / maybe_expired. Compromised server in incident chain. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p><code>31.172.71.5:50443/tcp</code>— near-hard / maybe_expired. Operational port. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p><code>31.172.71.5:8008/tcp</code>— near-hard / maybe_expired. Operational port. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p><code>31.172.71.5:44445/tcp</code>— near-hard / maybe_expired. Operational port. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<h3 id="domain-infrastructure-indicators">Domain / Infrastructure Indicators</h3>
+
+<p><code>esetsmart[.]com</code>— soft / volatile. ESET-impersonation phishing domain. <a href="#ref-R21" class="ref-cite" title="Reference">[R21]</a></p>
+
+<p><code>esetscanner[.]com</code>— soft / volatile. ESET-impersonation phishing domain. <a href="#ref-R21" class="ref-cite" title="Reference">[R21]</a></p>
+
+<p><code>esetremover[.]com</code>— soft / volatile. ESET-impersonation phishing domain. <a href="#ref-R21" class="ref-cite" title="Reference">[R21]</a></p>
+
+<p><code>solntsepek[.]com</code>— soft / volatile. Persona-linked infrastructure (AcidPour context). <a href="#ref-R19" class="ref-cite" title="Reference">[R19]</a></p>
+
+<p><code>totalcmd[.]net</code>— near-hard / maybe_expired. Masquerading software distribution domain. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p><code>updater-file[.]xyz</code>— near-hard / maybe_expired. Malware/tool delivery domain. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<h3 id="hash-iocs-sha256-december-2025-poland-incident">Hash IOCs — SHA256 (December 2025 Poland Incident)</h3>
+
+<p><code>8759e79cf3341406564635f3f08b2f333b0547c444735dba54ea6fce8539cf15</code>—<code>dynacom_update.ps1</code>(DynoWiper distribution). hard / stable_tracking. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p><code>f4e9a3ddb83c53f5b7717af737ab0885abd2f1b89b2c676d3441a793f65ffaee</code>—<code>exp1.ps1</code>(DynoWiper distribution). hard / stable_tracking. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p><code>65099f306d27c8bcdd7ba3062c012d2471812ec5e06678096394b238210f0f7c</code>—<code>Source.exe</code>(DynoWiper). hard / stable_tracking. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p><code>835b0d87ed2d49899ab6f9479cddb8b4e03f5aeb2365c50a51f9088dcede68d5</code>—<code>dynacom_update.exe</code>(DynoWiper). hard / stable_tracking. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p><code>60c70cdcb1e998bffed2e6e7298e1ab6bb3d90df04e437486c04e77c411cae4b</code>—<code>schtask.exe</code>(DynoWiper). hard / stable_tracking. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p><code>d1389a1ff652f8ca5576f10e9fa2bf8e8398699ddfc87ddd3e26adb201242160</code>—<code>schtask.exe</code>(DynoWiper variant). hard / stable_tracking. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p><code>033cb31c081ff4292f82e528f5cb78a503816462daba8cc18a6c4531009602c2</code>—<code>KB284726.ps1</code>(LazyWiper). hard / stable_tracking. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p><code>68192ca0fde951d973eb41a07814f402f2b46e610889224bd54583d8a332a464</code>— Probable original DynoWiper distribution script. near-hard / stable_tracking. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p><code>ba89f7ca1fdbd7f8ce5f081f393af6e95f7de473e3d6376f42f11ad58f0f75fb</code>—<code>dynacom_update.exe</code>(CERT Polska sample set). hard / stable_tracking. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p><code>dc54d7f820f6f699ab5a976eb95d112f54b3dddde3f0097fc7322549753f7209</code>—<code>explorer.exe</code>(CERT Polska sample set). hard / stable_tracking. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<h3 id="hash-iocs-sha256-cyclops-blink">Hash IOCs — SHA256 (Cyclops Blink)</h3>
+
+<p><code>50df5734dd0c6c5983c21278f119527f9fdf6ef1d7e808a29754ebc5253e9a86</code>— Cyclops Blink<code>cpd</code> sample 1. hard / stable_tracking. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a></p>
+
+<p><code>c082a9117294fa4880d75a2625cf80f63c8bb159b54a7151553969541ac35862</code>— Cyclops Blink<code>cpd</code> sample 2. hard / stable_tracking. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a></p>
+
+<h3 id="hash-iocs-sha256-infamous-chisel">Hash IOCs — SHA256 (Infamous Chisel)</h3>
+
+<p><code>5866e1fa5e262ade874c4b869d57870a88e6a8f9d5b9c61bd5d6a323e763e021</code>—<code>killer</code> component. hard / stable_tracking. <a href="#ref-R14" class="ref-cite" title="Reference">[R14]</a></p>
+
+<p><code>2d19e015412ef8f8f7932b1ad18a5992d802b5ac62e59344f3aea2e00e0804ad</code>—<code>blob</code> component. hard / stable_tracking. <a href="#ref-R14" class="ref-cite" title="Reference">[R14]</a></p>
+
+<p><code>5c5323bd17fd857a0e77be4e637841dad5c4367a72ac0a64cc054f78f530ba37</code>—<code>ndbr_armv7l</code>. hard / stable_tracking. <a href="#ref-R14" class="ref-cite" title="Reference">[R14]</a></p>
+
+<p><code>3cf2de421c64f57c173400b2c50bbd9e59c58b778eba2eb56482f0c54636dd29</code>—<code>ndbr_i686</code>. hard / stable_tracking. <a href="#ref-R14" class="ref-cite" title="Reference">[R14]</a></p>
+
+<p><code>338f8b447c95ba1c3d8d730016f0847585a7840c0a71d5054eb51cc612f13853</code>—<code>db</code>(multi-call binary). hard / stable_tracking. <a href="#ref-R14" class="ref-cite" title="Reference">[R14]</a></p>
+
+<p><code>33a2be6638be67ba9117e0ac7bad26b12adbcdf6f8556c4dc2ff3033a8cdf14f</code>—<code>td</code>(Tor component). hard / stable_tracking. <a href="#ref-R14" class="ref-cite" title="Reference">[R14]</a></p>
+
+<p><code>140accb18ba9569b43b92da244929bc009c890916dd703794daf83034e349359</code>—<code>tcpdump</code> component. hard / stable_tracking. <a href="#ref-R14" class="ref-cite" title="Reference">[R14]</a></p>
+
+<h3 id="hash-iocs-sha1-industroyer2-attack-chain">Hash IOCs — SHA1 (Industroyer2 Attack Chain)</h3>
+
+<p><code>fd9c17c35a68fc505235e20c6e50c622aed8dea0</code>—<code>108_100.exe</code>(Industroyer2). hard / stable_tracking. <a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a></p>
+
+<p><code>6fa04992c0624c7aa3ca80da6a30e6de91226a16</code>—<code>zrada.exe</code>(ArguePatch). hard / stable_tracking. <a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a></p>
+
+<p><code>9ce1491ce69809f92ae1fe8d4c0783bd1d11fbe7</code>—<code>pa.pay</code>(TailJump / encrypted chain component). near-hard / stable_tracking. <a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a></p>
+
+<p><code>0090cb4de31d2d3bca55fd4a36859921b5fc5dae</code>—<code>link.ps1</code>(GPO/script enumeration). near-hard / stable_tracking. <a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a></p>
+
+<p><code>d27d0b9bb57b2bab881e0efb97c740b7e81405df</code>—<code>sc.sh</code>(ORCSHRED). hard / stable_tracking. <a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a></p>
+
+<p><code>3cdbc19bc4f12d8d00b81380f7a2504d08074c15</code>—<code>wobf.sh</code>(AWFULSHRED). hard / stable_tracking. <a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a></p>
+
+<p><code>8fc7646fa14667d07e3110fe754f61a78cfde6bc</code>—<code>wsol.sh</code>(SOLOSHRED). hard / stable_tracking. <a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a></p>
+
+<h3 id="behavioral-procedure-indicators">Behavioral / Procedure Indicators</h3>
+
+<p>🔴 HIGH PRIORITY</p>
+
+<p><code>scilc.exe -do ...</code> against SCIL script in OT environment — near-hard / durable_pattern. OT command misuse alert. <a href="#ref-R3" class="ref-cite" title="Reference">[R3]</a></p>
+
+<p>GPO + scheduled task wiper deployment from domain controller — near-hard / durable_pattern. Domain-wide containment workflow. <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R21" class="ref-cite" title="Reference">[R21]</a><a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>Default Domain Policy tampering (<code>Files.xml</code>,<code>ScheduledTasks.xml</code>) — near-hard / durable_pattern. Domain policy integrity check and emergency rollback. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p><code>.pcap</code> file creation or<code>tcpdump</code> invocation on network appliance outside maintenance window — near-hard / durable_pattern. Credential interception staging. <a href="#ref-R29" class="ref-cite" title="Reference">[R29]</a></p>
+
+<p>Credential replay from edge device IP against M365/cloud auth endpoint — near-hard / durable_pattern. Credential harvest confirmation. <a href="#ref-R29" class="ref-cite" title="Reference">[R29]</a></p>
+
+<p>LSASS +<code>NTDS.dit</code>/<code>SAM</code>/<code>SYSTEM</code> extraction sequence — near-hard / durable_pattern. Identity-tier incident escalation. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>Kerberos ticket abuse (Diamond Ticket pattern) — near-hard / durable_pattern. KDC analytics trigger. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>Wiper logic: separate handling for small vs. large files at high velocity — near-hard / durable_pattern. Destructive pattern analytics. <a href="#ref-R22" class="ref-cite" title="Reference">[R22]</a><a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>🟠 MEDIUM-HIGH PRIORITY</p>
+
+<p>PowerShell history suppression (<code>Set-PSReadLineOption -HistorySaveStyle SaveNothing</code>) — near-hard / durable_pattern. Anti-forensics detection on admin hosts. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p><code>[kworker:0/1]</code> process name from user-space executable path — near-hard / durable_pattern. Linux process masquerade analytics. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a></p>
+
+<p>Factory reset / config wipe of edge appliances during attack window — soft / durable_pattern. Anti-forensics escalation. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>Slack webhook exfiltration of script output — near-hard / durable_pattern. Webhook egress alerting and containment. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>Signal database file (<code>db.sqlite</code> or equivalent) accessed by unexpected process — near-hard / durable_pattern. WaveSign-type activity detection. <a href="#ref-R28" class="ref-cite" title="Reference">[R28]</a></p>
+
+<p>Defender Usage Notes: Prioritize multi-signal correlation over standalone IOC hits. Network IOCs from incident reporting are volatile; never use as permanent blocklist entries without revalidation. Maintain separate confidence levels for cluster attribution versus incident attribution when sources diverge. Behavioral indicators carry longer useful life than network or hash IOCs.</p>
+
+<h2 id="appendix-b-attck-mapping">Appendix B: ATT&amp;CK-Oriented Mapping (Analyst View)</h2>
+
+<p>ATT&CK version note: Enterprise technique IDs (T####) reference MITRE ATT&CK for Enterprise; ICS technique IDs (T0###) reference MITRE ATT&CK for ICS. This mapping was prepared against ATT&CK Enterprise v16 / ATT&CK for ICS v3 (approximate, as of March 2026). Verify sub-technique IDs and names against the current ATT&CK release at time of use — names and IDs may change between versions.</p>
+
+<p>T1190 — Exploit Public-Facing Application. Exploitation of internet-facing edge software and management surfaces. <a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>T1133 — External Remote Services. Compromise of internet-facing edge infrastructure for initial access. <a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a><a href="#ref-R29" class="ref-cite" title="Reference">[R29]</a></p>
+
+<p>T1078.003 — Valid Accounts: Local Accounts. Reuse/abuse of local credentials on edge/OT devices. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>T1040 — Network Sniffing. Passive packet capture on compromised edge devices for credential interception. <a href="#ref-R14" class="ref-cite" title="Reference">[R14]</a><a href="#ref-R29" class="ref-cite" title="Reference">[R29]</a></p>
+
+<p>T1003.001 — OS Credential Dumping: LSASS Memory. Post-compromise credential harvesting for domain escalation. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>T1003.003 — OS Credential Dumping: NTDS. Theft of<code>NTDS.dit</code> and related registry hives. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>T1558 — Steal or Forge Kerberos Tickets (Diamond Ticket). Diamond Ticket attack: decrypts a legitimate DC-issued TGT using the KRBTGT AES256 key, modifies the PAC to elevate privileges, and re-encrypts. Distinct from T1558.001 (Golden Ticket), which forges a TGT entirely from scratch without a legitimate AS-REQ. Diamond Ticket produces a ticket appearing to originate from the DC, making it harder to detect. No dedicated ATT&CK sub-technique exists for Diamond Ticket — map to parent T1558 only; do not conflate with T1558.001. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>T1046 — Network Service Discovery. Internal reconnaissance before destructive stage. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>T1053.005 — Scheduled Task/Job: Scheduled Task. Wiper orchestration across domain environments. <a href="#ref-R21" class="ref-cite" title="Reference">[R21]</a><a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>T1569.002 — System Services: Service Execution. Remote command execution via PsExec/service context. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>T1484.001 — Domain Policy Modification: Group Policy. GPO-based distribution of destructive payloads. <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R21" class="ref-cite" title="Reference">[R21]</a><a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>T1195.002 — Supply Chain Compromise: Compromise Software Supply Chain. M.E.Doc update mechanism (NotPetya); software developer compromise (Eastern Europe/Central Asia wiper). <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a></p>
+
+<p>T1542.001 — Pre-OS Boot: System Firmware. Cyclops Blink persistence across firmware updates. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a></p>
+
+<p>T1036.005 — Masquerading: Match Legitimate Name/Location.<code>[kworker:*]</code> process-style kernel-thread disguise. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a></p>
+
+<p>T1562.004 — Impair Defenses: Disable/Modify Firewall. Edge firewall iptables rule injection. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a></p>
+
+<p>T1562.001 — Impair Defenses: Disable or Modify Tools. Security control disruption during destructive operations. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>T1562.013 — Impair Defenses: Disable or Modify Network Device Firewall. FortiGate configuration modification for persistence. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>T1059.001 — Command and Scripting Interpreter: PowerShell. PowerShell-based wiper delivery and anti-forensics. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>T1222 — File and Directory Permissions Modification. Wiper-driven permission changes. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>T1070.004 — Indicator Removal: File Deletion. Cleanup/deletion by destructive scripts. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>T1071.001 — Application Layer Protocol: Web Protocols. HTTP/HTTPS C2 transport. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a><a href="#ref-R14" class="ref-cite" title="Reference">[R14]</a></p>
+
+<p>T1573.002 — Encrypted Channel: Asymmetric Crypto. Cyclops Blink per-message TLS encryption; Kapeka AES-256 C2. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a><a href="#ref-R27" class="ref-cite" title="Reference">[R27]</a></p>
+
+<p>T1105 — Ingress Tool Transfer. Script and binary staging chain (<code>.ps1</code>→ executable). <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>T1602.002 — Data from Configuration Repository: Network Device Configuration Dump. Firewall/network config theft. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>T1090 — Proxy. Reverse proxy and SOCKS/Tor relay in incident chains. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>T1665 — Hide Infrastructure. Compromised infrastructure for attacker communications. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>T1567.004 — Exfiltration Over Web Service: Exfiltration Over Webhook. Script output exfiltrated to Slack webhook. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>T1485 — Data Destruction. Wiper family operations across campaigns. <a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a><a href="#ref-R21" class="ref-cite" title="Reference">[R21]</a><a href="#ref-R22" class="ref-cite" title="Reference">[R22]</a><a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>T1561.002 — Disk Wipe: Disk Structure Wipe. RAID/config destructive modification. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>T1490 — Inhibit System Recovery. Anti-recovery behavior in destructive workflows. <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R11" class="ref-cite" title="Reference">[R11]</a></p>
+
+<p>T1529 — System Shutdown/Reboot. Forced restart to complete wiper destruction. <a href="#ref-R22" class="ref-cite" title="Reference">[R22]</a><a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>T1486 — Data Encrypted for Impact. Prestige ransomware deployment against transport/logistics. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R27" class="ref-cite" title="Reference">[R27]</a></p>
+
+<p>T0807 — (ICS) Command-Line Interface. OT command execution against industrial components. <a href="#ref-R3" class="ref-cite" title="Reference">[R3]</a><a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>T0822 — (ICS) External Remote Services. Edge-to-OT access pathway in energy incidents. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>T0835 — (ICS) Denial of Service. Industroyer SIPROTEC DoS module: crafted UDP packet to port 50000 triggers firmware-update mode on Siemens SIPROTEC 4/Compact relay devices (CVE-2015–5374), disabling protective relay function (Loss of Protection) until manual reboot. <a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a></p>
+
+<p>T0839 — (ICS) Module Firmware. RTU firmware corruption (inserted bytes causing reboot loops). <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<p>T0886 — (ICS) Remote Services. Connection to industrial automation and RTU devices. <a href="#ref-R23" class="ref-cite" title="Reference">[R23]</a></p>
+
+<h2 id="references">References</h2>
+
+<p id="ref-R1"><a href="https://cloud.google.com/blog/topics/threat-intelligence/apt44-unearthing-sandworm" class="ref-link">[R1]</a> Google Cloud / Mandiant. Unearthing APT44: Russia’s Notorious Cyber Sabotage Unit Sandworm. Published: April 17, 2024. Accessed: March 6, 2026. <a href="https://cloud.google.com/blog/topics/threat-intelligence/apt44-unearthing-sandworm">https://cloud.google.com/blog/topics/threat-intelligence/apt44-unearthing-sandworm</a></p>
+
+<p id="ref-R2"><a href="https://cloud.google.com/blog/topics/threat-intelligence/gru-disruptive-playbook/" class="ref-link">[R2]</a> Google Cloud / Mandiant. The GRU’s Disruptive Playbook. Published: July 2023 (updated attribution note April 2024). Accessed: March 6, 2026. <a href="https://cloud.google.com/blog/topics/threat-intelligence/gru-disruptive-playbook/">https://cloud.google.com/blog/topics/threat-intelligence/gru-disruptive-playbook/</a></p>
+
+<p id="ref-R3"><a href="https://cloud.google.com/blog/topics/threat-intelligence/sandworm-disrupts-power-ukraine-operational-technology" class="ref-link">[R3]</a> Google Cloud / Mandiant. Sandworm Disrupts Power in Ukraine Using a Novel Attack Against Operational Technology. Published: November 9, 2023. Accessed: March 6, 2026. <a href="https://cloud.google.com/blog/topics/threat-intelligence/sandworm-disrupts-power-ukraine-operational-technology">https://cloud.google.com/blog/topics/threat-intelligence/sandworm-disrupts-power-ukraine-operational-technology</a></p>
+
+<p id="ref-R4"><a href="https://www.justice.gov/opa/pr/six-russian-gru-officers-charged-connection-worldwide-deployment-destructive-malware-and" class="ref-link">[R4]</a> U.S. Department of Justice. Six Russian GRU Officers Charged in Connection with Worldwide Deployment of Destructive Malware and Other Disruptive Actions in Cyberspace. Published: October 19, 2020. Accessed: March 6, 2026. <a href="https://www.justice.gov/opa/pr/six-russian-gru-officers-charged-connection-worldwide-deployment-destructive-malware-and">https://www.justice.gov/opa/pr/six-russian-gru-officers-charged-connection-worldwide-deployment-destructive-malware-and</a></p>
+
+<p id="ref-R5"><a href="https://www.justice.gov/opa/speech/remarks-assistant-attorney-general-national-security-john-c-demers-announcement-charges" class="ref-link">[R5]</a> U.S. Department of Justice. Remarks by Assistant Attorney General John C. Demers on Charges Against Russian Military Intelligence Officers. Published: October 2020. Accessed: March 6, 2026. <a href="https://www.justice.gov/opa/speech/remarks-assistant-attorney-general-national-security-john-c-demers-announcement-charges">https://www.justice.gov/opa/speech/remarks-assistant-attorney-general-national-security-john-c-demers-announcement-charges</a></p>
+
+<p id="ref-R6"><a href="https://www.gov.uk/government/news/foreign-office-minister-condemns-russia-for-notpetya-attacks" class="ref-link">[R6]</a> GOV.UK / NCSC. Foreign Office Minister condemns Russia for NotPetya attacks. Published: February 15, 2018. Accessed: March 6, 2026. <a href="https://www.gov.uk/government/news/foreign-office-minister-condemns-russia-for-notpetya-attacks">https://www.gov.uk/government/news/foreign-office-minister-condemns-russia-for-notpetya-attacks</a></p>
+
+<p id="ref-R7"><a href="https://www.gov.uk/government/news/uk-condemns-russias-gru-over-georgia-cyber-attacks" class="ref-link">[R7]</a> GOV.UK / NCSC. UK condemns Russia’s GRU over Georgia cyber-attacks. Published: February 20, 2020. Accessed: March 6, 2026. <a href="https://www.gov.uk/government/news/uk-condemns-russias-gru-over-georgia-cyber-attacks">https://www.gov.uk/government/news/uk-condemns-russias-gru-over-georgia-cyber-attacks</a></p>
+
+<p id="ref-R8"><a href="https://www.gov.uk/government/news/uk-exposes-series-of-russian-cyber-attacks-against-olympic-and-paralympic-games" class="ref-link">[R8]</a> GOV.UK. UK exposes series of Russian cyber attacks against Olympic and Paralympic Games. Published: October 19, 2020. Accessed: March 6, 2026. <a href="https://www.gov.uk/government/news/uk-exposes-series-of-russian-cyber-attacks-against-olympic-and-paralympic-games">https://www.gov.uk/government/news/uk-exposes-series-of-russian-cyber-attacks-against-olympic-and-paralympic-games</a></p>
+
+<p id="ref-R9"><a href="https://www.gov.uk/government/publications/profile-gru-cyber-and-hybrid-threat-operations/profile-gru-cyber-and-hybrid-threat-operations" class="ref-link">[R9]</a> GOV.UK. Profile: GRU cyber and hybrid threat operations. Published: July 18, 2025. Updated: December 4, 2025. Accessed: March 6, 2026. <a href="https://www.gov.uk/government/publications/profile-gru-cyber-and-hybrid-threat-operations/profile-gru-cyber-and-hybrid-threat-operations">https://www.gov.uk/government/publications/profile-gru-cyber-and-hybrid-threat-operations/profile-gru-cyber-and-hybrid-threat-operations</a></p>
+
+<p id="ref-R10"><a href="https://www.microsoft.com/en-us/security/blog/2025/02/12/the-badpilot-campaign-seashell-blizzard-subgroup-conducts-multiyear-global-access-operation/" class="ref-link">[R10]</a> Microsoft Security Blog. The BadPilot campaign: Seashell Blizzard subgroup conducts multiyear global access operation. Published: February 12, 2025. Accessed: March 6, 2026. <a href="https://www.microsoft.com/en-us/security/blog/2025/02/12/the-badpilot-campaign-seashell-blizzard-subgroup-conducts-multiyear-global-access-operation/">https://www.microsoft.com/en-us/security/blog/2025/02/12/the-badpilot-campaign-seashell-blizzard-subgroup-conducts-multiyear-global-access-operation/</a></p>
+
+<p id="ref-R11"><a href="https://www.microsoft.com/en-us/msrc/blog/2022/02/analysis-resources-cyber-threat-activity-ukraine/" class="ref-link">[R11]</a> Microsoft MSRC. Cyber threat activity in Ukraine: analysis and resources. Published: February 2022 (living update model). Accessed: March 6, 2026. <a href="https://www.microsoft.com/en-us/msrc/blog/2022/02/analysis-resources-cyber-threat-activity-ukraine/">https://www.microsoft.com/en-us/msrc/blog/2022/02/analysis-resources-cyber-threat-activity-ukraine/</a></p>
+
+<p id="ref-R12"><a href="https://www.microsoft.com/en-us/security/blog/2022/01/15/destructive-malware-targeting-ukrainian-organizations/" class="ref-link">[R12]</a> Microsoft Security Blog. Destructive malware targeting Ukrainian organizations. Published: January 15, 2022. Accessed: March 6, 2026. <a href="https://www.microsoft.com/en-us/security/blog/2022/01/15/destructive-malware-targeting-ukrainian-organizations/">https://www.microsoft.com/en-us/security/blog/2022/01/15/destructive-malware-targeting-ukrainian-organizations/</a></p>
+
+<p id="ref-R13"><a href="https://www.ncsc.gov.uk/files/Cyclops-Blink-Malware-Analysis-Report.pdf" class="ref-link">[R13]</a> NCSC (UK). Malware Analysis Report: Cyclops Blink. Published: February 23, 2022. Accessed: March 6, 2026. <a href="https://www.ncsc.gov.uk/files/Cyclops-Blink-Malware-Analysis-Report.pdf">https://www.ncsc.gov.uk/files/Cyclops-Blink-Malware-Analysis-Report.pdf</a></p>
+
+<p id="ref-R14"><a href="https://www.ncsc.gov.uk/static-assets/documents/malware-analysis-reports/infamous-chisel/NCSC-MAR-Infamous-Chisel.pdf" class="ref-link">[R14]</a> NCSC (Five Eyes partners). Malware Analysis Report: Infamous Chisel. Published: August 31, 2023. Accessed: March 6, 2026. <a href="https://www.ncsc.gov.uk/static-assets/documents/malware-analysis-reports/infamous-chisel/NCSC-MAR-Infamous-Chisel.pdf">https://www.ncsc.gov.uk/static-assets/documents/malware-analysis-reports/infamous-chisel/NCSC-MAR-Infamous-Chisel.pdf</a></p>
+
+<p id="ref-R15"><a href="https://www.welivesecurity.com/2017/06/12/industroyer-biggest-threat-industrial-control-systems-since-stuxnet/" class="ref-link">[R15]</a> ESET. Industroyer: Biggest threat to industrial control systems since Stuxnet. Published: June 12, 2017. Accessed: March 6, 2026. <a href="https://www.welivesecurity.com/2017/06/12/industroyer-biggest-threat-industrial-control-systems-since-stuxnet/">https://www.welivesecurity.com/2017/06/12/industroyer-biggest-threat-industrial-control-systems-since-stuxnet/</a></p>
+
+<p id="ref-R16"><a href="https://www.welivesecurity.com/2022/04/12/industroyer2-industroyer-reloaded/" class="ref-link">[R16]</a> ESET. Industroyer2: Industroyer reloaded. Published: April 12, 2022. Accessed: March 6, 2026. <a href="https://www.welivesecurity.com/2022/04/12/industroyer2-industroyer-reloaded/">https://www.welivesecurity.com/2022/04/12/industroyer2-industroyer-reloaded/</a></p>
+
+<p id="ref-R17"><a href="https://www.welivesecurity.com/2022/05/20/sandworm-ukraine-new-version-arguepatch-malware-loader/" class="ref-link">[R17]</a> ESET. Sandworm uses a new version of ArguePatch to attack targets in Ukraine. Published: May 20, 2022. Accessed: March 6, 2026. <a href="https://www.welivesecurity.com/2022/05/20/sandworm-ukraine-new-version-arguepatch-malware-loader/">https://www.welivesecurity.com/2022/05/20/sandworm-ukraine-new-version-arguepatch-malware-loader/</a></p>
+
+<p id="ref-R18"><a href="https://www.sentinelone.com/labs/acidrain-a-modem-wiper-rains-down-on-europe/" class="ref-link">[R18]</a> SentinelOne. AcidRain | A Modem Wiper Rains Down on Europe. Published: March 31, 2022. Accessed: March 6, 2026. <a href="https://www.sentinelone.com/labs/acidrain-a-modem-wiper-rains-down-on-europe/">https://www.sentinelone.com/labs/acidrain-a-modem-wiper-rains-down-on-europe/</a></p>
+
+<p id="ref-R19"><a href="https://www.sentinelone.com/labs/acidpour-new-embedded-wiper-variant-of-acidrain-appears-in-ukraine/" class="ref-link">[R19]</a> SentinelOne. AcidPour | New Embedded Wiper Variant of AcidRain Appears in Ukraine. Published: March 21, 2024. Accessed: March 6, 2026. <a href="https://www.sentinelone.com/labs/acidpour-new-embedded-wiper-variant-of-acidrain-appears-in-ukraine/">https://www.sentinelone.com/labs/acidpour-new-embedded-wiper-variant-of-acidrain-appears-in-ukraine/</a></p>
+
+<p id="ref-R20"><a href="https://www.eset.com/us/about/newsroom/research/eset-research-apt-report-russian-cyberattacks-in-ukraine-intensify-sandworm-unleashes-new-destructive-wiper/" class="ref-link">[R20]</a> ESET. ESET Research APT Report: Russian cyberattacks in Ukraine intensify; Sandworm unleashes new destructive wiper. Published: May 19, 2025. Accessed: March 6, 2026. <a href="https://www.eset.com/us/about/newsroom/research/eset-research-apt-report-russian-cyberattacks-in-ukraine-intensify-sandworm-unleashes-new-destructive-wiper/">https://www.eset.com/us/about/newsroom/research/eset-research-apt-report-russian-cyberattacks-in-ukraine-intensify-sandworm-unleashes-new-destructive-wiper/</a></p>
+
+<p id="ref-R21"><a href="https://web-assets.eset.com/fileadmin/ESET/IT_2/eset-apt-activity-report-q2-2025-q3-2025.pdf" class="ref-link">[R21]</a> ESET. APT Activity Report (April 2025 — September 2025). Published: October 2025 (exact date unverified; reporting period April–September 2025 is inconsistent with an August publication date; treat as H2 2025 ESET APT Activity Report — verify against ESET source). Accessed: March 6, 2026. <a href="https://web-assets.eset.com/fileadmin/ESET/IT_2/eset-apt-activity-report-q2-2025-q3-2025.pdf">https://web-assets.eset.com/fileadmin/ESET/IT_2/eset-apt-activity-report-q2-2025-q3-2025.pdf</a></p>
+
+<p id="ref-R22"><a href="https://www.welivesecurity.com/en/eset-research/dynowiper-update-technical-analysis-attribution/" class="ref-link">[R22]</a> ESET. DynoWiper update: Technical analysis and attribution. Published: January 30, 2026. Accessed: March 6, 2026. <a href="https://www.welivesecurity.com/en/eset-research/dynowiper-update-technical-analysis-attribution/">https://www.welivesecurity.com/en/eset-research/dynowiper-update-technical-analysis-attribution/</a></p>
+
+<p id="ref-R23"><a href="https://cert.pl/en/posts/2026/01/incident-report-energy-sector-2025/" class="ref-link">[R23]</a> CERT Polska. Energy Sector Incident Report — 29 December 2025. Published: January 30, 2026. Accessed: March 6, 2026. <a href="https://cert.pl/en/posts/2026/01/incident-report-energy-sector-2025/">https://cert.pl/en/posts/2026/01/incident-report-energy-sector-2025/</a> <a href="https://cert.pl/uploads/docs/CERT_Polska_Energy_Sector_Incident_Report_2025.pdf">https://cert.pl/uploads/docs/CERT_Polska_Energy_Sector_Incident_Report_2025.pdf</a></p>
+
+<p id="ref-R24"><a href="https://learn.microsoft.com/en-us/unified-secops/microsoft-threat-actor-naming" class="ref-link">[R24]</a> Microsoft Learn. How Microsoft names threat actors (alias context for Seashell Blizzard/APT44 naming). Accessed: March 6, 2026. <a href="https://learn.microsoft.com/en-us/unified-secops/microsoft-threat-actor-naming">https://learn.microsoft.com/en-us/unified-secops/microsoft-threat-actor-naming</a></p>
+
+<p id="ref-R25"><a href="https://cloud.google.com/blog/topics/threat-intelligence/gru-rise-telegram-minions" class="ref-link">[R25]</a> Google Cloud / Mandiant. ‘Hacktivists Collaborate with GRU-sponsored APT28’ [original title, September 2022]. April 2024 update re-attributed the supporting intrusion cluster (UNC3810) from APT28 to APT44 after re-analysis of overlapping incident data; persona-level formal affiliation with GRU operators remains moderate-confidence. Accessed: March 6, 2026. <a href="https://cloud.google.com/blog/topics/threat-intelligence/gru-rise-telegram-minions">https://cloud.google.com/blog/topics/threat-intelligence/gru-rise-telegram-minions</a></p>
+
+<p id="ref-R26"><a href="https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-054a" class="ref-link">[R26]</a> CISA / NSA / FBI / UK NCSC and partners. AA22–054A: New Sandworm Malware Cyclops Blink Replaces VPNFilter (joint cybersecurity advisory). Published: February 23, 2022. Accessed: March 6, 2026. <a href="https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-054a">https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-054a</a> <a href="https://www.cisa.gov/sites/default/files/publications/AA22-054A%20New%20Sandworm%20Malware%20Cyclops%20Blink%20Replaces%20VPN%20Filter.pdf">https://www.cisa.gov/sites/default/files/publications/AA22-054A%20New%20Sandworm%20Malware%20Cyclops%20Blink%20Replaces%20VPN%20Filter.pdf</a></p>
+
+<p id="ref-R27"><a href="https://labs.withsecure.com/publications/kapeka" class="ref-link">[R27]</a> WithSecure Labs. Kapeka: A novel backdoor spotted in Eastern Europe. Published: April 17, 2024. Accessed: March 6, 2026. <a href="https://labs.withsecure.com/publications/kapeka">https://labs.withsecure.com/publications/kapeka</a>(Note: Microsoft tracks the same malware as KnuckleTouch; attributed to Seashell Blizzard/APT44 independently by both vendors.)</p>
+
+<p id="ref-R28"><a href="https://www.rusi.org/explore-our-research/publications/commentary/russias-cyber-campaign-shifts-ukraines-frontlines" class="ref-link">[R28]</a> Dan Black / Royal United Services Institute (RUSI). Russia’s Cyber Campaign Shifts to Ukraine’s Frontlines. Published: 2024. Accessed: March 6, 2026. <a href="https://www.rusi.org/explore-our-research/publications/commentary/russias-cyber-campaign-shifts-ukraines-frontlines">https://www.rusi.org/explore-our-research/publications/commentary/russias-cyber-campaign-shifts-ukraines-frontlines</a>(WaveSign tool and battlefield Signal/Telegram interception doctrine also described in Computer Weekly reporting: <a href="https://www.computerweekly.com/news/366619473/Warning-over-privacy-of-encrypted-messages-as-Russia-targets-Signal-Messenger">https://www.computerweekly.com/news/366619473/Warning-over-privacy-of-encrypted-messages-as-Russia-targets-Signal-Messenger</a>)</p>
+
+<p id="ref-R29"><a href="https://aws.amazon.com/blogs/security/amazon-threat-intelligence-identifies-russian-cyber-threat-group-targeting-western-critical-infrastructure/" class="ref-link">[R29]</a> Amazon Web Services / Amazon Threat Intelligence. Amazon Threat Intelligence identifies Russian cyber threat group targeting Western critical infrastructure. Published: December 15, 2025. Accessed: March 6, 2026. <a href="https://aws.amazon.com/blogs/security/amazon-threat-intelligence-identifies-russian-cyber-threat-group-targeting-western-critical-infrastructure/">https://aws.amazon.com/blogs/security/amazon-threat-intelligence-identifies-russian-cyber-threat-group-targeting-western-critical-infrastructure/</a>(Assessed with high confidence as associated with Sandworm/APT44/Seashell Blizzard based on infrastructure overlaps in Amazon telemetry; also references Curly COMrades / Bitdefender CurlyShell/CurlCat cluster.)</p>
+
+<p id="ref-R30"><a href="https://www.picussecurity.com/resource/blog/inside-sandworm-decade-of-cyber-sabotage-and-espionage-activity" class="ref-link">[R30]</a> ESET / Picus Security (corroborating). SwiftSlicer wiper. First documented: January 2023. Accessed: March 6, 2026. (SwiftSlicer referenced in multiple open-source APT44/Sandworm wiper campaign surveys, including ESET periodic reporting and Picus Security’s Sandworm profile: <a href="https://www.picussecurity.com/resource/blog/inside-sandworm-decade-of-cyber-sabotage-and-espionage-activity">https://www.picussecurity.com/resource/blog/inside-sandworm-decade-of-cyber-sabotage-and-espionage-activity</a>)</p>
+
+<h3 id="andrey-pautov">Andrey Pautov</h3>
+
+<p><a href="https://medium.com/tag/cyber-threat-intelligence?source=post_page-----649332e8af44---------------------------------------">Cyber Threat Intelligence</a></p>
+
+<p><a href="https://medium.com/tag/cybersecurity?source=post_page-----649332e8af44---------------------------------------">Cybersecurity</a></p>
+
+<p><a href="https://medium.com/tag/hacker?source=post_page-----649332e8af44---------------------------------------">Hacker</a></p>
+
+<p><a href="https://medium.com/tag/apt?source=post_page-----649332e8af44---------------------------------------">Apt</a></p>
+
+<p><a href="https://medium.com/tag/sandworm?source=post_page-----649332e8af44---------------------------------------">Sandworm</a></p>
+
+  <footer class="back-top">
+    <a href="#table-of-contents">↑ Table of Contents</a> · <a href="#top">↑ Top</a>
+  </footer>
+</body>
+</html>
