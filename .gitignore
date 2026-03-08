@@ -23,6 +23,9 @@ Thumbs.db
 *_medium.pdf
 *Medium*.pdf
 
+# Extracted figure assets (used only when rebuilding HTML/PDF locally; not part of published research)
+**/assets/
+
 # Temporary / working files
 *.tmp
 *.temp
