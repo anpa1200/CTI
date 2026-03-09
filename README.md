@@ -23,8 +23,11 @@ Structured, citation-linked versions of long-form CTI articles: **PDF** and **HT
 |--------|--------|--------|
 | [**Handala Hack Group**](handala-hack-group/) | Handala Hack Team / Void Manticore. Evidence-labeled assessment and SOC guidance. Dec 2023–Mar 2026. | [PDF](handala-hack-group/cti-research-handala-hack-group-with-nav.pdf) · [HTML](handala-hack-group/cti-research-handala-hack-group.html) · [Medium →](https://medium.com/@1200km/cti-research-handala-hack-group-aka-handala-hack-team-ddbdd294cfb8) |
 | [**Sandworm / APT44**](sandworm-apt44/) | GRU GTsST (Sandworm). Evidence-labeled assessment and SOC guidance. 2009–Mar 2026. | [PDF](sandworm-apt44/cti-research-sandworm-apt44-with-nav.pdf) · [HTML](sandworm-apt44/cti-research-sandworm-apt44.html) · [Medium →](https://medium.com/@1200km/cti-research-sandworm-apt44-649332e8af44) |
+| [**MuddyWater / Seedworm**](muddywater-seedworm/) | Iranian MOIS-linked MuddyWater cluster. Evidence-labeled assessment and SOC guidance. 2017–Mar 2026. | [PDF](muddywater-seedworm/cti-research-muddywater-seedworm-with-nav.pdf) · [HTML](muddywater-seedworm/cti-research-muddywater-seedworm.html) · [Primary sources →](https://www.cisa.gov/uscert/ncas/alerts/aa22-055a) |
 
 *More reports (malware writeups, tool analysis, IOCs) will be added in separate directories.*
+
+- **Template:** Use **[template/](template/)** to start a new report with the same structure (README, IOCs, outline, optional build scripts).
 
 ---
 
@@ -33,15 +36,24 @@ Structured, citation-linked versions of long-form CTI articles: **PDF** and **HT
 ```
 CTI/
 ├── README.md                 # This file
+├── template/                 # Universal research template (see below)
+│   ├── README.md             # How to use the template
+│   ├── REPORT-README.tpl.md  # Report directory README template
+│   ├── IOCs.tpl.md           # IOC document template
+│   ├── REPORT-OUTLINE.md     # Section outline for the long-form article
+│   └── extract_figures.sh.tpl
 ├── handala-hack-group/       # One directory per report
-│   ├── README.md             # Report summary + Medium link
-│   ├── *.pdf, *.html         # Report with TOC and ref links
-│   └── assets/               # Figures
-└── sandworm-apt44/
-    ├── README.md
+│   ├── README.md, IOCs.md
+│   ├── *.pdf, *.html
+│   └── assets/               # Figures (optional; gitignored)
+├── sandworm-apt44/
+│   ├── README.md, IOCs.md
+│   ├── *.pdf, *.html
+│   └── assets/
+└── muddywater-seedworm/
+    ├── README.md, IOCs.md
     ├── *.pdf, *.html
-    ├── assets/
-    └── extract_figures.sh    # Optional: pull figures from Medium PDF
+    └── assets/
 ```
 
 - **PDF:** Table of contents, clickable `[R1]`…`[Rx]` to references, original figures where available.
@@ -60,10 +72,14 @@ CTI/
 
 ## Adding a new report
 
-1. Create a new directory (e.g. `report-name/`).
-2. Add a **README.md** (title, scope, link to Medium or primary source).
-3. Add report **PDF** and/or **HTML** (and `assets/` if you have figures).
+Use the **[template](template/)** for a consistent structure:
+
+1. Copy files from **`template/`** into a new directory (e.g. `my-actor-name/`).
+2. Rename and fill placeholders in `REPORT-README.tpl.md` → save as `README.md`; do the same for `IOCs.tpl.md` → `IOCs.md`.
+3. Add your report **PDF** and **HTML** (and `assets/` if you have figures; see template and existing reports for the build workflow).
 4. Add a row to the **Reports** table above with links to the report and source.
+
+See **[template/README.md](template/README.md)** for placeholders, naming conventions, and optional build steps.
 
 ---
 

@@ -6,7 +6,7 @@
   <title>CTI Research: MuddyWater / Seedworm</title>
   <meta name="description" content="Evidence-labeled threat intelligence assessment and SOC defensive guidance on MuddyWater / Seedworm (2017 — March 2026).">
   <meta name="author" content="Andrey Pautov">
-  <link rel="canonical" href="https://www.cisa.gov/uscert/ncas/alerts/aa22-055a">
+  <link rel="canonical" href="https://medium.com/@1200km/cti-research-muddywater-seedworm-mango-sandstorm-ebf6af5ba061">
   <style>
     :root {
       font-family: "Georgia", "Times New Roman", serif;
@@ -47,519 +47,807 @@
     <p>Evidence-Labeled Threat Intelligence Assessment and SOC Defensive Guidance (2017 — March 2026). Author: <a href="https://medium.com/@1200km">Andrey Pautov</a>. Evidence cutoff: March 7, 2026. Core baseline: <a href="https://www.cisa.gov/uscert/ncas/alerts/aa22-055a">AA22-055A</a>.</p>
   </header>
   <a id="top"></a>
-<h1 id="top">CTI Research: MuddyWater / Seedworm (Mango Sandstorm)</h1>
+<h1 id="top">CTI Research: MuddyWater/Seedworm (Mango Sandstorm)</h1>
 
-<h2 id="evidence-labeled-threat-intelligence-assessment-and-soc-defensive-guidance-2017-march-2026">Evidence-Labeled Threat Intelligence Assessment and SOC Defensive Guidance (2017 - March 2026)</h2>
+<h2 id="evidence-labeled-threat-intelligence-assessment-and-soc-defensive-guidance-2017-march-2026">Evidence-Labeled Threat Intelligence Assessment and SOC Defensive Guidance (2017 — March 2026)</h2>
+
+
+<p>27 min read</p>
+
+
+
+
+
+<figure class="report-fig"><img src="assets/fig-000.png" alt="Figure 1" loading="lazy" /></figure>
 
 <h2 id="table-of-contents">Table of Contents</h2>
 <nav class="toc" aria-label="Table of contents"><ul>
+<li><a href="#evidence-labeled-threat-intelligence-assessment-and-soc-defensive-guidance-2017-march-2026">Evidence-Labeled Threat Intelligence Assessment and SOC Defensive Guidance (2017 — March 2026)</a></li>
 <li><a href="#report-metadata">Report Metadata</a></li>
 <li><a href="#methodology-evidence-labels">Methodology &amp; Evidence Labels</a></li>
-<li><a href="#confidence-what-changes">Confidence &amp; What Changes Confidence</a></li>
+<li><a href="#confidence-what-changes-confidence">Confidence &amp; What Changes Confidence</a></li>
 <li><a href="#executive-summary">Executive Summary</a></li>
-<li><a href="#actor-overview">Actor Overview</a></li>
-<li><a href="#alias-cluster-crosswalk">Alias / Cluster Crosswalk</a></li>
-<li><a href="#key-judgments">Key Judgments</a></li>
-<li><a href="#attribution-assessment">Attribution Assessment</a></li>
-<li><a href="#activity-timeline">Activity Timeline (2017–2026)</a></li>
-<li><a href="#confirmed-vs-claimed-matrix">Confirmed vs Claimed Matrix</a></li>
-<li><a href="#pasted-research-reconciliation">Pasted Research Reconciliation (Validated vs Unvalidated)</a></li>
-<li><a href="#targeting-victimology">Targeting and Victimology</a></li>
-<li><a href="#operational-doctrine">Operational Doctrine: Evolution</a></li>
-<li><a href="#initial-access-and-privilege-escalation">Initial Access and Privilege Escalation Patterns</a></li>
+<li><a href="#actor-identifiers-and-aliases">Actor: Identifiers and Aliases</a></li>
+<li><a href="#key-judgments-with-confidence-levels">Key Judgments with Confidence Levels</a></li>
+<li><a href="#attribution-pillar-by-pillar-analysis">Attribution: Pillar-by-Pillar Analysis</a></li>
+<li><a href="#operations-timeline-20172026">Operations Timeline 2017–2026</a></li>
+<li><a href="#confirmed-vs-unconfirmed-facts-matrix">Confirmed vs Unconfirmed Facts Matrix</a></li>
+<li><a href="#critical-errors-in-the-public-corpus">Critical Errors in the Public Corpus</a></li>
 <li><a href="#malware-and-tooling-portfolio">Malware and Tooling Portfolio</a></li>
-<li><a href="#deep-technical-analysis">Deep Technical Analysis of Key Families</a></li>
-<li><a href="#detection-response-priorities">Detection and Response Priorities</a></li>
-<li><a href="#detection-engineering-pack">Detection Engineering Pack (SOC-Ready)</a></li>
-<li><a href="#wiper-disruption-first-30">Wiper/Disruption First 30 Minutes (Defensive Mini-Playbook)</a></li>
-<li><a href="#controls-mapping">Controls Mapping (NIST CSF-Lite)</a></li>
-<li><a href="#common-patterns">Common Patterns and Cross-Group Correlation</a></li>
-<li><a href="#collection-gaps">Collection Gaps and Unresolved Questions</a></li>
-<li><a href="#practical-defensive-actions">Practical Defensive Actions (Next 30 Days)</a></li>
-<li><a href="#appendix-a-ioc-compendium">Appendix A: IOC Compendium (Public Reporting)</a></li>
-<li><a href="#appendix-b-attck-mapping">Appendix B: ATT&amp;CK-Oriented Mapping (Analyst View)</a></li>
+<li><a href="#modern-custom-stack-20242026">Modern Custom Stack (2024–2026)</a></li>
+<li><a href="#deep-technical-analysis-of-key-families">Deep Technical Analysis of Key Families</a></li>
+<li><a href="#targeting-and-victimology">Targeting and Victimology</a></li>
+<li><a href="#evolution-of-operational-doctrine">Evolution of Operational Doctrine</a></li>
+<li><a href="#initial-access-and-privilege-escalation">Initial Access and Privilege Escalation</a></li>
+<li><a href="#detection-engineering-soc-ready-rules">Detection Engineering: SOC-Ready Rules</a></li>
+<li><a href="#mini-playbook-first-30-minutes">Mini Playbook: First 30 Minutes</a></li>
+<li><a href="#practical-defensive-actions-30-days">Practical Defensive Actions: 30 Days</a></li>
+<li><a href="#intelligence-gaps">Intelligence Gaps</a></li>
+<li><a href="#appendix-a-ioc-compendium">Appendix A: IOC Compendium</a></li>
+<li><a href="#appendix-b-mitre-attck-mapping">Appendix B: MITRE ATT&amp;CK Mapping</a></li>
 <li><a href="#references">References</a></li>
 </ul></nav>
 <h2 id="report-metadata">Report Metadata</h2>
 
 <ul>
-<li>Analytic intent: Convert public-source reporting into evidence-labeled, SOC-actionable CTI about MuddyWater.</li>
+<li>Scope note: Selected late-2025 to early-2026 campaign details remain single-source primary reporting and are treated as hunting hypotheses unless independently replicated.</li>
+<li>Analytic intent: Convert public-source reporting into evidence-labeled, SOC-actionable CTI for defenders.</li>
 <li>Evidence cutoff (collection freeze): March 7, 2026 (UTC)</li>
-<li>Assessment window: 2017 - March 2026</li>
+<li>Assessment window: 2017 — March 2026</li>
 <li>Date: March 7, 2026</li>
 <li>Author: Andrey Pautov</li>
-<li>Document classification: Public-release CTI product. All cited sources are open/public.</li>
-<li>Scope note: This report integrates the user-pasted research text and explicitly separates validated facts from unverified assertions.</li>
+<li>Document classification: Public-release CTI product. All sources are open and publicly available.</li>
 </ul>
 
 <h2 id="methodology-evidence-labels">Methodology &amp; Evidence Labels</h2>
 
-<p>This document uses five labels:</p>
+<p>This document uses six evidence labels applied consistently to factual and analytical claims.</p>
 
-<p>Observed means directly documented technical evidence in primary technical/government reporting (malware behavior, protocol flow, artifact details).</p>
+<ul>
+<li>Claimed: assertions without independent technical validation.</li>
+<li>Partially Corroborated: at least one technical artifact is available, but the full kill chain is not publicly confirmed.</li>
+<li>Assessed: analytical conclusion synthesized from multiple Observed and Reported items; not standalone proof.</li>
+<li>Observed/Reported: combined label used when part of the detail is directly observed and part is documented through high-quality vendor reporting.</li>
+<li>Reported: documented by authoritative sources where full victim-side telemetry is not fully public.</li>
+<li>Observed: direct technical artifacts in primary reporting, such as samples, reverse engineering, and telemetry.</li>
+</ul>
 
-<p>Reported means described by reputable primary sources, but without full victim-side telemetry release.</p>
+<p>Additional notation used throughout:</p>
 
-<p>Assessed means analytic inference built from multiple Observed/Reported items.</p>
+<ul>
+<li>[CORRECTION] marker: indicates errors identified in prior CTI materials, including earlier report versions.</li>
+<li>[single-source primary reporting]: evidentiary caveat for findings currently supported by one primary technical source.</li>
+</ul>
 
-<p>Claimed means actor/media assertions without sufficient independent corroboration.</p>
+<p>Analytic rule: vendor naming overlap indicates cluster convergence, not guaranteed incident-level identity.</p>
 
-<p>Partially corroborated means at least one technical artifact exists, but the complete kill chain is not publicly proven.</p>
+<h2 id="confidence-what-changes-confidence">Confidence &amp; What Changes Confidence</h2>
 
-<p>Analytic rule: alias overlap does not guarantee incident-level identity.</p>
-
-<h2 id="confidence-what-changes">Confidence &amp; What Changes Confidence</h2>
-
-<p>High confidence: multi-source convergence across government advisories and independent technical research.</p>
-
-<p>Medium-high confidence: strong technical reporting but limited victim telemetry.</p>
-
-<p>Medium confidence: single-source technical reporting without independent replication.</p>
-
-<p>Low confidence: claim-led narratives, press-only chains, or geopolitical assertions without technical support.</p>
+<ul>
+<li>Low confidence: claim-led narratives without sufficient technical corroboration.</li>
+<li>Medium confidence: technically plausible but still limited by source breadth or replication depth.</li>
+<li>Medium-High confidence: strong convergence with minor incident-level gaps.</li>
+<li>High confidence: multi-source convergence across government and independent technical reporting.</li>
+</ul>
 
 <p>What increases confidence:</p>
 
 <ul>
-<li>Public malware samples and reverse engineering artifacts.</li>
-<li>Time-overlap infrastructure reuse plus behavioral overlap.</li>
-<li>Government/legal attribution plus vendor convergence.</li>
-<li>Victim-confirmed telemetry.</li>
+<li>Convergent legal or government attribution statements.</li>
+<li>Cross-vendor replication of the same technical findings.</li>
+<li>Time-overlapping infrastructure reuse across campaigns.</li>
+<li>Malware samples with reproducible reverse engineering.</li>
+<li>Independent victim-side telemetry publication.</li>
 </ul>
 
 <p>What decreases confidence:</p>
 
 <ul>
-<li>Single-source reporting with no technical appendix.</li>
-<li>Circular citation loops.</li>
-<li>Narrative-only geopolitical context not grounded in forensic data.</li>
+<li>Incident narratives with incomplete forensic artifacts.</li>
+<li>Attribution claims not anchored to technical evidence.</li>
+<li>Circular citation chains.</li>
+<li>Single-source findings without independent replication.</li>
 </ul>
 
 <h2 id="executive-summary">Executive Summary</h2>
 
-<p>MuddyWater (aka Seedworm, Static Kitten, Mercury, Mango Sandstorm) remains one of the core Iranian espionage clusters associated with the Ministry of Intelligence and Security (MOIS), per U.S., UK, and partner advisories. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a><a href="#ref-R6" class="ref-cite" title="Reference">[R6]</a></p>
+<p>Scope note for this summary. Some 2025–2026 events mentioned below rely on a single primary technical source. Where this is the case, it is explicitly indicated in the relevant sections. All items presented below as facts are supported by primary reporting; analytical conclusions are marked as [Assessed].</p>
 
-<p>From 2017 to 2022, publicly documented operations repeatedly used script-heavy payloads, PowerShell/VBS delivery chains, and commodity execution wrappers (PowGoop, Small Sieve, Canopy/Starwhale, Mori, POWERSTATS). <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R3" class="ref-cite" title="Reference">[R3]</a><a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a></p>
+<p>MuddyWater (MITRE ATT&CK G0069) is one of the most active cyber-espionage clusters publicly attributed to Iran’s Ministry of Intelligence and Security (MOIS) in joint US/UK advisories. <a href="https://www.cybercom.mil/Media/News/Article/2897570/iranian-intel-cyber-suite-of-malware-uses-open-source-tools/">R1</a> <a href="https://www.ncsc.gov.uk/pdfs/news/joint-advisory-observes-muddywater-actors-conducting-cyber-espionage.pdf">R4</a> The group has been documented since November 2017, with operations continuing through March 2026.</p>
 
-<p>From late 2023 through 2024, MuddyWater shifted materially toward abuse of legitimate remote monitoring and management (RMM) tooling (Atera, ScreenConnect, Syncro, SimpleHelp, RemoteUtilities), reducing immediate malware signatures in initial access phases. <a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R11" class="ref-cite" title="Reference">[R11]</a></p>
+<p>Three documented evolutionary phases:</p>
 
-<p>By 2024-2026, reporting shows iterative custom malware development (BugSleep/MuddyRot lineage, Fooder+MuddyViper stack, and the 2026 Olalampo family set including CHAR in Rust), indicating higher tooling maturity and faster adaptation loops. <a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a><a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a><a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a></p>
+<p>Phase I (2017–2022). Script-centric operations based on PowerShell/VBS. Core toolset: POWERSTATS, PowGoop, Small Sieve, Canopy/Starwhale, Mori. <a href="https://www.ncsc.gov.uk/files/NCSC-Malware-Analysis-Report-Small-Sieve.pdf">R1</a> <a href="https://unit42.paloaltonetworks.com/unit42-muddywater-operations-in-lebanon-and-oman/">R4</a></p>
 
-<p>Bottom line: MuddyWater is no longer just a macro-and-script intrusion set. It is now a blended access and persistence actor combining living-off-trusted-software tactics with increasingly custom implants. Defenders need behavior-first detection and strict control over administrative pathways.</p>
+<p>Phase II (2023–2024). [Assessed] A doctrinal shift toward abuse of legitimate RMM tools, documented by multiple independent teams. <a href="https://harfanglab.io/insidethelab/muddywater-rmm-campaign/">R10</a> <a href="https://www.cisa.gov/news-events/cybersecurity-advisories/aa24-241a">R12</a> In parallel, the first custom backdoor of the new era emerged: BugSleep/MuddyRot, independently documented by Check Point Research and Sekoia TDR in July 2024. <a href="https://blog.sekoia.io/muddywater-replaces-atera-by-custom-muddyrot-implant-in-a-recent-campaign/">R14</a></p>
 
-<h2 id="actor-overview">Actor Overview</h2>
+<p>Phase III (2024–2026, through March 2026). Rapid custom malware iteration while retaining RMM components in selected campaigns. Rust became a preferred language; Telegram bots were used for C2; documented modern components and campaigns include PYTRIC, Operation Quicksand, MuddyViper/Fooder, StealthCache, Phoenix v4, and RustyWater. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R13</a> <a href="https://www.group-ib.com/blog/muddywater-espionage/">R17</a> <a href="https://www.seqrite.com/blog/ung0801-tracking-threat-clusters-obsessed-with-av-icon-spoofing-targeting-israel/">R19</a> Operation Olalampo is the most recent documented campaign at the time of writing [single-source primary reporting: Group-IB]. <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R21</a></p>
 
-<p>Primary designation: MuddyWater / Seedworm.</p>
+<p>Most significant 2025 finding. Amazon Threat Intelligence (CYBERWARCON, November 2025) documented a correlation between MuddyWater infrastructure and access to a Jerusalem CCTV server days before Iran’s June 2025 missile strike on the city. Amazon uses the term “cyber-enabled kinetic targeting.” The correlation is documented; asserting proven real-time operational coordination is a stronger claim than what the published data directly supports. <a href="https://aws.amazon.com/blogs/security/new-amazon-threat-intelligence-findings-nation-state-actors-bridging-cyber-and-kinetic-warfare/">R22</a></p>
 
-<p>Attribution core: Government and allied advisories attribute activity to Iranian government-sponsored operators linked to MOIS. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a></p>
+<p>[Assessed] Key defender takeaway. MuddyWater changes its primary intrusion toolset approximately every 6–12 months. Signature/IOC-only detection with long update cycles will consistently lag behind. Behavioral analytics, strict RMM governance, and identity hardening are the most durable defensive investments.</p>
 
-<p>Operational identity: espionage-led actor with recurring focus on long-term access, credential theft, and cross-organization foothold development.</p>
+<figure class="report-fig"><img src="assets/fig-001.png" alt="Figure 2" loading="lazy" /></figure>
 
-<p>Mission pillars (assessed):</p>
+<h2 id="actor-identifiers-and-aliases">Actor: Identifiers and Aliases</h2>
+
+<h3 id="official-identification">Official Identification</h3>
+
+<p>MITRE ATT&CK: G0069 — MuddyWater. Defined as a “subordinate element within Iran’s Ministry of Intelligence and Security (MOIS).” Active since at least 2017. <a href="https://attack.mitre.org/groups/G0069/">R6</a></p>
+
+<h3 id="alias-mapping-primary-vendor-sources-only">Alias Mapping — Primary Vendor Sources Only</h3>
+
+<ul>
+<li>MUDDYCOASTVendor source: Group-IB.Primary report/profile: Group-IB infrastructure report, 2025 <a href="https://www.group-ib.com/blog/muddywater-infrastructure-malware/">R13</a>.Notes: Used in current Group-IB reporting.</li>
+<li>TA450Vendor source: Proofpoint.Primary report/profile: Proofpoint campaign tracking, 2024 <a href="https://www.proofpoint.com/uk/blog/threat-insight/security-brief-ta450-uses-embedded-links-pdf-attachments-latest-campaign">R10</a>.Notes: Campaign-level tracking, not an actor-level alias.</li>
+<li>COBALT ULSTERVendor source: Secureworks CTU.Primary report/profile: Secureworks Threat Profile: COBALT ULSTER <a href="https://www.secureworks.com/research/threat-profiles/cobalt-ulster">R25</a>.Notes: “Since at least 2017, COBALT ULSTER has targeted various government, telecommunications, oil and gas, and education organizations…”</li>
+<li>Boggy SerpensVendor source: Unit 42 / Palo Alto Networks.Primary report/profile: Unit 42 Threat Actor Groups page; Timely Threat Intel GitHub 2024 <a href="https://unit42.paloaltonetworks.com/threat-actor-groups-tracked-by-palo-alto-networks-unit-42/">R23</a>.Notes: “Boggy Serpens is the name we use to track a state-sponsored Iranian threat actor also known as MuddyWater or TA450.”</li>
+<li>Earth VetalaVendor source: Trend Micro.Primary report/profile: Trend Micro Research, March 5, 2021: “Earth Vetala — MuddyWater Continues to Target Organizations in the Middle East” <a href="https://www.trendmicro.com/en_us/research/21/c/earth-vetala---muddywater-continues-to-target-organizations-in-t.html">R24</a>.Notes: Trend Micro attributes with moderate confidence: “we believe…this newly identified activity is connected to MuddyWater.”</li>
+<li>Mango SandstormVendor source: Microsoft.Primary report/profile: Current Microsoft profile <a href="https://learn.microsoft.com/en-us/unified-secops/microsoft-threat-actor-naming">R6</a>.Notes: Current Microsoft taxonomy standard.</li>
+<li>MERCURYVendor source: Microsoft (historical taxonomy).Primary report/profile: Microsoft naming taxonomy history <a href="https://learn.microsoft.com/en-us/unified-secops/microsoft-threat-actor-naming">R7</a>.Notes: Legacy Microsoft designation replaced by Mango Sandstorm.</li>
+<li>Static KittenVendor source: CrowdStrike.Primary report/profile: Direct primary CrowdStrike profile is not publicly available. Alias is reproduced in cross-vendor mappings, including Unit 42 Boggy Serpens profile <a href="https://unit42.paloaltonetworks.com/threat-actor-groups-tracked-by-palo-alto-networks-unit-42/">R23</a> and MITRE ATT&CK G0069 <a href="https://attack.mitre.org/groups/G0069/">R6</a>.Notes: [cross-vendor mapped alias] Lower source quality than entries with direct vendor primary reports; use with caution.</li>
+<li>TEMP.ZagrosVendor source: Mandiant / FireEye (historical).Primary report/profile: Cross-vendor historical alias mapping in ATT&CK profile <a href="https://attack.mitre.org/groups/G0069/">R6</a>.Notes: Legacy alias; direct original Mandiant publication is not included in this reference set.</li>
+<li>SeedwormVendor source: Cross-vendor historical alias (commonly associated with Symantec usage).Primary report/profile: MITRE ATT&CK G0069 alias mapping <a href="https://attack.mitre.org/groups/G0069/">R6</a>.Notes: Widely used equivalent identifier; direct Symantec primary profile is outside the current reference set.</li>
+<li>MuddyWaterVendor source: Unit 42 / Palo Alto Networks.Primary report/profile: Unit 42, November 2017 <a href="https://unit42.paloaltonetworks.com/unit42-muddywater-operations-in-lebanon-and-oman/">R5</a>.Notes: Original public naming.</li>
+</ul>
+
+<figure class="report-fig"><img src="assets/fig-002.png" alt="Figure 3" loading="lazy" /></figure>
+
+<h2 id="key-judgments-with-confidence-levels">Key Judgments with Confidence Levels</h2>
+
+<p>Judgment 1. Cluster-level attribution to MOIS is robust. Multilateral US/UK government attribution combined with independent technical convergence from 10+ vendors supports high confidence at the cluster level. Confidence: High. <a href="https://www.cybercom.mil/Media/News/Article/2897570/iranian-intel-cyber-suite-of-malware-uses-open-source-tools/">R1</a> <a href="https://attack.mitre.org/groups/G0069/">R4</a></p>
+
+<p>Judgment 2. The three-phase doctrinal evolution is chronologically substantiated. The transition from scripts to RMM abuse to custom implants is a documented sequence. Confidence: High. <a href="https://www.proofpoint.com/uk/blog/threat-insight/security-brief-ta450-uses-embedded-links-pdf-attachments-latest-campaign">R1</a> <a href="https://research.checkpoint.com/2024/new-bugsleep-backdoor-deployed-in-recent-muddywater-campaigns/">R11</a> <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R15</a></p>
+
+<p>Judgment 3. [Assessed] RMM abuse represents a doctrinal shift, not a one-off tactic. Basis: independently documented by Proofpoint, HarfangLab, Group-IB, and ESET across different campaigns with shared logic. Caveat: “doctrinal” is an analytical synthesis, not a directly verifiable internal organizational fact. Confidence: High for the tactic; Medium for the “doctrinal” characterization. <a href="https://harfanglab.io/insidethelab/muddywater-rmm-campaign/">R10</a> <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R13</a></p>
+
+<p>Judgment 4. BugSleep/MuddyRot is validated by two independent teams (Check Point Research and Sekoia TDR) that reverse engineered the same implant separately. Confidence: High. <a href="https://blog.sekoia.io/muddywater-replaces-atera-by-custom-muddyrot-implant-in-a-recent-campaign/">R14</a></p>
+
+<p>Judgment 5. MuddyViper/Fooder (ESET, December 2025) is validated with detailed technical analysis. Campaign timeframe: September 30, 2024 to March 18, 2025. Confidence: High. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a></p>
+
+<p>Judgment 6. [Assessed] MuddyWater likely operated as an Initial Access Broker for Lyceum (an OilRig/APT34 subgroup) in January–February 2025. ESET explicitly frames this as “likely.” Confidence: Medium-High. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a></p>
+
+<p>Judgment 7. Amazon Threat Intelligence documented correlation between MuddyWater infrastructure and CCTV access in Jerusalem days before Iran’s June 23, 2025 missile strike. Correlation is documented in a primary source; proven real-time operational coordination is a stronger claim and should be handled cautiously. Confidence for correlation: High. Confidence for causality: Medium. <a href="https://aws.amazon.com/blogs/security/new-amazon-threat-intelligence-findings-nation-state-actors-bridging-cyber-and-kinetic-warfare/">R22</a></p>
+
+<p>Judgment 8. Operation Olalampo (Group-IB, February 2026) is a detailed primary report with Telegram telemetry and technical analysis. [single-source primary reporting at time of writing] Independent replication remains limited. Confidence: Medium-High. <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R21</a></p>
+
+<p>Judgment 9. RustyWater/Archer RAT/RUSTRIC is independently documented by CloudSEK (January 2026) <a href="https://www.cloudsek.com/blog/reborn-in-rust-muddywater-evolves-tooling-with-rustywater-implant">R19</a> and Seqrite Labs (December 2025, as RUSTRIC under UNG0801) <a href="https://www.seqrite.com/blog/ung0801-tracking-threat-clusters-obsessed-with-av-icon-spoofing-targeting-israel/">R20</a>. Group-IB further linked CHAR to the same development environment via the<code>Jacob</code> variable. Confidence: Medium-High. <a href="https://www.seqrite.com/blog/ung0801-tracking-threat-clusters-obsessed-with-av-icon-spoofing-targeting-israel/">R19</a> <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R21</a></p>
+
+<p>Judgment 10. PYTRIC (Seqrite Labs, UNG0801) is a destructive PyInstaller implant. Seqrite attributes it to a “West Asia threat cluster” without directly naming MuddyWater. [single-source primary reporting] Direct attribution of PYTRIC to MuddyWater requires additional validation. Confidence for PYTRIC destructive functionality: High. Confidence for MuddyWater attribution: Low-Medium. <a href="https://www.seqrite.com/blog/ung0801-tracking-threat-clusters-obsessed-with-av-icon-spoofing-targeting-israel/">R20</a></p>
+
+<h2 id="attribution-pillar-by-pillar-analysis">Attribution: Pillar-by-Pillar Analysis</h2>
+
+<h3 id="pillar-1-joint-us-uk-government-attribution">Pillar 1: Joint US/UK Government Attribution</h3>
+
+<p>[Observed/Reported] In the joint advisory AA22–055A (February 24, 2022), CISA, FBI, NSA, USCYBERCOM, and NCSC-UK publicly attributed MuddyWater as a “subordinate element within the Iranian Ministry of Intelligence and Security (MOIS).” <a href="https://www.cybercom.mil/Media/News/Article/2897570/iranian-intel-cyber-suite-of-malware-uses-open-source-tools/">R1</a> <a href="https://www.ncsc.gov.uk/pdfs/news/joint-advisory-observes-muddywater-actors-conducting-cyber-espionage.pdf">R4</a> This reflects multiple US and UK government agencies, but not all Five Eyes partners.</p>
+
+<p>Chronological nuance. CISA dates the active MuddyWater-MOIS linkage to “since approximately 2018.” <a href="https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-055a">R1</a> Unit 42 first documented the cluster publicly in November 2017. <a href="https://unit42.paloaltonetworks.com/unit42-muddywater-operations-in-lebanon-and-oman/">R5</a> This is not contradictory: 2017 reflects first publicly observed operations; 2018 reflects formal government dating of MOIS linkage.</p>
+
+<h3 id="pillar-2-technical-continuity">Pillar 2: Technical Continuity</h3>
+
+<p>[Observed/Reported] Tooling fingerprints are traceable across all three phases. Key markers include:</p>
+
+<ul>
+<li>Macro logic (4-level nested loops, WriteHexToFile, UserForm1.TextBox1.Text parsing) in Olalampo matching historical campaign patterns. <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R21</a></li>
+<li>CNG API usage for encryption, which ESET describes as “unique to Iran-aligned groups.” <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a></li>
+<li>Developer variable<code>Jacob</code> in Rust library paths: CHAR (Group-IB) and BlackBeard/RUSTRIC (CloudSEK) share development-environment artifacts. <a href="https://www.cloudsek.com/blog/reborn-in-rust-muddywater-evolves-tooling-with-rustywater-implant">R21</a></li>
+<li>String obfuscation by subtracting a fixed value (3, 4, 5, or 6), recurring across multiple tool generations. <a href="https://blog.sekoia.io/muddywater-replaces-atera-by-custom-muddyrot-implant-in-a-recent-campaign/">R14</a></li>
+<li>Mutex patterns “DocumentUpdater” and “PackageManager” independently documented by Check Point Research and Sekoia TDR for BugSleep/MuddyRot. <a href="https://blog.sekoia.io/muddywater-replaces-atera-by-custom-muddyrot-implant-in-a-recent-campaign/">R14</a></li>
+</ul>
+
+<h3 id="pillar-3-cross-vendor-convergence">Pillar 3: Cross-Vendor Convergence</h3>
+
+<p>[Reported] More than 10 independent technical teams attribute overlapping campaigns to a single cluster: Unit 42, Cisco Talos, Proofpoint, HarfangLab, Check Point Research, Sekoia TDR, Group-IB, ESET, CloudSEK, Seqrite Labs, Amazon Threat Intelligence, Microsoft. <a href="https://unit42.paloaltonetworks.com/unit42-muddywater-operations-in-lebanon-and-oman/">R1</a> <a href="https://harfanglab.io/insidethelab/muddywater-rmm-campaign/">R10</a> <a href="https://blog.sekoia.io/muddywater-replaces-atera-by-custom-muddyrot-implant-in-a-recent-campaign/">R14</a> <a href="https://www.cloudsek.com/blog/reborn-in-rust-muddywater-evolves-tooling-with-rustywater-implant">R16</a> <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R20</a> <a href="https://aws.amazon.com/blogs/security/new-amazon-threat-intelligence-findings-nation-state-actors-bridging-cyber-and-kinetic-warfare/">R22</a></p>
+
+<p>Incident-Level CaveatA subset of late 2025 to early 2026 campaign details remains [single-source primary reporting]. Use these as hunting hypotheses, not as standalone attribution support for legal or policy documents.</p>
+
+<h2 id="operations-timeline-20172026">Operations Timeline 2017–2026</h2>
+
+<h3 id="20172018-public-emergence">2017–2018: Public Emergence</h3>
+
+<p>[Reported] Unit 42 (Palo Alto Networks) documented the cluster in November 2017: attacks against Middle East organizations from February to October 2017 using POWERSTATS. <a href="https://unit42.paloaltonetworks.com/unit42-muddywater-operations-in-lebanon-and-oman/">R5</a></p>
+
+<p>[Reported] Early target scope included government organizations in Saudi Arabia, Iraq, Israel, Pakistan, Afghanistan, the UAE, Austria, and other countries. <a href="https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-055a">R5</a></p>
+
+<h3 id="20192020-expansion-and-first-public-cve-exploitation">2019–2020: Expansion and First Public CVE Exploitation</h3>
+
+<p>[Observed/Reported] Use of CVE-2020–1472 (Zerologon) and CVE-2020–0688 (Microsoft Exchange RCE) is documented in AA22–055A. <a href="https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-055a">R1</a></p>
+
+<p>[Reported] Secureworks CTU documented COBALT ULSTER campaign activity (January 2020) targeting government entities in Turkey, Jordan, and Iraq. <a href="https://www.secureworks.com/research/threat-profiles/cobalt-ulster">R25</a></p>
+
+<p>[Reported] 360 Threat Intelligence Center reported MuddyWater RMM usage as early as 2020. <a href="https://www.group-ib.com/blog/muddywater-infrastructure-malware/">R13</a></p>
+
+<h3 id="2021-earth-vetala-and-campaign-continuity">2021: Earth Vetala and Campaign Continuity</h3>
+
+<p>[Reported] Trend Micro (March 5, 2021) documented Earth Vetala activity targeting organizations in the UAE, Saudi Arabia, Israel, and Azerbaijan using ScreenConnect and RemoteUtilities. Attribution to MuddyWater is framed at “moderate confidence.” <a href="https://www.trendmicro.com/en_us/research/21/c/earth-vetala---muddywater-continues-to-target-organizations-in-t.html">R24</a></p>
+
+<h3 id="20212022-consolidation-in-government-advisories">2021–2022: Consolidation in Government Advisories</h3>
+
+<p>[Observed/Reported] CNMF (January 12, 2022) published MuddyWater malware samples to VirusTotal, an uncommon level of public disclosure. <a href="https://www.ncsc.gov.uk/files/NCSC-Malware-Analysis-Report-Small-Sieve.pdf">R2</a></p>
+
+<p>[Observed/Reported] AA22–055A (February 24, 2022) delivered formal interagency public attribution to MOIS and detailed TTP documentation for PowGoop, Small Sieve, Canopy/Starwhale, Mori, and POWERSTATS. <a href="https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-055a">R1</a></p>
+
+<p>[Reported] Operation Quicksand. MuddyWater used a Thanos ransomware variant delivered via PowGoop in destructive attacks against Israeli organizations. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a> This documents destructive capability beyond a purely espionage profile.</p>
+
+<h3 id="20232024-peak-rmm-campaigns-and-bugsleep">2023–2024: Peak RMM Campaigns and BugSleep</h3>
+
+<p>[Observed/Reported] HarfangLab (April 2024) documented SimpleHelp and Atera campaigns where compromised corporate email accounts distributed links to RMM agents through file-sharing services (Egnyte, OneHub, Mega). <a href="https://harfanglab.io/insidethelab/muddywater-rmm-campaign/">R11</a></p>
+
+<p>[Observed/Reported] Proofpoint (TA450, March 2024) documented PDF attachments containing embedded links leading to RMM agent delivery. <a href="https://www.proofpoint.com/uk/blog/threat-insight/security-brief-ta450-uses-embedded-links-pdf-attachments-latest-campaign">R10</a></p>
+
+<p>[Observed/Reported] Check Point Research (July 15, 2024) published the first detailed BugSleep analysis: custom C/C++ backdoor deployed since May 2024. From February to July 2024, more than 50 phishing emails were observed across 10+ sectors with hundreds of recipients. <a href="https://research.checkpoint.com/2024/new-bugsleep-backdoor-deployed-in-recent-muddywater-campaigns/">R14</a></p>
+
+<p>[Observed/Reported] Sekoia TDR (July 2024) independently documented the same implant under the name MuddyRot, with matching characteristics: mutex “DocumentUpdater,” TCP port 443, and identical string obfuscation logic. <a href="https://blog.sekoia.io/muddywater-replaces-atera-by-custom-muddyrot-implant-in-a-recent-campaign/">R15</a></p>
+
+<p>Discovery attribution note. Some sources indicate ClearSky (Israel) published IOCs for the new MuddyWater campaign on June 9, 2024, before full technical analyses. Check Point Research <a href="https://research.checkpoint.com/2024/new-bugsleep-backdoor-deployed-in-recent-muddywater-campaigns/">R14</a> and Sekoia TDR <a href="https://blog.sekoia.io/muddywater-replaces-atera-by-custom-muddyrot-implant-in-a-recent-campaign/">R15</a> independently delivered full reverse engineering in July 2024. These are distinct forms of contribution. A direct primary ClearSky report link from June 9 is not included in the reviewed corpus; that date appears in secondary reporting.</p>
+
+<h3 id="20242025-muddyviper-fooder-and-cooperation-with-lyceum">2024–2025: MuddyViper/Fooder and Cooperation with Lyceum</h3>
+
+<p>[Observed/Reported] ESET Research (December 2, 2025) documented campaigns against Israeli critical infrastructure organizations (technology, engineering, manufacturing, local government, education) and a technology company in Egypt. Campaign timeframe: September 30, 2024 to March 18, 2025. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a></p>
+
+<p>[Reported] In January–February 2025, MuddyWater likely acted as an Initial Access Broker in an Israeli manufacturing organization: deploying Syncro RMM, then PDQ and a custom Mimikatz loader. Stolen credentials were likely used by Lyceum (OilRig subgroup; also tracked as HEXANE / Storm-0133) for deeper penetration. ESET explicitly uses “likely.” <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a></p>
+
+<p>[Observed/Reported] ESET reported that operators deliberately avoided interactive keyboard sessions, suggesting improved operational discipline. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a></p>
+
+<h3 id="2025-mayjune-correlation-with-kinetic-strike">2025 (May–June): Correlation with Kinetic Strike</h3>
+
+<p>[Reported] Amazon Threat Intelligence (CYBERWARCON, November 19, 2025): <a href="https://aws.amazon.com/blogs/security/new-amazon-threat-intelligence-findings-nation-state-actors-bridging-cyber-and-kinetic-warfare/">R22</a></p>
+
+<ul>
+<li>June 23, 2025: Iran launched missile strikes on Jerusalem; Israeli officials publicly stated that hacked cameras were used for “real-time intelligence gathering.”</li>
+<li>June 17, 2025: via this server, operators accessed another compromised server with live CCTV feeds from Jerusalem.</li>
+<li>May 13, 2025: MuddyWater prepared C2 server IP 18[.]219.14.54.</li>
+</ul>
+
+<p>Amazon uses the term “cyber-enabled kinetic targeting” and describes this as a “fundamental shift in the nature of nation-state cyber attacks.” <a href="https://aws.amazon.com/blogs/security/new-amazon-threat-intelligence-findings-nation-state-actors-bridging-cyber-and-kinetic-warfare/">R22</a></p>
+
+<p>Documented elements include timestamp correlation, C2 infrastructure, and public statements by Israeli officials. Real-time operational coordination between MuddyWater and missile units is a stronger claim and is not directly proven by the published Amazon data.</p>
+
+<p>[CORRECTION to previous versions of this report and the source draft] The CCTV narrative was previously marked as “Not corroborated.” That is incorrect: it is documented in a primary Amazon Threat Intelligence publication with specific dates and IOCs.</p>
+
+<h3 id="2025-october-phoenix-v4-and-nordvpn-opsec">2025 (October): Phoenix v4 and NordVPN OPSEC</h3>
+
+<p>[Reported] Group-IB (October 22, 2025) documented a Phoenix v4 phishing campaign targeting MENA government and international organizations. Compromised email infrastructure was used; operators employed NordVPN to obscure source IPs. PDB paths confirm family lineage: phoenixV2 -> V3 -> V4. <a href="https://www.group-ib.com/blog/muddywater-espionage/">R18</a> [single-source primary reporting]</p>
+
+<p>[Reported] Cyberthint (October 2025) independently documented Phoenix v4 with a Chromium_Stealer payload masquerading as a calculator application. <a href="https://cyberthint.io/updated-muddywater-analysis-2025/">R26</a> Two independent sources increase confidence in September–October 2025 Phoenix v4 activity.</p>
+
+<h3 id="2025-novemberdecember-rustywater-and-operation-iconcat">2025 (November–December): RustyWater and Operation IconCat</h3>
+
+<p>[Observed/Reported] Seqrite Labs (December 21, 2025): Operation IconCat / UNG0801. Two tools targeting Israeli organizations since November 2025:</p>
+
+<ul>
+<li>PYTRIC (PyInstaller Python implant): full system wipe, backup deletion, Telegram C2, Check Point icon spoofing. <a href="https://www.seqrite.com/blog/ung0801-tracking-threat-clusters-obsessed-with-av-icon-spoofing-targeting-israel/">R20</a></li>
+<li>RUSTRIC (Rust RAT): reconnaissance, enumeration of 28 AV products, C2 communications, SentinelOne icon spoofing. <a href="https://www.seqrite.com/blog/ung0801-tracking-threat-clusters-obsessed-with-av-icon-spoofing-targeting-israel/">R20</a></li>
+</ul>
+
+<p>Seqrite attributes this to a “West Asia threat actor” without directly naming MuddyWater. [single-source primary reporting]</p>
+
+<p>[Observed/Reported] CloudSEK (January 9, 2026): RustyWater/Archer RAT, delivered via phishing email titled “Cybersecurity Guidelines” from a compromised TMCell domain (Altyn Asyr CJSC, Turkmenistan). VBA macro WriteHexToFile dropped<code>reddit.exe</code> with Cloudflare branding. C2: nomercys.it[.]com. <a href="https://www.cloudsek.com/blog/reborn-in-rust-muddywater-evolves-tooling-with-rustywater-implant">R19</a></p>
+
+<p>[Assessed] The RUSTRIC (Seqrite) and RustyWater (CloudSEK) linkage is supported by technical overlap; Group-IB explicitly ties their development environment to CHAR through the<code>Jacob</code> variable. <a href="https://www.seqrite.com/blog/ung0801-tracking-threat-clusters-obsessed-with-av-icon-spoofing-targeting-israel/">R19</a> <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R21</a></p>
+
+<h3 id="2026-januaryfebruary-operation-olalampo">2026 (January–February): Operation Olalampo</h3>
+
+<p>[Observed/Reported] Group-IB (February 20, 2026): Operation Olalampo, attributed to MuddyWater with high confidence. Earliest indicators: January 26, 2026. Geographic focus: predominantly MENA. [single-source primary reporting] <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R21</a></p>
+
+<p>Three documented attack chains:</p>
 
 <ol>
-<li>Strategic intelligence collection from government, telecom, defense-adjacent, and critical infrastructure sectors. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a><a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a></li>
-<li>Persistent network access development and access brokerage for adjacent Iranian clusters in some reported campaigns. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a></li>
-<li>Operational adaptation under pressure (RMM abuse, custom C/C++, and Rust/Python implants). <a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R11" class="ref-cite" title="Reference">[R11]</a><a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a><a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a></li>
+<li>Word lure (airline tickets, reports) -> HTTP_VIP -> AnyDesk (return to RMM abuse pattern).</li>
+<li>Lure document -> GhostFetch (memory execution) -> GhostBackDoor.</li>
+<li>Excel lure (energy/maritime company) -> CHAR (Rust backdoor with Telegram C2).</li>
 </ol>
 
-<h2 id="alias-cluster-crosswalk">Alias / Cluster Crosswalk</h2>
+<p>In parallel with phishing, Group-IB reported active exploitation of recently disclosed vulnerabilities on public-facing servers (specific CVEs not publicly disclosed).</p>
 
-<p>MuddyWater - longstanding public label. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></p>
+<p>Telegram telemetry: Group-IB tracked bot<code>stager_51_bot</code>, enabling direct observation of post-exploitation commands. The bot also showed activity in late 2025, indicating infrastructure reuse. <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R21</a></p>
 
-<p>Seedworm - frequent vendor/government alias. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a></p>
+<figure class="report-fig"><img src="assets/fig-003.png" alt="Figure 4" loading="lazy" /></figure>
 
-<p>Static Kitten / Mercury - broad industry naming overlap. <a href="#ref-R6" class="ref-cite" title="Reference">[R6]</a></p>
+<h2 id="confirmed-vs-unconfirmed-facts-matrix">Confirmed vs Unconfirmed Facts Matrix</h2>
 
-<p>Mango Sandstorm - Microsoft taxonomy for overlapping Iranian activity associated with MuddyWater naming in multi-vendor crosswalks. <a href="#ref-R6" class="ref-cite" title="Reference">[R6]</a><a href="#ref-R7" class="ref-cite" title="Reference">[R7]</a></p>
-
-<p>TA450 - Proofpoint tracking name in selected campaigns linked to MuddyWater behavior. <a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a></p>
-
-<p>TEMP.Zagros / UNC lineage overlaps - historical Google/Mandiant naming context connected in public reporting ecosystems. <a href="#ref-R17" class="ref-cite" title="Reference">[R17]</a><a href="#ref-R18" class="ref-cite" title="Reference">[R18]</a></p>
-
-<p>Note: alias conversion is model-dependent and can include partial-overlap clusters. Do not force one-to-one mapping at incident granularity.</p>
-
-<h2 id="key-judgments">Key Judgments</h2>
-
-<p>KJ1 - MuddyWater attribution to Iranian state structures is strongly supported at cluster level. Confidence: High. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a></p>
-
-<p>KJ2 - The actor evolved from script-centric tooling to trusted-tool abuse and then to iterative custom implants. Confidence: High. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R11" class="ref-cite" title="Reference">[R11]</a><a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a><a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a><a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a></p>
-
-<p>KJ3 - RMM abuse was a major tradecraft pivot in late 2023-2024 and remains operationally relevant even as custom malware resumed growth. Confidence: High. <a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R11" class="ref-cite" title="Reference">[R11]</a></p>
-
-<p>KJ4 - The 2025 MuddyViper/Fooder campaign demonstrates more mature loader design, anti-analysis timing tricks, and richer credential theft workflows. Confidence: Medium-High. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a><a href="#ref-R14" class="ref-cite" title="Reference">[R14]</a></p>
-
-<p>KJ5 - Operation Olalampo (2026) is technically plausible and supported by a primary reverse-engineering source, but still requires additional independent replication for full confidence. Confidence: Medium. <a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a></p>
-
-<p>KJ6 - Claims of broad 2026 retaliatory effects (including certain geopolitical trigger narratives in the pasted text) are not fully corroborated by currently reviewed primary sources. Confidence: Low-Medium.</p>
-
-<p>KJ7 - The actor's adaptation cycle is compressing: first-stage tooling shifts faster than traditional IOC update cycles. Confidence: Medium-High. <a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R11" class="ref-cite" title="Reference">[R11]</a><a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a><a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a><a href="#ref-R17" class="ref-cite" title="Reference">[R17]</a></p>
-
-<h2 id="attribution-assessment">Attribution Assessment</h2>
-
-<h3 id="attribution-pillars">Attribution Pillars</h3>
-
-<p>Government convergence:</p>
+<h3 id="confirmed-high-confidence-unless-noted">Confirmed (High Confidence Unless Noted)</h3>
 
 <ul>
-<li>CISA/FBI/USCYBERCOM and partners publicly linked MuddyWater activity to Iranian government-sponsored operators and MOIS context. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a></li>
+<li>Jerusalem CCTV / kinetic correlation (June 2025)Status: ✅ Confirmed (correlation).Confidence: High for correlation; Medium for causality.Primary sources: Amazon Threat Intelligence primary report <a href="https://aws.amazon.com/blogs/security/new-amazon-threat-intelligence-findings-nation-state-actors-bridging-cyber-and-kinetic-warfare/">R22</a>.</li>
+<li>VAXOne, CE-Notes, LP-Notes, BlubStatus: ✅ Confirmed.Confidence: High.Primary sources: ESET <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a>.</li>
+<li>MuddyViper / Fooder (September 2024 to March 2025)Status: ✅ Confirmed.Confidence: High.Primary sources: ESET detailed analysis <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a>.</li>
+<li>BugSleep / MuddyRot (July 2024)Status: ✅ Confirmed.Confidence: High.Primary sources: Check Point <a href="https://research.checkpoint.com/2024/new-bugsleep-backdoor-deployed-in-recent-muddywater-campaigns/">R14</a> and Sekoia <a href="https://blog.sekoia.io/muddywater-replaces-atera-by-custom-muddyrot-implant-in-a-recent-campaign/">R15</a>, independently.</li>
+<li>RMM abuse as a documented tacticStatus: ✅ Confirmed.Confidence: High.Primary sources: <a href="https://harfanglab.io/insidethelab/muddywater-rmm-campaign/">R10</a> <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R13</a>.</li>
+<li>Operation Quicksand (Thanos ransomware, Israel)Status: ✅ Confirmed.Confidence: High.Primary sources: <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a>.</li>
+<li>CVE-2020–1472 and CVE-2020–0688 exploitationStatus: ✅ Confirmed.Confidence: High.Primary sources: AA22–055A <a href="https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-055a">R1</a>.</li>
+<li>POWERSTATS, PowGoop, Small Sieve, Canopy, MoriStatus: ✅ Confirmed.Confidence: High.Primary sources: <a href="https://www.ncsc.gov.uk/files/NCSC-Malware-Analysis-Report-Small-Sieve.pdf">R1</a> <a href="https://unit42.paloaltonetworks.com/unit42-muddywater-operations-in-lebanon-and-oman/">R4</a>.</li>
+<li>MOIS attribution at cluster levelStatus: ✅ Confirmed.Confidence: High.Primary sources: <a href="https://www.cybercom.mil/Media/News/Article/2897570/iranian-intel-cyber-suite-of-malware-uses-open-source-tools/">R1</a> <a href="https://attack.mitre.org/groups/G0069/">R4</a>.</li>
 </ul>
 
-<p>Technical continuity:</p>
+<h3 id="partially-confirmed-partial">Partially Confirmed / Partial</h3>
 
 <ul>
-<li>Repeated malware family overlap and procedural continuity across years (PowGoop, Small Sieve, Canopy, POWERSTATS and later custom stacks). <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R3" class="ref-cite" title="Reference">[R3]</a><a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a><a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a></li>
+<li>AI-assisted CHAR code generation (emoji debug strings)Status: ✅ Partially confirmed.Confidence: Medium.Primary sources: Group-IB primary artifact <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R21</a> [single-source].</li>
+<li>PYTRIC as a MuddyWater toolStatus: ⚠️ Partial.Confidence: Low-Medium.Primary sources: Seqrite Labs <a href="https://www.seqrite.com/blog/ung0801-tracking-threat-clusters-obsessed-with-av-icon-spoofing-targeting-israel/">R20</a>, with “West Asia” attribution and no direct MuddyWater attribution.</li>
+<li>StealthCache (September 2025)Status: ✅ Partially confirmed.Confidence: Medium.Primary sources: Group-IB <a href="https://www.group-ib.com/blog/muddywater-infrastructure-malware/">R13</a> [single-source].</li>
+<li>CHAR and RUSTRIC shared development environmentStatus: ✅ Partially confirmed.Confidence: Medium.Primary sources: Group-IB and CloudSEK convergence <a href="https://www.cloudsek.com/blog/reborn-in-rust-muddywater-evolves-tooling-with-rustywater-implant">R21</a>.</li>
+<li>Operation Olalampo: GhostFetch, CHAR, HTTP_VIPStatus: ✅ Partially confirmed.Confidence: Medium-High.Primary sources: Group-IB <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R21</a> [single-source].</li>
+<li>RustyWater / Archer RAT / RUSTRICStatus: ✅ Partially confirmed.Confidence: Medium-High.Primary sources: CloudSEK <a href="https://www.cloudsek.com/blog/reborn-in-rust-muddywater-evolves-tooling-with-rustywater-implant">R19</a> and Seqrite Labs <a href="https://www.seqrite.com/blog/ung0801-tracking-threat-clusters-obsessed-with-av-icon-spoofing-targeting-israel/">R20</a>, independently.</li>
+<li>Phoenix v4 (October 2025)Status: ✅ Partially confirmed.Confidence: Medium-High.Primary sources: Group-IB <a href="https://www.group-ib.com/blog/muddywater-espionage/">R18</a> and Cyberthint <a href="https://cyberthint.io/updated-muddywater-analysis-2025/">R26</a>, independently.</li>
+<li>IAB cooperation with Lyceum (January to February 2025)Status: ✅ Partially confirmed.Confidence: Medium-High.Primary sources: ESET with “likely” caveat <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a>.</li>
 </ul>
 
-<p>Campaign behavior continuity:</p>
+<h3 id="not-confirmed-incorrect">Not Confirmed / Incorrect</h3>
 
 <ul>
-<li>Persistent spearphishing and credential-centric operations, later complemented by RMM abuse and memory-resident loaders. <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a><a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R11" class="ref-cite" title="Reference">[R11]</a><a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a></li>
+<li>APT34/OilRig as a MuddyWater aliasStatus: ❌ INCORRECT.Confidence: N/A.Primary sources: Frequent media error; MuddyWater (MOIS, G0069) is not APT34 (IRGC, G0049).</li>
+<li>AI as MuddyWater’s systemic development standardStatus: ❌ Not confirmed.Confidence: Low.Primary sources: Invalid extrapolation from a single artifact.</li>
 </ul>
 
-<p>Cross-vendor convergence:</p>
+<h2 id="critical-errors-in-the-public-corpus">Critical Errors in the Public Corpus</h2>
 
-<ul>
-<li>Talos, Proofpoint, HarfangLab, Group-IB, ESET, and Microsoft ecosystem naming/behavior all support the same broad actor trajectory. <a href="#ref-R6" class="ref-cite" title="Reference">[R6]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a><a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R11" class="ref-cite" title="Reference">[R11]</a><a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a><a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a><a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a></li>
-</ul>
+<p>Error 1: APT34/OilRig as a MuddyWater alias. Incorrect. The Register (November 2025) listed “MuddyWater (aka Seedworm, APT34, OilRig, and TA450).” APT34/OilRig is G0049, a distinct Iranian group primarily associated with IRGC rather than MOIS. Operational interaction has been observed (IAB cooperation in ESET 2025), but this does not imply identity. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a></p>
 
-<h3 id="attribution-caveat">Attribution Caveat</h3>
+<p>Error 2: Group-IB as the primary source for BugSleep discovery. Incorrect. The first detailed technical BugSleep analysis was published by Check Point Research (July 15, 2024), with parallel independent analysis by Sekoia TDR. Group-IB described BugSleep later in a broader September 2025 infrastructure context. <a href="https://blog.sekoia.io/muddywater-replaces-atera-by-custom-muddyrot-implant-in-a-recent-campaign/">R14</a></p>
 
-<p>Incident-level attribution still requires caution when only one vendor has published technical details. This applies to some late-2025 and 2026 campaign details where corroboration is still developing.</p>
+<p>Error 3: RMM abuse “started” in 2023. Inaccurate. Group-IB reports MuddyWater RMM usage as early as 2020. <a href="https://www.group-ib.com/blog/muddywater-infrastructure-malware/">R13</a> 2023 reflects scale escalation and broader public visibility, not first appearance.</p>
 
-<h2 id="activity-timeline-2017-2026">Activity Timeline (2017-2026)</h2>
+<p>Error 4: CCTV narrative as “unverified.” This appeared in the source draft. Incorrect: it is documented in Amazon Threat Intelligence primary reporting with explicit dates and IOCs. <a href="https://aws.amazon.com/blogs/security/new-amazon-threat-intelligence-findings-nation-state-actors-bridging-cyber-and-kinetic-warfare/">R22</a></p>
 
-<h3 id="2017-2020-public-emergence-and-script-heavy-tradecraft">2017-2020: Public Emergence and Script-Heavy Tradecraft</h3>
-
-<ul>
-<li>[Reported] Unit 42 publicly reported MuddyWater operations in November 2017; later playbook reviews continued to track the actor. <a href="#ref-R8" class="ref-cite" title="Reference">[R8]</a></li>
-<li>[Observed/Reported] Campaigns relied on malicious documents, scripts, and staged execution.</li>
-<li>[Observed/Reported] Public malware families and techniques later codified in joint advisories included PowGoop, Small Sieve, Canopy, Mori, and POWERSTATS. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R3" class="ref-cite" title="Reference">[R3]</a><a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a></li>
-</ul>
-
-<h3 id="2021-2022-government-advisory-consolidation">2021-2022: Government Advisory Consolidation</h3>
-
-<ul>
-<li>[Observed/Reported] Joint advisory AA22-055A published detailed TTPs, malware families, and defensive guidance tied to MuddyWater. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a></li>
-<li>[Reported] USCYBERCOM released additional malware technical details linked to MuddyWater operations. <a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R5" class="ref-cite" title="Reference">[R5]</a></li>
-<li>[Reported] Talos and other teams tracked sustained regional targeting and evolving delivery vectors. <a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a><a href="#ref-R24" class="ref-cite" title="Reference">[R24]</a></li>
-</ul>
-
-<h3 id="2023-2024-rmm-pivot-and-initial-custom-implant-modernization">2023-2024: RMM Pivot and Initial Custom Implant Modernization</h3>
-
-<ul>
-<li>[Observed/Reported] Proofpoint and HarfangLab documented campaigns abusing legitimate RMM software and file-sharing services to reduce detection surface. <a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R11" class="ref-cite" title="Reference">[R11]</a></li>
-<li>[Reported] Reported RMM stack included Atera, ScreenConnect, Syncro, SimpleHelp, and RemoteUtilities. <a href="#ref-R11" class="ref-cite" title="Reference">[R11]</a></li>
-<li>[Reported] Group-IB documented BugSleep (MuddyRot) as a newer custom implant family with iterative development characteristics. <a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a></li>
-</ul>
-
-<h3 id="2025-muddyviper-fooder-expansion-and-joint-activity-signals">2025: MuddyViper/Fooder Expansion and Joint Activity Signals</h3>
-
-<ul>
-<li>[Observed/Reported] ESET documented Fooder + MuddyViper campaigns targeting critical infrastructure organizations in Israel and Egypt. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a><a href="#ref-R14" class="ref-cite" title="Reference">[R14]</a></li>
-<li>[Reported] ESET observed overlap/coordination indicators involving Lyceum in selected victim environments. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a></li>
-<li>[Reported] Credential theft tooling (CE-Notes, LP-Notes, Blub) and reverse tunneling components were used alongside main backdoors. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a></li>
-</ul>
-
-<h3 id="2026-through-march-7-olalampo-and-conflict-period-activity">2026 (through March 7): Olalampo and Conflict-Period Activity</h3>
-
-<ul>
-<li>[Reported] Group-IB documented Operation Olalampo with GhostFetch, GhostBackDoor, HTTP_VIP, and CHAR (Rust), plus Telegram-based C2 orchestration. <a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a></li>
-<li>[Reported] Group-IB reported indicators of AI-assisted code generation in CHAR development artifacts. <a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a></li>
-<li>[Reported] Unit 42 documented concurrent Iran-linked operational activity and hacktivist pressure campaigns in early March 2026 (Operation Epic Fury / Roaring Lion context). <a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a></li>
-</ul>
-
-<h2 id="confirmed-vs-claimed-matrix">Confirmed vs Claimed Matrix</h2>
-
-<p>Claims from the user-pasted research were assessed as follows:</p>
-
-<ul>
-<li>Confirmed/Strongly supported:</li>
-<li>MuddyWater-MOIS linkage at cluster level. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R2" class="ref-cite" title="Reference">[R2]</a><a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a></li>
-<li>Legacy malware families (PowGoop, Small Sieve, Canopy, Mori, POWERSTATS). <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R3" class="ref-cite" title="Reference">[R3]</a><a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a></li>
-<li>RMM abuse pivot (Atera, ScreenConnect, etc.). <a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R11" class="ref-cite" title="Reference">[R11]</a></li>
-<li>BugSleep and MuddyViper/Fooder evolution in 2024-2025. <a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a><a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a></li>
-<li>Operation Olalampo malware set and Telegram C2 references (single primary source). <a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a></li>
-</ul>
-
-<ul>
-<li>Partially corroborated / medium confidence:</li>
-<li>MuddyWater-Lyceum operational overlap as recurring access handoff model (seen in at least one primary technical report; broader institutional model still inferential). <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a></li>
-<li>AI-assisted malware prototyping as durable workflow (currently campaign-specific evidence, not full organizational baseline). <a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a><a href="#ref-R17" class="ref-cite" title="Reference">[R17]</a></li>
-</ul>
-
-<ul>
-<li>Not corroborated in reviewed primary sources as of March 7, 2026:</li>
-<li>Assertions that the death of Ali Khamenei triggered the 2026 campaign wave.</li>
-<li>Broad claims of systematic IP camera exploitation for missile battle damage assessment tied specifically to MuddyWater, including some listed CVEs.</li>
-<li>Some named malware/campaign details (for example Dindoor/Fakeset chains) currently appear mainly in secondary reporting and need direct primary publication confirmation. <a href="#ref-R19" class="ref-cite" title="Reference">[R19]</a><a href="#ref-R20" class="ref-cite" title="Reference">[R20]</a><a href="#ref-R21" class="ref-cite" title="Reference">[R21]</a></li>
-</ul>
-
-<h2 id="pasted-research-reconciliation">Pasted Research Reconciliation (Validated vs Unvalidated)</h2>
-
-<h3 id="what-your-pasted-text-got-right">What your pasted text got right</h3>
-
-<ul>
-<li>The strategic direction is correct: MuddyWater has moved from noisy scripting to more stealthy, adaptive intrusion tradecraft.</li>
-<li>The RMM phase and later custom malware resurgence are consistent with primary reporting.</li>
-<li>The Fooder/MuddyViper cluster and credential theft emphasis are consistent with ESET's technical findings.</li>
-</ul>
-
-<h3 id="what-remains-uncertain-or-overstated">What remains uncertain or overstated</h3>
-
-<ul>
-<li>Geopolitical trigger chain claims in the pasted text exceed the currently available forensic evidence.</li>
-<li>The camera exploitation and missile-support narrative may be directionally plausible in regional conflict context, but it is not yet strongly grounded in the MuddyWater-specific technical corpus reviewed here.</li>
-<li>Some 2026 family names (Dindoor/Fakeset) appear in secondary security press; until the underlying technical report is directly reviewed, confidence should stay medium-low.</li>
-</ul>
-
-<h3 id="practical-interpretation-for-defenders">Practical interpretation for defenders</h3>
-
-<p>Treat all high-confidence TTPs as immediately actionable.</p>
-
-<p>Treat single-source 2026 campaign details as hunt hypotheses, not production blocking logic.</p>
-
-<h2 id="targeting-victimology">Targeting and Victimology</h2>
-
-<p>Public reporting shows repeated interest in:</p>
-
-<ul>
-<li>Government and public sector entities. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a></li>
-<li>Telecommunications and network service contexts. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a></li>
-<li>Defense-adjacent and critical infrastructure organizations. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a><a href="#ref-R14" class="ref-cite" title="Reference">[R14]</a></li>
-<li>Regional targets in MENA, plus additional Western-facing victim selection in some periods. <a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a><a href="#ref-R16" class="ref-cite" title="Reference">[R16]</a></li>
-</ul>
-
-<p>Assessed motivation by sector:</p>
-
-<ul>
-<li>Government: policy and strategic intelligence collection.</li>
-<li>Telecom: metadata and comms access value.</li>
-<li>Critical infrastructure: strategic pressure and contingency disruption positioning.</li>
-<li>NGO/logistics/finance: regional visibility and influence support.</li>
-</ul>
-
-<h2 id="operational-doctrine">Operational Doctrine: Evolution</h2>
-
-<p>Phase 1 (2017-2022): script-heavy, document-led access, broad phishing dependency. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R3" class="ref-cite" title="Reference">[R3]</a><a href="#ref-R9" class="ref-cite" title="Reference">[R9]</a></p>
-
-<p>Phase 2 (late 2023-2024): RMM-led low-friction access using legitimate tooling and trial infrastructure. <a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R11" class="ref-cite" title="Reference">[R11]</a></p>
-
-<p>Phase 3 (2024-2026): resumed custom malware development (C/C++ and Rust), layered loaders, and faster prototyping cadence. <a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a><a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a><a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a></p>
-
-<p>Assessed doctrinal constant: persistence and access durability over one-shot impact.</p>
-
-<h2 id="initial-access-and-privilege-escalation">Initial Access and Privilege Escalation Patterns</h2>
-
-<p>Recurring initial access vectors:</p>
-
-<ul>
-<li>Spearphishing with document/URL lures and embedded links. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R24" class="ref-cite" title="Reference">[R24]</a></li>
-<li>Abuse of valid credentials and account compromise pathways. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R11" class="ref-cite" title="Reference">[R11]</a></li>
-<li>Deployment via trusted remote administration channels after foothold acquisition. <a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R11" class="ref-cite" title="Reference">[R11]</a></li>
-</ul>
-
-<p>Privilege/persistence patterns:</p>
-
-<ul>
-<li>Scheduled tasks and startup persistence in custom tools. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a></li>
-<li>Service/process masquerading and memory injection into legitimate processes. <a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a><a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a></li>
-<li>Credential harvesting and browser/login theft for privilege expansion. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a></li>
-</ul>
+<p>Error 5: Earth Vetala, Boggy Serpens, COBALT ULSTER without primary vendor references. Corrected in version 4.0: all three aliases now map to primary vendor reporting. <a href="https://unit42.paloaltonetworks.com/threat-actor-groups-tracked-by-palo-alto-networks-unit-42/">R24</a> <a href="https://www.secureworks.com/research/threat-profiles/cobalt-ulster">R25</a></p>
 
 <h2 id="malware-and-tooling-portfolio">Malware and Tooling Portfolio</h2>
 
-<p>Legacy portfolio (advisory-documented):</p>
+<h3 id="historical-stack-20172022">Historical Stack (2017–2022)</h3>
+
+<p>POWERSTATSFunction: PowerShell backdoor.Key technical characteristics: group flagship since 2017; credential theft from email and social services.Hash: 8674058edfbe636e550109fabb6403827c1bba4ab08833e9692099c96a43497aPrimary sources: <a href="https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-055a">R5</a> <a href="https://www.ncsc.gov.uk/pdfs/news/joint-advisory-observes-muddywater-actors-conducting-cyber-espionage.pdf">R4</a>.</p>
+
+<h3 id="powgoop">PowGoop</h3>
+
+<figure class="report-fig"><img src="assets/fig-004.png" alt="Figure 5" loading="lazy" /></figure>
+
+<p>Function: Loader with DLL side-loading.Key technical characteristics: masquerades as Google Update; encrypted C2 commands; variant used in Operation Quicksand.Hash: b154d3fd88767776b1e36113c479ef3487ceda0f6e4fc80cef85ba539a589555Primary sources: <a href="https://www.ncsc.gov.uk/pdfs/news/joint-advisory-observes-muddywater-actors-conducting-cyber-espionage.pdf">R1</a>.</p>
+
+<p>Small SieveFunction: Python backdoor.Key technical characteristics: NSIS installer<code>gram_app.exe</code>; Telegram Bot API C2;<code>OutlookMicrosift</code> registry key typo.Primary sources: <a href="https://www.ncsc.gov.uk/files/NCSC-Malware-Analysis-Report-Small-Sieve.pdf">R1</a>.</p>
+
+<p>Canopy/StarwhaleFunction: VBS/WSF chain.Key technical characteristics: WSF scripts via Excel; collects hostname, IP, and username.Primary sources: <a href="https://www.ncsc.gov.uk/pdfs/news/joint-advisory-observes-muddywater-actors-conducting-cyber-espionage.pdf">R1</a>.</p>
+
+<p>MoriFunction: DNS tunneling backdoor.Key technical characteristics: DLL<code>FML.dll</code> with junk-data concealment.Primary sources: <a href="https://www.ncsc.gov.uk/pdfs/news/joint-advisory-observes-muddywater-actors-conducting-cyber-espionage.pdf">R1</a>.</p>
+
+<h3 id="rmm-tooling-documented-from-2020-peak-in-20232024">RMM Tooling (documented from 2020, peak in 2023–2024)</h3>
+
+<p>Atera AgentRole: Legitimate RMM.Primary sources: <a href="https://harfanglab.io/insidethelab/muddywater-rmm-campaign/">R10</a> <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a>.</p>
+
+<p>ScreenConnectRole: Legitimate RMM.Primary sources: <a href="https://www.trendmicro.com/en_us/research/21/c/earth-vetala---muddywater-continues-to-target-organizations-in-t.html">R14</a>.</p>
+
+<p>SimpleHelpRole: Legitimate RMM.Primary sources: <a href="https://blog.sekoia.io/muddywater-replaces-atera-by-custom-muddyrot-implant-in-a-recent-campaign/">R11</a>.</p>
+
+<p>SyncroRole: Legitimate RMM.Primary sources: <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R10</a>.</p>
+
+<p>RemoteUtilitiesRole: Legitimate RMM.Primary sources: <a href="https://www.trendmicro.com/en_us/research/21/c/earth-vetala---muddywater-continues-to-target-organizations-in-t.html">R11</a>.</p>
+
+<p>Level, PDQRole: Legitimate admin/RMM tools.Primary sources: <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a>.</p>
+
+<p>AnyDeskRole: Legitimate remote tool.Primary sources: Deployed by HTTP_VIP in Olalampo <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R21</a>.</p>
+
+<h2 id="modern-custom-stack-20242026">Modern Custom Stack (2024–2026)</h2>
+
+<p>BugSleep / MuddyRot</p>
+
+<figure class="report-fig"><img src="assets/fig-005.png" alt="Figure 6" loading="lazy" /></figure>
+
+<p>Period: since May 2024.Function: C/C++ backdoor.Key technical characteristics: mutex<code>DocumentUpdater</code>/<code>PackageManager</code>; repeated Sleep calls; subtraction-based obfuscation (3-6); injection into<code>msedge</code>,<code>chrome</code>,<code>anydesk</code>,<code>onedrive</code>,<code>powershell</code>.Hash: 94278fa01900fdbfb58d2e373895c045c69c01915edc5349cd6f3e5b7130c472Primary sources: Check Point <a href="https://research.checkpoint.com/2024/new-bugsleep-backdoor-deployed-in-recent-muddywater-campaigns/">R14</a>; Sekoia <a href="https://blog.sekoia.io/muddywater-replaces-atera-by-custom-muddyrot-implant-in-a-recent-campaign/">R15</a>.</p>
+
+<p>StealthCache</p>
+
+<figure class="report-fig"><img src="assets/fig-006.png" alt="Figure 7" loading="lazy" /></figure>
+
+<p>Period: 2024–2025.Function: Advanced backdoor.Key technical characteristics: HTTP(S) to<code>/aq36</code>; C2<code>netivtech[.]org</code>; sample<code>wtsapi.dll</code>.Hash: 5f22f4c4fdb36c4f0ea3248abb00521e39008c1fb4c97e1b4a9c7b9ef0b691c2Primary sources: Group-IB <a href="https://www.group-ib.com/blog/muddywater-infrastructure-malware/">R13</a>.</p>
+
+<p>Fooder</p>
+
+<figure class="report-fig"><img src="assets/fig-007.png" alt="Figure 8" loading="lazy" /></figure>
+
+<p>Period: September 2024 to March 2025.Function: 64-bit C/C++ loader.Key technical characteristics: reflective in-memory payload loading; Snake-game variant; CNG API.Hash: 47B70C47BEB33E88B4197D6AF1B768230E51B067Primary sources: ESET <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a>.</p>
+
+<p>MuddyViperPeriod: September 2024 to March 2025.Function: C/C++ backdoor.Key technical characteristics: 20 commands; CNG API; theft of Windows credentials and browser data.Primary sources: ESET <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a>.</p>
+
+<p>VAXOnePeriod: 2024–2025.Function: Backdoor.Key technical characteristics: masquerades as Veeam, AnyDesk, Xerox, OneDrive.Primary sources: ESET <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a>.</p>
+
+<p>CE-NotesPeriod: 2024–2025.Function: Chrome stealer.Key technical characteristics: bypasses app-bound encryption; extraction from Local State.Primary sources: ESET <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a>.</p>
+
+<p>LP-NotesPeriod: 2024–2025.Function: Credential stealer.Key technical characteristics: fake Windows Security prompt.Primary sources: ESET <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a>.</p>
+
+<p>BlubPeriod: 2024–2025.Function: Browser stealer.Key technical characteristics: C/C++; targets Chrome, Edge, Firefox, Opera.Primary sources: ESET <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a>.</p>
+
+<p>Phoenix v4</p>
+
+<figure class="report-fig"><img src="assets/fig-008.png" alt="Figure 9" loading="lazy" /></figure>
+
+<p>Period: October 2025.Function: Backdoor.Key technical characteristics:<code>/register</code> plus<code>/iamalive</code> beaconing; PDB<code>phoenixV4</code>; NordVPN OPSEC.Hash:6de859a27ccc784689e8748cef536e32780e498aPrimary sources: Group-IB <a href="https://www.group-ib.com/blog/muddywater-espionage/">R18</a>; Cyberthint <a href="https://cyberthint.io/updated-muddywater-analysis-2025/">R26</a>.</p>
+
+<p>PYTRICPeriod: since November 2025.Function: Python wiper.Key technical characteristics: PyInstaller; full system wipe; backup deletion; Telegram C2.Primary sources: Seqrite Labs <a href="https://www.seqrite.com/blog/ung0801-tracking-threat-clusters-obsessed-with-av-icon-spoofing-targeting-israel/">R20</a>.Attribution caveat: MW attribution: low-medium.</p>
+
+<p>RUSTRIC / RustyWater / Archer RAT</p>
+
+<figure class="report-fig"><img src="assets/fig-009.png" alt="Figure 10" loading="lazy" /></figure>
+
+<p>Period: since November 2025.Function: Rust RAT.Key technical characteristics: VEH anti-debugging; more than 25 AV detections; XOR encryption; registry persistence; C2<code>nomercys.it[.]com</code>.Hash: a2001892410e9f34ff0d02c8bc9e7c53b0bd10da58461e1e9eab26bdbf410c79Primary sources: CloudSEK <a href="https://www.cloudsek.com/blog/reborn-in-rust-muddywater-evolves-tooling-with-rustywater-implant">R19</a>; Seqrite Labs <a href="https://www.seqrite.com/blog/ung0801-tracking-threat-clusters-obsessed-with-av-icon-spoofing-targeting-israel/">R20</a>.</p>
+
+<p>GhostFetchPeriod: since January 2026.Function: Loader.Key technical characteristics: mouse/screen checks; sandbox evasion; in-memory GhostBackDoor loading.Primary sources: Group-IB <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R21</a>.</p>
+
+<p>GhostBackDoorPeriod: since January 2026.Function: Advanced backdoor.Key technical characteristics: interactive shell; file operations.Primary sources: Group-IB <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R21</a>.</p>
+
+<p>HTTP_VIPPeriod: since January 2026.Function: Native downloader.Key technical characteristics: system recon; C2<code>codefusiontech[.]org</code>; deploys AnyDesk.Primary sources: Group-IB <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R21</a>.</p>
+
+<p>CHARPeriod: since January 2026.Function: Rust backdoor.Key technical characteristics: Telegram bot<code>stager_51_bot</code>; SOCKS5; browser data theft; emoji debug strings.Primary sources: Group-IB <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R21</a>.</p>
+
+<h2 id="deep-technical-analysis-of-key-families">Deep Technical Analysis of Key Families</h2>
+
+<h3 id="bugsleep-muddyrot-independent-dual-team-validation">BugSleep / MuddyRot — Independent Dual-Team Validation</h3>
+
+<p>BugSleep analysis quality is strengthened by independent reverse engineering from Check Point Research and Sekoia TDR with matching findings.</p>
+
+<p>[Observed] Shared characteristics:</p>
 
 <ul>
-<li>PowGoop</li>
-<li>Small Sieve</li>
-<li>Canopy (Starwhale)</li>
-<li>Mori</li>
-<li>POWERSTATS</li>
+<li>Multiple versions with rapid iterative fixes.</li>
+<li>Raw TCP C2 over port 443.</li>
+<li>Initial C2 packet includes<code>hostname/username</code> victim fingerprint.</li>
+<li>String obfuscation by subtracting fixed integers (3, 4, 5, or 6) from each character.</li>
+<li>Mutex<code>DocumentUpdater</code>(or<code>PackageManager</code>) reported by both vendors. <a href="https://blog.sekoia.io/muddywater-replaces-atera-by-custom-muddyrot-implant-in-a-recent-campaign/">R14</a></li>
+<li>x64 C implant with reverse shell, file upload/download, and persistence.</li>
 </ul>
 
-<p>Documented in joint advisory and MAR artifacts. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R3" class="ref-cite" title="Reference">[R3]</a><a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a></p>
+<p>[Observed/Reported] Check Point-specific details: injection into<code>msedge.exe</code>,<code>chrome.exe</code>,<code>opera.exe</code>,<code>anydesk.exe</code>,<code>onedrive.exe</code>,<code>powershell.exe</code>. <a href="https://research.checkpoint.com/2024/new-bugsleep-backdoor-deployed-in-recent-muddywater-campaigns/">R14</a></p>
 
-<p>Modern portfolio (2024-2026 reporting):</p>
+<p>[Assessed] Doctrinal nuance: In 2024, MuddyWater used BugSleep primarily against Israeli targets while continuing RMM deployment against Saudi targets, indicating payload differentiation by victim profile. <a href="https://research.checkpoint.com/2024/new-bugsleep-backdoor-deployed-in-recent-muddywater-campaigns/">R14</a></p>
+
+<h3 id="muddyviper-fooder-in-memory-architecture-with-game-themed-evasion">MuddyViper/Fooder — In-Memory Architecture with Game-Themed Evasion</h3>
+
+<p>[Observed/Reported] Fooder:</p>
 
 <ul>
-<li>BugSleep / MuddyRot. <a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a></li>
-<li>Fooder loader + MuddyViper backdoor family. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a><a href="#ref-R14" class="ref-cite" title="Reference">[R14]</a></li>
-<li>Credential modules CE-Notes, LP-Notes, Blub; reverse tunneling components. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a></li>
-<li>Operation Olalampo set: GhostFetch, GhostBackDoor, HTTP_VIP, CHAR (Rust). <a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a></li>
+<li>CNG API usage; ESET notes this is “unique to Iran-aligned groups and somewhat atypical across the broader threat landscape.” <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a></li>
+<li>Custom delay logic based on Snake game mechanics plus Sleep API for layered sandbox evasion.</li>
+<li>64-bit C/C++ loader using reflective in-memory payload loading, minimizing on-disk artifacts.</li>
 </ul>
 
-<h2 id="deep-technical-analysis">Deep Technical Analysis of Key Families</h2>
-
-<h3 id="bugsleep-muddyrot">BugSleep / MuddyRot</h3>
-
-<p>Reported characteristics:</p>
+<p>[Observed/Reported] MuddyViper:</p>
 
 <ul>
-<li>C/C++ custom implant evolution with iterative quality improvements.</li>
-<li>Sleep-heavy anti-sandbox behavior and runtime API resolution.</li>
-<li>Process-injection patterns into common legitimate executables.</li>
+<li>Same CNG API pattern and fake Windows Security prompt behavior.</li>
+<li>20-command feature set: system collection, file/shell execution, file transfer, Windows credential theft, browser data theft.</li>
 </ul>
 
-<p>Analytic implication: developer feedback loop is active and operationally informed. <a href="#ref-R12" class="ref-cite" title="Reference">[R12]</a></p>
+<p>[Assessed] Operational maturity indicator: deliberate avoidance of interactive keyboard sessions suggests improved OPSEC discipline. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a></p>
 
-<h3 id="fooder-muddyviper">Fooder + MuddyViper</h3>
+<h3 id="operation-olalampo-first-publicly-documented-telegram-c2-in-muddywater-toolkit">Operation Olalampo — First Publicly Documented Telegram-C2 in MuddyWater Toolkit</h3>
 
-<p>ESET-reported characteristics:</p>
+<p>[Observed/Reported, single-source: Group-IB] CHAR:</p>
 
 <ul>
-<li>Loader/backdoor architecture with staged in-memory execution.</li>
-<li>Anti-analysis delay mechanics (including game-themed obfuscation variants).</li>
-<li>Rich command set, encrypted C2 traffic, and credential-theft integration.</li>
+<li>Development environment overlaps with RUSTRIC/RustyWater via shared<code>Jacob</code> Rust library path artifacts. <a href="https://www.cloudsek.com/blog/reborn-in-rust-muddywater-evolves-tooling-with-rustywater-implant">R21</a></li>
+<li>Debug strings contain four emoji instances. Group-IB assessment: “adversary likely used an AI model to generate specific code segments and failed to sanitize the debug strings.” <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R21</a></li>
+<li>Supported actions: directory changes, cmd.exe/PowerShell execution, SOCKS5 activation, browser data collection,<code>sh.exe</code> launch.</li>
+<li>Controlled via Telegram bot<code>stager_51_bot</code>; bot monitoring enabled direct observation of post-exploitation commands.</li>
 </ul>
 
-<p>Analytic implication: this is a mature espionage toolkit, not ad hoc malware. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a><a href="#ref-R14" class="ref-cite" title="Reference">[R14]</a></p>
+<p>Critical caveat: all Operation Olalampo analysis in this report is treated as [single-source primary reporting] and should be used as priority hunting guidance until independently replicated.</p>
 
-<h3 id="olalampo-family-set">Olalampo Family Set</h3>
+<h3 id="amazon-cyberwarcon-2025-documented-correlation-with-kinetic-strike">Amazon CYBERWARCON 2025: Documented Correlation with Kinetic Strike</h3>
 
-<p>Group-IB-reported characteristics:</p>
+<p>[Reported] Date-specific documented facts:</p>
 
 <ul>
-<li>Multi-family modular deployment (downloaders + backdoor).</li>
-<li>Telegram-assisted command channeling in selected components.</li>
-<li>CHAR backdoor in Rust; signs of AI-assisted development workflow.</li>
+<li>June 23, 2025: Iran launched missile strikes on Jerusalem; Israeli officials publicly reported use of hacked cameras. <a href="https://aws.amazon.com/blogs/security/new-amazon-threat-intelligence-findings-nation-state-actors-bridging-cyber-and-kinetic-warfare/">R22</a></li>
+<li>June 17, 2025: access obtained to a CCTV server carrying live Jerusalem feeds. <a href="https://aws.amazon.com/blogs/security/new-amazon-threat-intelligence-findings-nation-state-actors-bridging-cyber-and-kinetic-warfare/">R22</a></li>
+<li>May 13, 2025: C2 server created (IP: 18[.]219.14.54). <a href="https://aws.amazon.com/blogs/security/new-amazon-threat-intelligence-findings-nation-state-actors-bridging-cyber-and-kinetic-warfare/">R22</a></li>
 </ul>
 
-<p>Analytic implication: MuddyWater development stack is broadening language/runtime surface area and may outpace static signatures. <a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a><a href="#ref-R17" class="ref-cite" title="Reference">[R17]</a></p>
+<p>[Assessed] Threat-model implication: organizations operating surveillance, IoT, or sensor networks in conflict-prone regions should treat MuddyWater as a potential threat regardless of sector.</p>
 
-<h2 id="detection-response-priorities">Detection and Response Priorities</h2>
+<h2 id="targeting-and-victimology">Targeting and Victimology</h2>
 
-<p>Priority 1: Tight governance of RMM software installation and outbound control.</p>
+<h3 id="geographic-focus">Geographic Focus</h3>
 
-<p>Priority 2: Macro/attachment hardening and sandboxing for phishing entry paths.</p>
+<p>[Reported] Israel — sharply elevated priority after October 2023; present across documented campaigns in 2024–2026. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R14</a> <a href="https://www.cloudsek.com/blog/reborn-in-rust-muddywater-evolves-tooling-with-rustywater-implant">R18</a> <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R20</a> <a href="https://aws.amazon.com/blogs/security/new-amazon-threat-intelligence-findings-nation-state-actors-bridging-cyber-and-kinetic-warfare/">R22</a></p>
 
-<p>Priority 3: Identity protections (MFA hardening, impossible travel, password spray and token abuse detection).</p>
+<p>[Reported] Broader MENA region: Saudi Arabia, Egypt, UAE, Jordan, Azerbaijan as recurrent strategic targets. <a href="https://www.group-ib.com/blog/muddywater-infrastructure-malware/">R10</a> <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R16</a></p>
 
-<p>Priority 4: EDR analytics for process injection, unusual parent-child chains, and script-to-admin-tool pivots.</p>
+<p>[Reported] Turkmenistan — compromised TMCell account in RustyWater campaign. <a href="https://www.cloudsek.com/blog/reborn-in-rust-muddywater-evolves-tooling-with-rustywater-implant">R19</a></p>
 
-<p>Priority 5: Cloud egress monitoring for suspicious bulk sync/exfil behavior.</p>
+<p>[Reported] Turkey, Jordan, Iraq — documented by Secureworks in 2020. <a href="https://www.secureworks.com/research/threat-profiles/cobalt-ulster">R25</a></p>
 
-<h2 id="detection-engineering-pack">Detection Engineering Pack (SOC-Ready)</h2>
+<p>[Reported] India and Portugal — observed in BugSleep 2024 campaign activity. <a href="https://research.checkpoint.com/2024/new-bugsleep-backdoor-deployed-in-recent-muddywater-campaigns/">R14</a></p>
 
-<p>High-value detections:</p>
+<p>[Reported] Europe and North America — periodic presence in earlier campaign phases. <a href="https://unit42.paloaltonetworks.com/unit42-muddywater-operations-in-lebanon-and-oman/">R1</a></p>
+
+<h3 id="sectoral-focus">Sectoral Focus</h3>
+
+<p>According to INCD (Israel National Cyber Directorate): local government, civil aviation, tourism, healthcare, telecommunications, IT, and SMEs. ESET reports include technology, engineering, manufacturing, and education. Group-IB emphasizes government, energy, finance, and critical infrastructure. Amazon highlights CCTV and IoT operators. <a href="https://www.group-ib.com/blog/muddywater-espionage/">R16</a> <a href="https://aws.amazon.com/blogs/security/new-amazon-threat-intelligence-findings-nation-state-actors-bridging-cyber-and-kinetic-warfare/">R21</a></p>
+
+<h3 id="assessed-operational-motivation">[Assessed] Operational Motivation</h3>
 
 <ul>
-<li>Unsanctioned installation or execution of Atera/ScreenConnect/Syncro/SimpleHelp/RemoteUtilities endpoints. <a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R11" class="ref-cite" title="Reference">[R11]</a></li>
-<li>Office/PDF lure to external file-sharing services followed by administrative agent deployment. <a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a></li>
-<li>Suspicious <code>powershell.exe</code> or <code>cmd.exe</code> child processes spawned by RMM agent binaries.</li>
-<li>Scheduled task creation with suspicious updater-like naming on non-admin user workstations. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a></li>
-<li>Browser credential store access by unsigned/unexpected binaries.</li>
-<li>Rust or Deno runtime execution in environments where these runtimes are not business-normal (hunt heuristic for 2026 claims; not deterministic IOC).</li>
+<li>Destructive capability as a contingency option (Operation Quicksand, PYTRIC). <a href="https://www.seqrite.com/blog/ung0801-tracking-threat-clusters-obsessed-with-av-icon-spoofing-targeting-israel/">R16</a></li>
+<li>[Reported] Potential intelligence support to kinetic operations via compromised CCTV access has been publicly discussed in Amazon Threat Intelligence reporting, though direct operational coordination is not publicly proven. <a href="https://aws.amazon.com/blogs/security/new-amazon-threat-intelligence-findings-nation-state-actors-bridging-cyber-and-kinetic-warfare/">R22</a></li>
+<li>[Partially Corroborated] Access handoff to other Iranian actors (IAB function for Lyceum). <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a></li>
+<li>Strategic intelligence collection for MOIS: policy, defense programs, diplomatic communications.</li>
 </ul>
 
-<h2 id="wiper-disruption-first-30">Wiper/Disruption First 30 Minutes (Defensive Mini-Playbook)</h2>
+<h2 id="evolution-of-operational-doctrine">Evolution of Operational Doctrine</h2>
+
+<h3 id="phase-i-20172022-script-centric-operations">Phase I (2017–2022): Script-Centric Operations</h3>
+
+<p>[Observed/Reported] Spearphishing with lure documents, multi-stage script chains (PowerShell, VBS, WSF), DLL side-loading, and DNS tunneling. Broad custom tooling with moderate technical complexity. <a href="https://www.ncsc.gov.uk/files/NCSC-Malware-Analysis-Report-Small-Sieve.pdf">R1</a> <a href="https://unit42.paloaltonetworks.com/unit42-muddywater-operations-in-lebanon-and-oman/">R4</a></p>
+
+<h3 id="phase-ii-20232024-trusted-tool-model">Phase II (2023–2024): Trusted-Tool Model</h3>
+
+<p>[Observed/Reported] Abuse of legitimate RMM tools as a primary initial-access channel. Delivery via compromised corporate email accounts and file-sharing services (Egnyte, OneHub, Mega). BugSleep served as a partial RMM replacement for high-priority targets. <a href="https://harfanglab.io/insidethelab/muddywater-rmm-campaign/">R10</a> <a href="https://blog.sekoia.io/muddywater-replaces-atera-by-custom-muddyrot-implant-in-a-recent-campaign/">R14</a></p>
+
+<p>[CORRECTION to source draft] Group-IB documents RMM usage from 2020. <a href="https://www.group-ib.com/blog/muddywater-infrastructure-malware/">R13</a> 2023 reflects scale and visibility escalation, not first tactic appearance.</p>
+
+<h3 id="phase-iii-20242026-iterative-custom-development">Phase III (2024–2026): Iterative Custom Development</h3>
+
+<p>[Observed/Reported] Return to custom malware while retaining RMM in selected campaigns. Rust as a preferred implementation language (RustyWater, CHAR); in-memory execution as baseline; Telegram bot C2; rapid iterative development cycles; limited evidence of AI-assisted code generation (single documented artifact level). <a href="https://www.cloudsek.com/blog/reborn-in-rust-muddywater-evolves-tooling-with-rustywater-implant">R16</a> <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R20</a></p>
+
+<p>[Assessed] Doctrinal constant: priority on long-term low-noise access over high-noise immediate impact. Destructive operations (Operation Quicksand, PYTRIC) are documented as reserve capability, not systemic baseline behavior.</p>
+
+<h2 id="initial-access-and-privilege-escalation">Initial Access and Privilege Escalation</h2>
+
+<h3 id="documented-initial-access-vectors">Documented Initial Access Vectors</h3>
+
+<p>[Observed/Reported] Spearphishing via compromised corporate email accounts. <a href="https://research.checkpoint.com/2024/new-bugsleep-backdoor-deployed-in-recent-muddywater-campaigns/">R11</a> <a href="https://www.group-ib.com/blog/muddywater-espionage/">R18</a></p>
+
+<p>[Observed/Reported] PDF attachments with embedded links -> file-sharing services -> RMM agent deployment. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R10</a></p>
+
+<p>[Observed/Reported] Word/Excel documents with VBA macros (WriteHexToFile, UserForm1.TextBox1.Text, four-level nested loops). <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R19</a></p>
+
+<p>[Observed/Reported] CVE exploitation: CVE-2020–1472, CVE-2020–0688 (AA22–055A); recent CVEs on public-facing servers in Olalampo (specific CVEs undisclosed). <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R1</a></p>
+
+<p>[Reported] VPN infrastructure vulnerability exploitation. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a></p>
+
+<h3 id="documented-persistence-methods">Documented Persistence Methods</h3>
+
+<p>[Observed/Reported] Scheduled tasks:<code>MicrosoftVersionUpdater</code>,<code>DocumentUpdater</code>,<code>OutlookMicrosift</code>. <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R3</a></p>
+
+<p>[Observed/Reported] Windows Run keys (RustyWater, Phoenix v4). <a href="https://www.cloudsek.com/blog/reborn-in-rust-muddywater-evolves-tooling-with-rustywater-implant">R18</a></p>
+
+<p>[Observed/Reported] Deployment of legitimate RMM agents as long-term backdoor channels. <a href="https://harfanglab.io/insidethelab/muddywater-rmm-campaign/">R10</a></p>
+
+<p>[Reported] Registration of RMM accounts using compromised corporate email credentials. <a href="https://www.group-ib.com/blog/muddywater-infrastructure-malware/">R13</a></p>
+
+<h3 id="documented-credential-theft">Documented Credential Theft</h3>
+
+<p>[Observed/Reported] CE-Notes (Chrome app-bound encryption bypass), LP-Notes (fake Windows Security dialog), Blub (Chrome/Edge/Firefox/Opera), MuddyViper built-in credential module. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a></p>
+
+<p>[Reported] Custom Mimikatz loader (disguised as<code>.txt</code> certificates) in IAB scenario with Lyceum. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a></p>
+
+<h2 id="detection-engineering-soc-ready-rules">Detection Engineering: SOC-Ready Rules</h2>
+
+<h3 id="high-priority-detections-immediate-deployment">High-Priority Detections (Immediate Deployment)</h3>
+
+<p>RMM control:</p>
+
+<ul>
+<li><code>powershell.exe</code> or<code>cmd.exe</code> spawned by RMM agent processes.</li>
+<li>RMM account registration from corporate domains outside standard business workflows (potential account compromise). <a href="https://www.group-ib.com/blog/muddywater-infrastructure-malware/">R13</a></li>
+<li>Unauthorized installation/execution of Atera, ScreenConnect, SimpleHelp, Syncro, RemoteUtilities, Level, PDQ, AnyDesk. <a href="https://harfanglab.io/insidethelab/muddywater-rmm-campaign/">R10</a> <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a></li>
+</ul>
+
+<p>Delivery chain:</p>
+
+<ul>
+<li>Four-level nested loop pattern in macro code (MuddyWater-specific indicator). <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R21</a></li>
+<li>VBA macro usage with<code>WriteHexToFile</code> or<code>UserForm1.TextBox1.Text</code> patterns. <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R19</a></li>
+<li>PDF/Office -> external file-sharing service (Egnyte, OneHub, Mega, Dropbox) -> executable drop. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R10</a></li>
+</ul>
+
+<p>Malware behavior:</p>
+
+<ul>
+<li>Telegram API calls (<code>api.telegram.org</code>) initiated by atypical system processes. <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R3</a></li>
+<li>Injection into<code>msedge.exe</code>,<code>chrome.exe</code>,<code>opera.exe</code>,<code>anydesk.exe</code>,<code>onedrive.exe</code>,<code>powershell.exe</code> from unsigned or atypical parent processes. <a href="https://research.checkpoint.com/2024/new-bugsleep-backdoor-deployed-in-recent-muddywater-campaigns/">R14</a></li>
+<li>More than 10 consecutive Sleep API calls in first 60 seconds of new process execution. <a href="https://blog.sekoia.io/muddywater-replaces-atera-by-custom-muddyrot-implant-in-a-recent-campaign/">R14</a> <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a></li>
+<li>Mutex creation:<code>DocumentUpdater</code> or<code>PackageManager</code> in newly launched processes. <a href="https://blog.sekoia.io/muddywater-replaces-atera-by-custom-muddyrot-implant-in-a-recent-campaign/">R14</a></li>
+</ul>
+
+<p>Persistence:</p>
+
+<ul>
+<li>Run-key persistence created by binaries from ProgramData, Downloads, or Temp.</li>
+<li>Scheduled tasks:<code>MicrosoftVersionUpdater</code>,<code>DocumentUpdater</code>,<code>PackageManager</code>,<code>OutlookMicrosift</code>. <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R3</a></li>
+</ul>
+
+<p>Credential theft:</p>
+
+<ul>
+<li>Access to browser<code>Login Data</code> by non-standard processes. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a></li>
+<li>Fake Windows Security prompt behavior outside trusted system processes. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a></li>
+<li>Access to<code>%LOCALAPPDATA%\Google\Chrome\User Data\Local State</code> by unusual processes. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a></li>
+</ul>
+
+<p>IoT/CCTV vector (from Amazon findings):</p>
+
+<ul>
+<li>Anomalous outbound traffic from DVR/NVR and IP camera devices.</li>
+<li>Unauthorized connections to CCTV servers from unknown external IPs. <a href="https://aws.amazon.com/blogs/security/new-amazon-threat-intelligence-findings-nation-state-actors-bridging-cyber-and-kinetic-warfare/">R22</a></li>
+</ul>
+
+<h3 id="hunting-indicators-medium-priority">Hunting Indicators (Medium Priority)</h3>
+
+<ul>
+<li>C2 domains (validate before blocking):<code>netivtech[.]org</code>,<code>codefusiontech[.]org</code>,<code>nomercys.it[.]com</code>.</li>
+<li>Programmatic checks for screen resolution and mouse activity. <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R21</a></li>
+<li>Early-process Vectored Exception Handler (VEH) registration. <a href="https://www.cloudsek.com/blog/reborn-in-rust-muddywater-evolves-tooling-with-rustywater-implant">R19</a></li>
+<li>PyInstaller binaries containing backup discovery/deletion logic. <a href="https://www.seqrite.com/blog/ung0801-tracking-threat-clusters-obsessed-with-av-icon-spoofing-targeting-israel/">R20</a></li>
+<li>AV vendor icon spoofing (Check Point, SentinelOne) in PE metadata. <a href="https://www.seqrite.com/blog/ung0801-tracking-threat-clusters-obsessed-with-av-icon-spoofing-targeting-israel/">R20</a></li>
+<li>Rust-compiled binaries (Rust artifacts in PE sections) in environments where Rust tooling is not business-normal. <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R19</a></li>
+</ul>
+
+<h2 id="mini-playbook-first-30-minutes">Mini Playbook: First 30 Minutes</h2>
 
 <ol>
-<li>Isolate suspected host and disable all remote admin channels to that host.</li>
-<li>Revoke active tokens/sessions for compromised identity and reset credentials.</li>
-<li>Block suspicious outbound channels and messaging-driven C2 endpoints where feasible.</li>
-<li>Pull volatile telemetry (process tree, net connections, scheduled tasks, recent persistence changes).</li>
-<li>Validate backup integrity and snapshot critical systems before broad remediation.</li>
-<li>Hunt lateral movement from the first compromised node via admin tools and credential reuse.</li>
+<li>Recover only after complete scoping of compromise boundaries.</li>
+<li>Validate backup integrity and isolation from compromised hosts (wiper resilience).</li>
+<li>Hunt lateral movement using admin-tool telemetry, credential reuse, and anomalous authentication events from patient zero.</li>
+<li>Preserve forensic artifacts before any cleanup actions.</li>
+<li>Verify CCTV/IoT infrastructure for unauthorized external access.</li>
+<li>Capture volatile state: process tree, network connections, scheduled tasks, autoruns, loaded modules.</li>
+<li>Block suspicious egress paths: known/suspected C2 endpoints, file-sharing services (Egnyte, OneHub, Mega), and Telegram API access from atypical processes.</li>
+<li>Revoke active sessions/tokens and rotate high-risk credentials.</li>
+<li>Isolate the suspected endpoint and disable all active RMM channels on that host.</li>
 </ol>
 
-<h2 id="controls-mapping">Controls Mapping (NIST CSF-Lite)</h2>
-
-<ul>
-<li>Identify: Asset inventory for RMM tooling and uncommon runtimes.</li>
-<li>Protect: Enforce allowlists for remote management software and script interpreters.</li>
-<li>Detect: Behavioral detections on credential access and admin-tool abuse.</li>
-<li>Respond: IR runbooks for phishing-to-RMM and loader-to-backdoor chains.</li>
-<li>Recover: Tested restoration plus post-incident credential and trust boundary reset.</li>
-</ul>
-
-<h2 id="common-patterns">Common Patterns and Cross-Group Correlation</h2>
-
-<p>Cross-campaign constants:</p>
-
-<ul>
-<li>Initial social engineering remains central.</li>
-<li>Credential theft is repeatedly integrated, not optional.</li>
-<li>Trusted administration pathways are leveraged for stealth.</li>
-<li>Tooling modernization happens in waves, often after defenders adapt.</li>
-</ul>
-
-<p>Correlation note:</p>
-
-<p>Public reporting indicates occasional operational overlap with other Iranian clusters; treat these as context for hunting, not proof of unified command in every incident. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a></p>
-
-<h2 id="collection-gaps">Collection Gaps and Unresolved Questions</h2>
-
-<ul>
-<li>Full primary publication access for some 2026 reported families (for example Dindoor/Fakeset references in secondary media) remains pending. <a href="#ref-R19" class="ref-cite" title="Reference">[R19]</a><a href="#ref-R20" class="ref-cite" title="Reference">[R20]</a><a href="#ref-R21" class="ref-cite" title="Reference">[R21]</a></li>
-<li>Broader multi-source corroboration of Olalampo details is still developing beyond Group-IB's publication. <a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a></li>
-<li>More victim-side telemetry is needed to quantify true global prevalence vs targeted regional operations.</li>
-<li>Correlation between geopolitical events and campaign launch windows remains analytically suggestive but not forensically complete.</li>
-</ul>
-
-<h2 id="practical-defensive-actions">Practical Defensive Actions (Next 30 Days)</h2>
+<h2 id="practical-defensive-actions-30-days">Practical Defensive Actions: 30 Days</h2>
 
 <ol>
-<li>Build and enforce an approved list of RMM tools; block everything else at installation and network layers.</li>
-<li>Disable internet-exposed admin interfaces and enforce phishing-resistant MFA for remote access.</li>
-<li>Add detections for RMM-to-script execution chains and suspicious scheduled task persistence.</li>
-<li>Hunt for legacy advisory malware indicators (PowGoop/Small Sieve/CANOPY/POWERSTATS) in long-retention telemetry.</li>
-<li>Run tabletop exercise for phishing to RMM to credential theft to lateral movement sequence.</li>
-<li>Segment high-value infrastructure and monitor unusual cloud sync/exfil paths.</li>
+<li>Backup isolation. Ensure backups are physically/logically isolated against wiper scenarios.</li>
+<li>Segmentation. Apply egress restrictions for file-sharing services, Telegram, and external IoT communication paths.</li>
+<li>Tabletop exercise. Scenario: phishing -> RMM -> credential theft -> lateral movement -> IAB handoff to secondary actor.</li>
+<li>Behavioral detections. Monitor injection, unusual parent-child process chains, admin-tool pivots, and Telegram API usage by atypical processes.</li>
+<li>Patch prioritization. Prioritize VPN infrastructure and public-facing servers.</li>
+<li>IoT/CCTV audit. Inventory and segment surveillance systems; monitor anomalous external connections.</li>
+<li>Credential store protection. Restrict process access to Chrome Local State and Login Data.</li>
+<li>Identity hardening. Deploy phishing-resistant MFA (FIDO2/hardware keys), token/session controls, and Privileged Access Workstations for administrators.</li>
+<li>Behavioral email security. SPF/DKIM/DMARC do not stop phishing from compromised legitimate accounts; sender-behavior anomaly detection is required.</li>
+<li>RMM allowlisting. Enforce strict approved-RMM inventory; block all non-approved agents at endpoint policy and DNS layers.</li>
 </ol>
 
-<h2 id="appendix-a-ioc-compendium">Appendix A: IOC Compendium (Public Reporting)</h2>
-
-<p>Note: this appendix focuses on public families and behavior pivots. Use source-linked reports for full IOC sets.</p>
+<h2 id="intelligence-gaps">Intelligence Gaps</h2>
 
 <ul>
-<li>Legacy family set: PowGoop, Small Sieve, Canopy/Starwhale, Mori, POWERSTATS. <a href="#ref-R1" class="ref-cite" title="Reference">[R1]</a><a href="#ref-R3" class="ref-cite" title="Reference">[R3]</a><a href="#ref-R4" class="ref-cite" title="Reference">[R4]</a></li>
-<li>RMM abuse stack: Atera, ScreenConnect, Syncro, SimpleHelp, RemoteUtilities. <a href="#ref-R10" class="ref-cite" title="Reference">[R10]</a><a href="#ref-R11" class="ref-cite" title="Reference">[R11]</a></li>
-<li>2025 stack: Fooder, MuddyViper, CE-Notes, LP-Notes, Blub, go-socks5 usage. <a href="#ref-R13" class="ref-cite" title="Reference">[R13]</a><a href="#ref-R14" class="ref-cite" title="Reference">[R14]</a></li>
-<li>2026 Olalampo set: GhostFetch, GhostBackDoor, HTTP_VIP, CHAR. <a href="#ref-R15" class="ref-cite" title="Reference">[R15]</a></li>
+<li>Operation Olalampo overall still awaits broad independent technical replication.</li>
+<li>CCTV-vector scale remains uncertain; the Amazon-documented case is the only currently public example.</li>
+<li>Mechanisms of MuddyWater-Lyceum coordination in IAB scenarios are not deeply documented. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a></li>
+<li>StealthCache technical analysis outside Group-IB remains limited. <a href="https://www.group-ib.com/blog/muddywater-infrastructure-malware/">R13</a></li>
+<li>PYTRIC direct attribution to MuddyWater requires independent confirmation. <a href="https://www.seqrite.com/blog/ung0801-tracking-threat-clusters-obsessed-with-av-icon-spoofing-targeting-israel/">R20</a></li>
+<li>Kalim backdoor (invoked by CHAR) is named, but no complete public technical analysis is available. <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R21</a></li>
+<li>Specific CVEs exploited against public-facing servers in Operation Olalampo are not disclosed. <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R21</a></li>
 </ul>
 
-<h2 id="appendix-b-attck-mapping">Appendix B: ATT&amp;CK-Oriented Mapping (Analyst View)</h2>
+<h2 id="appendix-a-ioc-compendium">Appendix A: IOC Compendium</h2>
 
-<p>Representative ATT&CK-aligned behavior (non-exhaustive):</p>
+<p>Warning. Network IOCs age rapidly. Always validate against current threat intelligence before enforcing blocking controls.</p>
+
+<h3 id="stable-host-oriented-indicators">Stable Host-Oriented Indicators</h3>
 
 <ul>
-<li>Initial Access: phishing and attachment/link delivery.</li>
-<li>Execution: PowerShell/CMD/script interpreters, trusted admin agent command modules.</li>
-<li>Persistence: scheduled tasks, startup/service abuse, recurring agent deployment.</li>
-<li>Privilege Escalation/Credential Access: credential theft modules, browser and Windows credential targeting.</li>
-<li>Defense Evasion: process injection, delayed execution, masquerading as legitimate services.</li>
-<li>Command and Control: HTTP(S), raw TCP, and in some cases messaging-platform-assisted channels.</li>
-<li>Exfiltration: staged file transfer and cloud/object-storage aligned workflows (campaign-dependent).</li>
+<li>DLL name:<code>wtsapi.dll</code>(StealthCache). <a href="https://www.group-ib.com/blog/muddywater-infrastructure-malware/">R13</a></li>
+<li>DLL name:<code>FML.dll</code>(Mori). <a href="https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-055a">R1</a></li>
+<li>Document metadata tags:<code>DontAsk</code>,<code>Jacob</code>(Olalampo). <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R21</a></li>
+<li><code>Jacob</code> variable in Rust library paths (CHAR, RUSTRIC). <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R19</a></li>
+<li>File name:<code>reddit.exe</code> with Cloudflare icon (RustyWater). <a href="https://www.cloudsek.com/blog/reborn-in-rust-muddywater-evolves-tooling-with-rustywater-implant">R19</a></li>
+<li>Scheduled task names:<code>MicrosoftVersionUpdater</code>. <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R21</a></li>
+<li>Registry key:<code>OutlookMicrosift</code>(intentional typo; Small Sieve). <a href="https://www.ncsc.gov.uk/files/NCSC-Malware-Analysis-Report-Small-Sieve.pdf">R1</a></li>
+<li>Mutexes:<code>DocumentUpdater</code>,<code>PackageManager</code>. <a href="https://blog.sekoia.io/muddywater-replaces-atera-by-custom-muddyrot-implant-in-a-recent-campaign/">R14</a></li>
+</ul>
+
+<h3 id="network-indicators-validate-recency">Network Indicators (Validate Recency)</h3>
+
+<ul>
+<li><code>stager_51_bot</code>- CHAR Telegram bot username. <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R21</a></li>
+<li><code>18[.]219.14.54</code>- MuddyWater C2 IP (May–June 2025). <a href="https://aws.amazon.com/blogs/security/new-amazon-threat-intelligence-findings-nation-state-actors-bridging-cyber-and-kinetic-warfare/">R22</a></li>
+<li><code>nomercys.it[.]com</code>- RustyWater C2 (January 2026). <a href="https://www.cloudsek.com/blog/reborn-in-rust-muddywater-evolves-tooling-with-rustywater-implant">R19</a></li>
+<li><code>codefusiontech[.]org</code>- HTTP_VIP C2 (January 2026). <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R21</a></li>
+<li><code>netivtech[.]org</code>- StealthCache C2 (September 2025). <a href="https://www.group-ib.com/blog/muddywater-infrastructure-malware/">R13</a></li>
+</ul>
+
+<h3 id="family-names-for-retrospective-hunting">Family Names for Retrospective Hunting</h3>
+
+<p>Historical (2017–2022): POWERSTATS, PowGoop, Small Sieve/<code>gram_app.exe</code>, Canopy/Starwhale, Mori/<code>FML.dll</code>.</p>
+
+<p>2024–2026: BugSleep/MuddyRot, StealthCache/<code>wtsapi.dll</code>, Phoenix v4, Fooder, MuddyViper, VAXOne, CE-Notes, LP-Notes, Blub, PYTRIC, RUSTRIC/RustyWater/Archer RAT, GhostFetch, GhostBackDoor, HTTP_VIP, CHAR, Kalim.</p>
+
+<h2 id="appendix-b-mitre-attck-mapping">Appendix B: MITRE ATT&amp;CK Mapping</h2>
+
+<p>Mapping is based on techniques documented in primary sources. Rows where ATT&CK alignment is approximate are marked [approx].</p>
+
+<h3 id="initial-access">Initial Access</h3>
+
+<ul>
+<li>T1078 — Valid Accounts: compromised corporate accounts. <a href="https://research.checkpoint.com/2024/new-bugsleep-backdoor-deployed-in-recent-muddywater-campaigns/">R11</a></li>
+<li>T1190 — Exploit Public-Facing Application: CVE-2020–1472, CVE-2020–0688, and recent CVEs in Olalampo. <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R1</a></li>
+<li>T1566.002 — Spearphishing Link: PDF embedded links to file-sharing services. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R10</a></li>
+<li>T1566.001 — Spearphishing Attachment: PDF/Office with macros. <a href="https://www.proofpoint.com/uk/blog/threat-insight/security-brief-ta450-uses-embedded-links-pdf-attachments-latest-campaign">R1</a></li>
+</ul>
+
+<h3 id="execution">Execution</h3>
+
+<ul>
+<li>T1204.002 — User Execution: Malicious File: lure document execution. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R10</a></li>
+<li>T1059.003 — Command and Scripting Interpreter: Windows Command Shell: CMD execution across multiple campaigns. <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R14</a></li>
+<li>T1059.005 — VBScript/VBA: Canopy/Starwhale and macro execution chains. <a href="https://www.ncsc.gov.uk/pdfs/news/joint-advisory-observes-muddywater-actors-conducting-cyber-espionage.pdf">R1</a></li>
+<li>T1059.001 — PowerShell. <a href="https://unit42.paloaltonetworks.com/unit42-muddywater-operations-in-lebanon-and-oman/">R1</a></li>
+</ul>
+
+<h3 id="persistence">Persistence</h3>
+
+<ul>
+<li>T1547.001 — Boot or Logon Autostart Execution: Registry Run Keys / Startup Folder: RustyWater and Phoenix v4. <a href="https://www.cloudsek.com/blog/reborn-in-rust-muddywater-evolves-tooling-with-rustywater-implant">R18</a></li>
+<li>T1053.005 — Scheduled Task/Job: Scheduled Task:<code>MicrosoftVersionUpdater</code>,<code>DocumentUpdater</code>. <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R3</a></li>
+</ul>
+
+<h3 id="defense-evasion">Defense Evasion</h3>
+
+<ul>
+<li>T1574.002 — Hijack Execution Flow: DLL Side-Loading: PowGoop chain. <a href="https://www.ncsc.gov.uk/pdfs/news/joint-advisory-observes-muddywater-actors-conducting-cyber-espionage.pdf">R1</a></li>
+<li>T1497.003 — Virtualization/Sandbox Evasion: Time Based Evasion: Sleep API and game-based delay logic. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R14</a></li>
+<li>T1027 — Obfuscated Files or Information: XOR/subtraction-based obfuscation. <a href="https://blog.sekoia.io/muddywater-replaces-atera-by-custom-muddyrot-implant-in-a-recent-campaign/">R14</a> <a href="https://www.cloudsek.com/blog/reborn-in-rust-muddywater-evolves-tooling-with-rustywater-implant">R19</a></li>
+<li>T1036 — Masquerading: VAXOne as Veeam/AnyDesk;<code>reddit.exe</code> with Cloudflare icon. <a href="https://www.cloudsek.com/blog/reborn-in-rust-muddywater-evolves-tooling-with-rustywater-implant">R16</a></li>
+<li>T1055 — Process Injection: BugSleep injection into browser/admin processes. <a href="https://research.checkpoint.com/2024/new-bugsleep-backdoor-deployed-in-recent-muddywater-campaigns/">R14</a></li>
+</ul>
+
+<h3 id="credential-access">Credential Access</h3>
+
+<ul>
+<li>T1056.002 [approx] — Input Capture: GUI Input Capture: LP-Notes/MuddyViper fake dialogs. Note: fake Windows Security prompt is deception-based credential harvesting; strict T1056.002 alignment remains debatable. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a></li>
+<li>T1555.003 — Credentials from Password Stores: Credentials from Web Browsers: CE-Notes, Blub, MuddyViper. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a></li>
+<li>T1003 — OS Credential Dumping: custom Mimikatz loader. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a></li>
+</ul>
+
+<h3 id="command-and-control-c2">Command and Control (C2)</h3>
+
+<ul>
+<li>T1090.001 — Proxy: Internal Proxy (SOCKS): CHAR and go-socks5 usage. <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R16</a></li>
+<li>T1102 — Web Service: Telegram Bot API for CHAR, Small Sieve, and PYTRIC. <a href="https://www.seqrite.com/blog/ung0801-tracking-threat-clusters-obsessed-with-av-icon-spoofing-targeting-israel/">R3</a> <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R21</a></li>
+<li>T1573 — Encrypted Channel usage. <a href="https://www.cloudsek.com/blog/reborn-in-rust-muddywater-evolves-tooling-with-rustywater-implant">R16</a></li>
+<li>T1071.001 — Application Layer Protocol: Web Protocols: HTTP/S. <a href="https://www.group-ib.com/blog/muddywater-espionage/">R13</a> <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">R21</a></li>
+</ul>
+
+<h3 id="collection">Collection</h3>
+
+<ul>
+<li>T1005 — Data from Local System. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a></li>
+</ul>
+
+<h3 id="exfiltration">Exfiltration</h3>
+
+<ul>
+<li>T1567 — Exfiltration Over Web Service. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a></li>
+<li>T1048 — Exfiltration Over Alternative Protocol. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">R16</a></li>
+</ul>
+
+<h3 id="impact">Impact</h3>
+
+<ul>
+<li>T1485 [approx] — Data Destruction: PYTRIC (MuddyWater attribution remains low-medium confidence). <a href="https://www.seqrite.com/blog/ung0801-tracking-threat-clusters-obsessed-with-av-icon-spoofing-targeting-israel/">R20</a></li>
 </ul>
 
 <h2 id="references">References</h2>
 
-<p id="ref-R1"><a href="https://www.cisa.gov/uscert/ncas/alerts/aa22-055a" class="ref-link">[R1]</a> CISA. Iranian Government-Sponsored Actors Conduct Cyber Operations Against Global Government and Commercial Networks (AA22-055A). <a href="https://www.cisa.gov/uscert/ncas/alerts/aa22-055a">https://www.cisa.gov/uscert/ncas/alerts/aa22-055a</a></p>
-<p id="ref-R2"><a href="https://www.cybercom.mil/Media/News/Article/2945592/iranian-government-sponsored-actors-conduct-cyber-operations-against-global-gov/" class="ref-link">[R2]</a> USCYBERCOM. Iranian Government Sponsored Actors Conduct Cyber Operations Against Global Government and Commercial Networks. <a href="https://www.cybercom.mil/Media/News/Article/2945592/iranian-government-sponsored-actors-conduct-cyber-operations-against-global-gov/">https://www.cybercom.mil/Media/News/Article/2945592/iranian-government-sponsored-actors-conduct-cyber-operations-against-global-gov/</a></p>
-<p id="ref-R3"><a href="https://www.ncsc.gov.uk/files/NCSC-Malware-Analysis-Report-Small-Sieve.pdf" class="ref-link">[R3]</a> NCSC. Malware Analysis Report: Small Sieve. <a href="https://www.ncsc.gov.uk/files/NCSC-Malware-Analysis-Report-Small-Sieve.pdf">https://www.ncsc.gov.uk/files/NCSC-Malware-Analysis-Report-Small-Sieve.pdf</a></p>
-<p id="ref-R4"><a href="https://www.ncsc.gov.uk/pdfs/news/joint-advisory-observes-muddywater-actors-conducting-cyber-espionage.pdf" class="ref-link">[R4]</a> NCSC/CISA/FBI/NSA/CYBERCOM. Joint advisory on MuddyWater cyber espionage operations. <a href="https://www.ncsc.gov.uk/pdfs/news/joint-advisory-observes-muddywater-actors-conducting-cyber-espionage.pdf">https://www.ncsc.gov.uk/pdfs/news/joint-advisory-observes-muddywater-actors-conducting-cyber-espionage.pdf</a></p>
-<p id="ref-R5"><a href="https://www.cisa.gov/news-events/alerts/2022/01/12/cnmf-identifies-and-discloses-malware-used-iranian-apt-muddywater" class="ref-link">[R5]</a> CISA Alert. CNMF identifies and discloses malware used by Iranian APT MuddyWater. <a href="https://www.cisa.gov/news-events/alerts/2022/01/12/cnmf-identifies-and-discloses-malware-used-iranian-apt-muddywater">https://www.cisa.gov/news-events/alerts/2022/01/12/cnmf-identifies-and-discloses-malware-used-iranian-apt-muddywater</a></p>
-<p id="ref-R6"><a href="https://learn.microsoft.com/en-us/unified-secops/microsoft-threat-actor-naming" class="ref-link">[R6]</a> Microsoft. Threat actor naming taxonomy. <a href="https://learn.microsoft.com/en-us/unified-secops/microsoft-threat-actor-naming">https://learn.microsoft.com/en-us/unified-secops/microsoft-threat-actor-naming</a></p>
-<p id="ref-R7"><a href="https://www.microsoft.com/en-gb/security/security-insider/intelligence-reports/iran-surges-cyber-enabled-influence-operations-in-support-of-hamas/" class="ref-link">[R7]</a> Microsoft Threat Intelligence. Iran surges cyber-enabled influence operations in support of Hamas. <a href="https://www.microsoft.com/en-gb/security/security-insider/intelligence-reports/iran-surges-cyber-enabled-influence-operations-in-support-of-hamas/">https://www.microsoft.com/en-gb/security/security-insider/intelligence-reports/iran-surges-cyber-enabled-influence-operations-in-support-of-hamas/</a></p>
-<p id="ref-R8"><a href="https://unit42.paloaltonetworks.com/unveiling-11-new-adversary-playbooks/" class="ref-link">[R8]</a> Unit 42. Unveiling 11 New Adversary Playbooks (includes MuddyWater historical tracking). <a href="https://unit42.paloaltonetworks.com/unveiling-11-new-adversary-playbooks/">https://unit42.paloaltonetworks.com/unveiling-11-new-adversary-playbooks/</a></p>
-<p id="ref-R9"><a href="https://blog.talosintelligence.com/iranian-supergroup-muddywater/" class="ref-link">[R9]</a> Cisco Talos. Iranian supergroup MuddyWater. <a href="https://blog.talosintelligence.com/iranian-supergroup-muddywater/">https://blog.talosintelligence.com/iranian-supergroup-muddywater/</a></p>
-<p id="ref-R10"><a href="https://www.proofpoint.com/uk/blog/threat-insight/security-brief-ta450-uses-embedded-links-pdf-attachments-latest-campaign" class="ref-link">[R10]</a> Proofpoint. Security Brief: TA450 uses embedded links in PDF attachments. <a href="https://www.proofpoint.com/uk/blog/threat-insight/security-brief-ta450-uses-embedded-links-pdf-attachments-latest-campaign">https://www.proofpoint.com/uk/blog/threat-insight/security-brief-ta450-uses-embedded-links-pdf-attachments-latest-campaign</a></p>
-<p id="ref-R11"><a href="https://harfanglab.io/insidethelab/muddywater-rmm-campaign/" class="ref-link">[R11]</a> HarfangLab. MuddyWater's latest campaign: from phishing to persistence through RMM abuse. <a href="https://harfanglab.io/insidethelab/muddywater-rmm-campaign/">https://harfanglab.io/insidethelab/muddywater-rmm-campaign/</a></p>
-<p id="ref-R12"><a href="https://www.group-ib.com/blog/muddywater-infrastructure-malware/" class="ref-link">[R12]</a> Group-IB. MuddyWater infrastructure and malware trends. <a href="https://www.group-ib.com/blog/muddywater-infrastructure-malware/">https://www.group-ib.com/blog/muddywater-infrastructure-malware/</a></p>
-<p id="ref-R13"><a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/" class="ref-link">[R13]</a> ESET Research. MuddyWater snakes by the riverbank. <a href="https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/">https://www.welivesecurity.com/en/eset-research/muddywater-snakes-riverbank/</a></p>
-<p id="ref-R14"><a href="https://www.eset.com/us/about/newsroom/research/iran-muddywater-critical-infrastructure-israel-egypt-snake-game-eset-research/" class="ref-link">[R14]</a> ESET newsroom summary of MuddyWater Israel/Egypt campaign. <a href="https://www.eset.com/us/about/newsroom/research/iran-muddywater-critical-infrastructure-israel-egypt-snake-game-eset-research/">https://www.eset.com/us/about/newsroom/research/iran-muddywater-critical-infrastructure-israel-egypt-snake-game-eset-research/</a></p>
-<p id="ref-R15"><a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/" class="ref-link">[R15]</a> Group-IB. Operation Olalampo analysis. <a href="https://www.group-ib.com/blog/muddywater-operation-olalampo/">https://www.group-ib.com/blog/muddywater-operation-olalampo/</a></p>
-<p id="ref-R16"><a href="https://unit42.paloaltonetworks.com/iranian-cyberattacks-2026/" class="ref-link">[R16]</a> Unit 42 Threat Brief. Iranian cyberattacks and internet disruptions (March 2026 context). <a href="https://unit42.paloaltonetworks.com/iranian-cyberattacks-2026/">https://unit42.paloaltonetworks.com/iranian-cyberattacks-2026/</a></p>
-<p id="ref-R17"><a href="https://cloud.google.com/blog/topics/threat-intelligence/threat-actor-usage-of-ai-tools" class="ref-link">[R17]</a> Google Threat Intelligence Group. Adversarial misuse of generative AI. <a href="https://cloud.google.com/blog/topics/threat-intelligence/threat-actor-usage-of-ai-tools">https://cloud.google.com/blog/topics/threat-intelligence/threat-actor-usage-of-ai-tools</a></p>
-<p id="ref-R18"><a href="https://cloud.google.com/blog/topics/threat-intelligence/how-attackers-weaponize-digital-analytics-tools" class="ref-link">[R18]</a> Google Threat Intelligence. How attackers weaponize digital analytics tools (UNC1189 / MuddyWater context). <a href="https://cloud.google.com/blog/topics/threat-intelligence/how-attackers-weaponize-digital-analytics-tools">https://cloud.google.com/blog/topics/threat-intelligence/how-attackers-weaponize-digital-analytics-tools</a></p>
-<p id="ref-R19"><a href="https://www.infosecurity-magazine.com/news/iran-muddywater-hackers-us-firms/" class="ref-link">[R19]</a> Infosecurity Magazine. Iran-linked MuddyWater hackers target US firms (secondary reporting). <a href="https://www.infosecurity-magazine.com/news/iran-muddywater-hackers-us-firms/">https://www.infosecurity-magazine.com/news/iran-muddywater-hackers-us-firms/</a></p>
-<p id="ref-R20"><a href="https://thehackernews.com/2026/03/iran-linked-muddywater-hackers-target.html" class="ref-link">[R20]</a> The Hacker News. Iran-linked MuddyWater hackers target US and Israeli entities with Deno-based malware (secondary reporting). <a href="https://thehackernews.com/2026/03/iran-linked-muddywater-hackers-target.html">https://thehackernews.com/2026/03/iran-linked-muddywater-hackers-target.html</a></p>
-<p id="ref-R21"><a href="https://www.security.com/blog-post/iran-cyber-threat-activity-us" class="ref-link">[R21]</a> Security.com. Iran cyber threat activity against US organizations (secondary reporting). <a href="https://www.security.com/blog-post/iran-cyber-threat-activity-us">https://www.security.com/blog-post/iran-cyber-threat-activity-us</a></p>
-<p id="ref-R22"><a href="https://www.cisa.gov/news-events/cybersecurity-advisories/aa24-241a" class="ref-link">[R22]</a> CISA. Iran-based cyber actors conduct cyber operations against organizations in multiple US critical infrastructure sectors (AA24-241A). <a href="https://www.cisa.gov/news-events/cybersecurity-advisories/aa24-241a">https://www.cisa.gov/news-events/cybersecurity-advisories/aa24-241a</a></p>
-<p id="ref-R23"><a href="https://www.microsoft.com/en-us/security/blog/2025/02/12/the-badpilot-campaign-seashell-blizzard-subgroup-conducts-multiyear-global-access-operation/" class="ref-link">[R23]</a> Microsoft Security Blog. The BADPILOT campaign (context on Iranian/Russian access operations and ecosystem shifts). <a href="https://www.microsoft.com/en-us/security/blog/2025/02/12/the-badpilot-campaign-seashell-blizzard-subgroup-conducts-multiyear-global-access-operation/">https://www.microsoft.com/en-us/security/blog/2025/02/12/the-badpilot-campaign-seashell-blizzard-subgroup-conducts-multiyear-global-access-operation/</a></p>
-<p id="ref-R24"><a href="https://blog.talosintelligence.com/threat-roundup-0114-0121/" class="ref-link">[R24]</a> Cisco Talos. Threat Roundup 01/14 to 01/21 (MuddyWater targeting notes). <a href="https://blog.talosintelligence.com/threat-roundup-0114-0121/">https://blog.talosintelligence.com/threat-roundup-0114-0121/</a></p>
+<p id="ref-R1"><a href="https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-055a" class="ref-link">[R1]</a> CISA/FBI/NSA/USCYBERCOM/NCSC-UK. Iranian Government-Sponsored Actors Conduct Cyber Operations Against Global Government and Commercial Networks (AA22–055A). February 24, 2022. <a href="https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-055a">https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-055a</a></p>
+
+<p id="ref-R2"><a href="https://www.cybercom.mil/Media/News/Article/2897570/iranian-intel-cyber-suite-of-malware-uses-open-source-tools/" class="ref-link">[R2]</a> USCYBERCOM/CNMF. Iranian Intel Cyber Suite of Malware Uses Open Source Tools. January 12, 2022. <a href="https://www.cybercom.mil/Media/News/Article/2897570/iranian-intel-cyber-suite-of-malware-uses-open-source-tools/">https://www.cybercom.mil/Media/News/Article/2897570/iranian-intel-cyber-suite-of-malware-uses-open-source-tools/</a></p>
+
+<p id="ref-R3"><a href="https://www.ncsc.gov.uk/files/NCSC-Malware-Analysis-Report-Small-Sieve.pdf" class="ref-link">[R3]</a> NCSC-UK. Malware Analysis Report: Small Sieve. <a href="https://www.ncsc.gov.uk/files/NCSC-Malware-Analysis-Report-Small-Sieve.pdf">https://www.ncsc.gov.uk/files/NCSC-Malware-Analysis-Report-Small-Sieve.pdf</a></p>
+
+<p id="ref-R4"><a href="https://www.ncsc.gov.uk/pdfs/news/joint-advisory-observes-muddywater-actors-conducting-cyber-espionage.pdf" class="ref-link">[R4]</a> NCSC/CISA/FBI/NSA/CYBERCOM. Joint Advisory: MuddyWater Cyber Espionage Operations. <a href="https://www.ncsc.gov.uk/pdfs/news/joint-advisory-observes-muddywater-actors-conducting-cyber-espionage.pdf">https://www.ncsc.gov.uk/pdfs/news/joint-advisory-observes-muddywater-actors-conducting-cyber-espionage.pdf</a></p>
+
+<p id="ref-R5"><a href="https://unit42.paloaltonetworks.com/unit42-muddywater-operations-in-lebanon-and-oman/" class="ref-link">[R5]</a> Unit 42 / Palo Alto Networks. Threat Group Behind Wave of Espionage Attacks (first public MuddyWater documentation, November 2017). <a href="https://unit42.paloaltonetworks.com/unit42-muddywater-operations-in-lebanon-and-oman/">https://unit42.paloaltonetworks.com/unit42-muddywater-operations-in-lebanon-and-oman/</a></p>
+
+<p id="ref-R6"><a href="https://attack.mitre.org/groups/G0069/" class="ref-link">[R6]</a> MITRE ATT&CK. G0069 — MuddyWater. <a href="https://attack.mitre.org/groups/G0069/">https://attack.mitre.org/groups/G0069/</a></p>
+
+<p id="ref-R7"><a href="https://learn.microsoft.com/en-us/unified-secops/microsoft-threat-actor-naming" class="ref-link">[R7]</a> Microsoft Security. Threat actor naming taxonomy (Mango Sandstorm). <a href="https://learn.microsoft.com/en-us/unified-secops/microsoft-threat-actor-naming">https://learn.microsoft.com/en-us/unified-secops/microsoft-threat-actor-naming</a></p>
+
+<p id="ref-R8"><a href="https://www.microsoft.com/en-gb/security/security-insider/intelligence-reports/iran-surges-cyber-enabled-influence-operations-in-support-of-hamas/" class="ref-link">[R8]</a> Microsoft Threat Intelligence. Iran surges cyber-enabled influence operations in support of Hamas. <a href="https://www.microsoft.com/en-gb/security/security-insider/intelligence-reports/iran-surges-cyber-enabled-influence-operations-in-support-of-hamas/">https://www.microsoft.com/en-gb/security/security-insider/intelligence-reports/iran-surges-cyber-enabled-influence-operations-in-support-of-hamas/</a></p>
   <footer class="back-top">
     <a href="#table-of-contents">↑ Table of Contents</a> · <a href="#top">↑ Top</a>
   </footer>
