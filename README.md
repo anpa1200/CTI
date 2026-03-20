@@ -24,6 +24,7 @@ Structured, citation-linked versions of long-form CTI articles: **PDF** and **HT
 | [**Handala Hack Group**](handala-hack-group/) | Handala Hack Team / Void Manticore. Evidence-labeled assessment and SOC guidance. Dec 2023–Mar 2026. | [PDF](handala-hack-group/cti-research-handala-hack-group-with-nav.pdf) · [HTML](handala-hack-group/cti-research-handala-hack-group.html) · [Medium →](https://medium.com/@1200km/cti-research-handala-hack-group-aka-handala-hack-team-ddbdd294cfb8) |
 | [**Sandworm / APT44**](sandworm-apt44/) | GRU GTsST (Sandworm). Evidence-labeled assessment and SOC guidance. 2009–Mar 2026. | [PDF](sandworm-apt44/cti-research-sandworm-apt44-with-nav.pdf) · [HTML](sandworm-apt44/cti-research-sandworm-apt44.html) · [Medium →](https://medium.com/@1200km/cti-research-sandworm-apt44-649332e8af44) |
 | [**MuddyWater / Seedworm**](muddywater-seedworm/) | Iranian MOIS-linked MuddyWater cluster. Evidence-labeled assessment and SOC guidance. 2017–Mar 2026. | [PDF](muddywater-seedworm/cti-research-muddywater-seedworm-with-nav.pdf) · [HTML](muddywater-seedworm/cti-research-muddywater-seedworm.html) · [Primary sources →](https://www.cisa.gov/uscert/ncas/alerts/aa22-055a) |
+| [**ATT&CK as a Working Tool**](ATT%26CK/) | Practitioner's guide: framework anatomy, 14 tactics, 5 hands-on use cases (mapping, gap analysis, Sigma + ATT&CK, threat hunting, adversary emulation). For CTI analysts, detection engineers, and SOC analysts. Mar 2026. | [PDF](ATT%26CK/ATT%26CK%20as%20a%20Working%20Tool_%20Theory%20and%20Hands-On%20Practical%20Usage%20_%20by%20Andrey%20Pautov%20_%20Mar%2C%202026%20_%20Medium.pdf) · [Medium →](https://medium.com/@1200km) |
 
 *More reports (malware writeups, tool analysis, IOCs) will be added in separate directories.*
 
@@ -50,10 +51,13 @@ CTI/
 │   ├── README.md, IOCs.md
 │   ├── *.pdf, *.html
 │   └── assets/
-└── muddywater-seedworm/
-    ├── README.md, IOCs.md
-    ├── *.pdf, *.html
-    └── assets/
+├── muddywater-seedworm/
+│   ├── README.md, IOCs.md
+│   ├── *.pdf, *.html
+│   └── assets/
+└── ATT&CK/                   # Practitioner's guide to MITRE ATT&CK
+    ├── README.md
+    └── *.pdf
 ```
 
 - **PDF:** Table of contents, clickable `[R1]`…`[Rx]` to references, original figures where available.
