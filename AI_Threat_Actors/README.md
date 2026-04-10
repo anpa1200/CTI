@@ -59,7 +59,7 @@ AI has crossed from a theoretical offensive threat into a documented, operationa
 
 Despite these developments, the dominant finding across the best-sourced CTI reports (NCSC, OpenAI, IBM X-Force, Mandiant) remains: **AI is enhancing existing TTPs, not creating new attack categories.** Social engineering, phishing, fraud, and influence operations have seen the most significant practical impact. Autonomous AI-driven intrusion at scale remains nascent.
 
-The sectors most exposed today are financial services, professional services, and critical infrastructure. The actors most advanced in AI adoption are **Iranian APT42**, **North Korean FAMOUS CHOLLIMA**, and **financially motivated BEC/fraud operators**.
+The sectors most exposed today are financial services, professional services, and critical infrastructure. In publicly available primary reporting through April 2026, **Iranian APT42** and **North Korean FAMOUS CHOLLIMA** show the broadest documented AI adoption across multiple attack phases among state-linked actors; **financially motivated BEC/fraud operators** remain the most mature category overall given a seven-year operational head-start beginning with voice cloning in 2019. These assessments are bounded by available public disclosure and do not account for undisclosed programs.
 
 ---
 
@@ -88,14 +88,16 @@ The sectors most exposed today are financial services, professional services, an
 
 ### Pre-ChatGPT Era (2004–2022)
 
+> **Scope note:** Rows marked `[RESEARCH PRECURSOR]` are defensive or academic demonstrations, not in-the-wild threat-actor use. They are included because they define the architectural lineage of current offensive AI tools and are analyzed in depth in §9.1. They should not be read as evidence of criminal or state-actor AI use in those years.
+
 | Date | Event | Actor | Country | AI Use | Evidence | Why It Matters |
 |------|--------|-------|---------|--------|----------|----------------|
 | 2004 | ML spam filter evasion demonstrated at MIT Spam Conference | Academic / implicit criminal adoption | N/A | ML models used to evade ML-based spam filters via "good word" insertion | REPORTED (conference proceedings) | Origin of adversarial ML concept; criminal spam operators adopted techniques within years |
 | 2014 | Neural CAPTCHA-solving demonstrated | Academic | N/A | ML-based CAPTCHA solvers demonstrated at scale; accuracy varied by target service (5–55% in Bursztein et al. USENIX WOOT 2014, not the ~95% figure cited in some secondary sources; ~95% accuracy in CNN-specific solvers emerged in later papers circa 2020) | REPORTED (Bursztein et al., USENIX WOOT 2014) | Established that ML could reliably bypass ML-based bot-detection at scale |
-| August 2016 | **SNAP_R — First automated ML spear-phishing tool** | Defensive research (John Seymour & Philip Tully, ZeroFOX) | USA | LSTM and Markov chain generation modes trained on target's Twitter history to produce personalized phishing tweets; 30–66% click-through in live bake-off at 6.85 tweets/min across 819 targets in 2-hour window | REPORTED (Black Hat USA 2016 / ZeroFOX, PRIMARY) | First publicly documented ML system automating personalized spear-phishing generation and delivery; architectural predecessor of LLM-driven phishing (2023–2026) |
-| August 2016 | **DARPA Cyber Grand Challenge — Mayhem wins autonomous hacking competition** | Defensive research (ForAllSecure / CMU, DARPA) | USA | Fully autonomous system combining symbolic execution (Z3 SMT solver) and concolic fuzzing to discover vulnerabilities, generate exploits, and patch binaries in previously unseen software without human intervention in real time | CONFIRMED (DARPA CGC Final Event, August 4, 2016, PRIMARY) | First publicly validated fully autonomous vulnerability discovery and exploitation system; establishes closed-loop AI-driven offensive security template that Big Sleep (2024) later realises with neural methods |
-| August 2018 | **DeepExploit (Reinforcement Learning Pentesting)** | Defensive research (Isao Takaesu / MBSD — Mitsui Bussan Secure Directions) | Japan | A3C reinforcement learning agent orchestrating Metasploit RPC API for autonomous exploitation sequencing against live targets; policy network trained via reward shaping on shell-session success | REPORTED (Black Hat Arsenal 2018 / Isao Takaesu, PRIMARY) | First publicly documented system treating exploitation sequencing as an RL optimization problem against live infrastructure; architectural predecessor to LLM-orchestrated pentesting frameworks (Stage 5b) |
-| August 2018 | **DeepLocker — CNN-gated payload delivery** | Defensive research (IBM Research: Dhilung Kirat, Jiyong Jang, Marc Ph. Stoecklin) | USA | Deep CNN (AlexNet referenced in primary slides) fine-tuned on target biometrics; model's penultimate-layer activations used as cryptographic key to decrypt payload only on correct target identification; PoC hidden in videoconferencing app | REPORTED (Black Hat USA 2018 Briefings / IBM Research, PRIMARY) | First documented malware design using a neural network as an activation trigger; payload unrecoverable via static analysis or sandbox detonation without presenting the precise biometric trigger |
+| August 2016 | **SNAP_R — Automated ML spear-phishing tool [RESEARCH PRECURSOR]** | Defensive research (John Seymour & Philip Tully, ZeroFOX) — not a threat actor | USA | LSTM and Markov chain generation modes trained on target's Twitter history to produce personalized phishing tweets; 30–66% click-through in live bake-off at 6.85 tweets/min across 819 targets in 2-hour window | REPORTED (Black Hat USA 2016 / ZeroFOX, PRIMARY) | Publicly documented ML system automating personalized spear-phishing generation and delivery; architectural predecessor of LLM-driven phishing (2023–2026). Included here as research precursor, not threat-actor use. |
+| August 2016 | **DARPA Cyber Grand Challenge — Mayhem wins autonomous hacking competition [RESEARCH PRECURSOR]** | Defensive research (ForAllSecure / CMU, DARPA) — not a threat actor | USA | Fully autonomous system combining symbolic execution (Z3 SMT solver) and concolic fuzzing to discover vulnerabilities, generate exploits, and patch binaries in previously unseen software without human intervention in real time | CONFIRMED (DARPA CGC Final Event, August 4, 2016, PRIMARY) | Publicly validated fully autonomous vulnerability discovery and exploitation system; establishes closed-loop automated security template that Big Sleep (2024) later realises with neural methods. Included here as research precursor, not threat-actor use. |
+| August 2018 | **DeepExploit (Reinforcement Learning Pentesting) [RESEARCH PRECURSOR]** | Defensive research (Isao Takaesu / MBSD — Mitsui Bussan Secure Directions) — not a threat actor | Japan | A3C reinforcement learning agent orchestrating Metasploit RPC API for autonomous exploitation sequencing against live targets; policy network trained via reward shaping on shell-session success | REPORTED (Black Hat Arsenal 2018 / Isao Takaesu, PRIMARY) | Publicly documented system treating exploitation sequencing as an RL optimization problem against live infrastructure; architectural predecessor to LLM-orchestrated pentesting frameworks (Stage 5b). Included here as research precursor, not threat-actor use. |
+| August 2018 | **DeepLocker — CNN-gated payload delivery [RESEARCH PRECURSOR]** | Defensive research (IBM Research: Dhilung Kirat, Jiyong Jang, Marc Ph. Stoecklin) — not a threat actor | USA | Deep CNN (AlexNet referenced in primary slides) fine-tuned on target biometrics; model's penultimate-layer activations used as cryptographic key to decrypt payload only on correct target identification; PoC hidden in videoconferencing app | REPORTED (Black Hat USA 2018 Briefings / IBM Research, PRIMARY) | PoC malware design using a neural network as an activation trigger; payload unrecoverable via static analysis or sandbox detonation without presenting the precise biometric trigger. Included here as research precursor, not threat-actor use. |
 | March 2019 | **First confirmed criminal voice-cloning fraud** | Unknown criminal group | Origin unclear | AI voice synthesis cloned German CEO voice; €220,000 stolen | CONFIRMED (Euler Hermes insurer statement, PRIMARY) | Earliest verifiable documented criminal deployment of generative AI in an attack |
 | January 2020 (public Oct 2021) | UAE bank voice-cloning fraud | Unknown (17 identified in UAE investigation) | Unknown | "Deep voice" AI cloned company director's voice; combined with forged emails | REPORTED (UAE court documents referenced in media, SECONDARY with primary basis) | $35M loss; tenfold scale increase over 2019 case; first cross-jurisdictional AI fraud case |
 | August 2021 | Singapore GovTech GPT-3 phishing experiment | Defensive research (Singapore government) | Singapore | GPT-3-generated phishing emails outperformed human-crafted emails in click-through | REPORTED (Black Hat USA 2021 presentation) | First controlled public demonstration of LLM-generated phishing superiority |
@@ -526,10 +528,9 @@ The sectors most exposed today are financial services, professional services, an
 
 | Metric | Figure | Source | Quality |
 |--------|--------|--------|---------|
-| AI-generated phishing click-through rate | 54% | **Heiding et al. arXiv preprint (arXiv:2412.00586, 101 participants, controlled study)** — not a Hoxhunt figure; Hoxhunt click-through rates are 2–4%. The 54% figure is specific to Heiding et al.'s controlled experiment with human subjects | SECONDARY (academic preprint, controlled study) |
-| Fully AI-automated phishing click-through (controlled study) | 54% (matching skilled human experts at 54%); AI with minimal human-in-loop: 56% | **Heiding et al. arXiv preprint** (arXiv:2412.00586, 101 participants) — **arXiv preprint, not peer-reviewed at time of writing** | SECONDARY (academic preprint, human subjects) |
-| Control/baseline phishing click-through (same study) | 12% | Same arXiv study | SECONDARY (academic) |
-| Fraction of recipients falling for AI phishing | 60% | Harvard research | SECONDARY (academic) |
+| Fully AI-automated phishing click-through (controlled study) | 54% (fully AI-automated, matching skilled human expert baseline); AI with minimal human-in-loop: 56% | **Heiding et al., arXiv:2412.00586** (101 participants, controlled study) — **arXiv preprint, not peer-reviewed at time of writing.** Not a Hoxhunt figure; Hoxhunt click-through rates are 2–4% | SECONDARY (academic preprint, human subjects) |
+| Control/baseline phishing click-through (same study) | 12% | Heiding et al., arXiv:2412.00586 | SECONDARY (academic) |
+| Fraction of recipients falling for AI phishing | 60% | Source not identified in this review — treat as WEAK pending primary citation | WEAK (unverified) |
 | AI phishing campaign generation time | 5 minutes | Hoxhunt | SECONDARY |
 | Human red team phishing campaign generation time | 16 hours | Hoxhunt | SECONDARY |
 | AI surpassing human red team in phishing | Feb–Mar 2025 | Hoxhunt | SECONDARY |
@@ -887,8 +888,8 @@ OpenAI/Microsoft joint disclosure (February 2024) confirms five state actors usi
 ### Stage 5: LLM-Integrated Malware and Agentic Intrusion (2025)
 Three primary-sourced developments mark a genuine phase transition:
 - **LAMEHUG (CERT-UA) / PROMPTSTEAL (GTIG)** (July 2025): malware queries LLM at runtime — the first in-the-wild shift from "AI helps develop malware" to "AI is part of malware execution."
-- **GTG-1002** (November 2025): AI autonomously executes 80–90% of intrusion lifecycle — first real-world agentic cyber espionage.
-- **PROMPTFLUX** (November 2025): malware designed to rewrite itself via AI API — first designed-for-AI-evasion malware in the wild.
+- **GTG-1002** (November 2025): AI reported to execute 80–90% of intrusion lifecycle across ~30 targets — the most detailed provider-disclosed case of high-autonomy AI-assisted intrusion to date (autonomy degree disputed by peer analysts).
+- **PROMPTFLUX** (November 2025): malware designed to rewrite itself via AI API — first publicly documented malware family with LLM-driven self-rewriting as a design objective; self-modification function was commented out in analyzed samples (development phase).
 
 SentinelOne's retrohunt identified 7,000+ samples with embedded AI API keys — though the primary report notes almost all turned out to be non-malicious leaks from legitimate developers. The genuine LLM-integrated malware subset remains small but growing. The retrohunt methodology reveals an important detection surface: malware that queries AI APIs must embed identifiable keys and prompt structures.
 
@@ -949,7 +950,7 @@ Based on current trajectory:
 
 2. **Automated intrusion campaigns at scale.** Human-to-AI ratio in intrusion operations continues to decrease. A small team of 3–5 operators orchestrating dozens of simultaneous AI-agent intrusion campaigns becomes plausible. Current constraints (LLM hallucination, human oversight requirements) will partially resolve with model improvements. **[Confidence: MEDIUM]**
 
-3. **Deepfake-enabled biometric authentication bypass.** Real-time AI bypass of facial recognition and voice authentication used in banking KYC and access control. FinCEN's 2024 alert on deepfake fraud in financial institutions marks the beginning of this threat arc; by 2029, it will be a standard attack vector. **[Confidence: HIGH]**
+3. **Deepfake-enabled biometric authentication bypass.** Real-time AI bypass of facial recognition and voice authentication used in banking KYC and access control. FinCEN's 2024 alert on deepfake fraud in financial institutions marks the beginning of this threat arc; by 2029, this is on track to become a well-documented and frequently employed attack vector given the current adoption trajectory. **[Confidence: HIGH]**
 
 4. **Criminal AI tool ecosystem matures.** Unlike 2023's largely vaporware underground LLMs, the 2027–2028 period will see functional criminal AI tooling — built on open-source model fine-tuning and uncensored model hosting, not on misleading advertisements. **[Confidence: MEDIUM]**
 
@@ -958,7 +959,7 @@ Based on current trajectory:
 **What defenders are underestimating:**
 - The speed at which agentic AI intrusion will scale once the model is proven.
 - The authentication threat from deepfakes — current enterprise MFA and call-back procedures assume real-time voice is trustworthy.
-- The shift from AI-developed malware to AI-executed malware — detection logic designed for the former will not catch the latter.
+- The shift from AI-developed malware to AI-executed malware — detection logic designed for the former will be materially less effective against the latter without behavioral and egress-analysis layers.
 
 ---
 
@@ -1005,24 +1006,28 @@ Based on current trajectory:
 
 ## 12. Top 10 Milestones Table
 
-| # | Date | Milestone | Evidence Quality |
-|---|------|-----------|-----------------|
-| 1 | August 2016 | DARPA Cyber Grand Challenge (Mayhem) — First fully autonomous AI vulnerability discovery and exploitation system | PRIMARY |
-| 2 | March 2019 | First confirmed criminal AI voice cloning attack (UK CEO fraud, €220K) | PRIMARY |
-| 3 | January 2020 | First large-scale AI voice cloning fraud ($35M, UAE bank) | SECONDARY (court basis) |
-| 4 | November 2022 | ChatGPT launch — LLM democratization; jailbreaking starts within days | Structural event |
-| 5 | January 2024 | Arup CFO deepfake fraud ($25M) — multi-person real-time video deepfake deployed | PRIMARY |
-| 6 | February 14, 2024 | OpenAI/Microsoft joint disclosure: five nation-state APTs confirmed using LLMs | PRIMARY |
-| 7 | July 2025 | LAMEHUG (CERT-UA) / PROMPTSTEAL (GTIG) confirmed in wild — first malware querying LLM at execution time (APT28) | PRIMARY |
-| 8 | August 2025 | GTG-2002 — Claude Code as autonomous extortion operator at 17 organisations | PRIMARY |
-| 9 | November 2025 | SesameOp — first legitimate AI API (OpenAI Assistants) abused as covert C2 relay | PRIMARY |
-| 10 | March 2026 | TeamPCP/LiteLLM — first major AI supply chain attack; ~36% installation footprint (Wiz); 3–5 hr malicious window; CVE-2026-33634 CVSS4 9.4 | PRIMARY |
+> **Table note:** Row 1 (DARPA CGC / Mayhem) is a defensive research milestone, not a threat-actor use event. It is included because it established the first publicly validated closed-loop automated vulnerability discovery pipeline — the architectural template for subsequent offensive AI development. Rows 7 and 10 are scoped as noted.
+
+| # | Date | Milestone | Type | Evidence Quality |
+|---|------|-----------|------|-----------------|
+| 1 | August 2016 | DARPA Cyber Grand Challenge (Mayhem) — First publicly validated fully automated vulnerability discovery and exploit generation system in a controlled competition [RESEARCH PRECURSOR, not threat-actor use] | Research | PRIMARY |
+| 2 | March 2019 | Earliest publicly documented primary-sourced criminal AI deployment: UK CEO voice cloning fraud (€220K) | Adversary | PRIMARY |
+| 3 | January 2020 | First documented large-scale AI voice cloning fraud (in primary sources reviewed here): UAE bank ($35M) | Adversary | SECONDARY (court basis) |
+| 4 | November 2022 | ChatGPT launch — LLM democratization; jailbreaking starts within days | Structural event | — |
+| 5 | January 2024 | Arup CFO deepfake fraud ($25.6M) — multi-person real-time deepfake video conference deployed against corporate finance | Adversary | PRIMARY |
+| 6 | February 14, 2024 | OpenAI/Microsoft joint disclosure: five nation-state APTs confirmed using LLMs | Disclosure | PRIMARY |
+| 7 | July 2025 | LAMEHUG (CERT-UA) / PROMPTSTEAL (GTIG) — first publicly documented in-the-wild malware querying an LLM at execution time (APT28, assessed exploratory phase) | Adversary | PRIMARY |
+| 8 | August 2025 | GTG-2002 — Anthropic-disclosed case of agentic AI used for scaled data extortion across 17 organisations | Adversary | PRIMARY |
+| 9 | November 2025 | SesameOp — first publicly documented abuse of a legitimate commercial AI API (OpenAI Assistants) as a covert C2 relay | Adversary | PRIMARY |
+| 10 | March 2026 | TeamPCP/LiteLLM — first major confirmed attack targeting AI proxy middleware (supply chain, not AI used offensively); CVE-2026-33634 CVSS4 9.4 [ADJACENT CATEGORY] | Adjacent / AI infrastructure targeted | PRIMARY |
 
 ---
 
 ## 13. Top 10 Incidents Table
 
 > **Sorting methodology:** Ranked by **analytical significance** — a composite of financial/operational impact, evidence quality, and novelty of AI use. Incidents with the highest primary-sourced losses and clearest AI component are ranked highest regardless of date. Chronologically descending order would favour recency over significance; this table prioritises what each incident contributed to understanding the AI threat landscape. Date column retains the actual incident date for reference.
+>
+> **Category note:** Row 3 (TeamPCP/LiteLLM) is an adjacent-category event: AI infrastructure was the target, not the weapon. It is included because it establishes a new threat category (AI supply chain) of direct relevance to defenders. Its ranking reflects novelty and potential blast radius, not direct harm caused by AI being used offensively.
 
 | # | Date | Incident | Loss / Impact | AI Component | Sector | Source |
 |---|------|----------|--------------|-------------|--------|--------|
@@ -1055,7 +1060,7 @@ Based on the documented threat landscape, organized by priority:
 
 **Medium-term (3–12 months):**
 
-5. **Deploy AI-native detection tooling.** Signature-based AV/EDR will not detect PROMPTFLUX-model malware. Behavioral detection, network traffic analysis, and anomaly-based approaches are required. Evaluate vendors specifically on their capability against LLM-querying and self-modifying malware.
+5. **Deploy AI-native detection tooling.** Signature-based AV/EDR alone will be insufficient against PROMPTFLUX-model malware if such designs operationalize at scale. Behavioral detection, network traffic analysis, and anomaly-based approaches are required as complementary layers. Evaluate vendors specifically on their capability against LLM-querying and self-modifying malware.
 
 6. **Map your attack surface for agentic AI exposure.** If your organization uses AI code assistants, agentic AI platforms, or API-connected AI services, assess whether an attacker could abuse these (via prompt injection, stolen API keys, or compromised AI-adjacent systems) to gain access or escalate privileges.
 
@@ -1079,55 +1084,57 @@ Based on the documented threat landscape, organized by priority:
 
 ## 15. Source Register
 
-| Source | Type | Quality | Key Findings Used | Link/DOI |
-|--------|------|---------|------------------|----------|
-| OpenAI/Microsoft "Disrupting Malicious Uses of AI by State-Affiliated Threat Actors" (Feb 14, 2024) | Joint official disclosure | PRIMARY | Five APT groups using LLMs; assessed as exploratory | [URL] |
-| OpenAI "Disrupting Deceptive Uses of AI by Covert Influence Operations" (May 30, 2024) | Official report | PRIMARY | Five IO operations disrupted; none built real audience | [URL] |
-| OpenAI "Influence and Cyber Operations: An Update" (October 9, 2024) | Official report | PRIMARY | 20+ operations disrupted; SweetSpecter, CyberAv3ngers, Storm-0817 | [URL] |
-| OpenAI Threat Intelligence Report (February 21, 2025) | Official report | PRIMARY | Romance scam networks; Chinese IO targeting Japan | [URL] |
-| Microsoft Digital Defense Report 2023 (October 2023) | Official report | PRIMARY | AI for phishing, IO; attack volume statistics | [URL] |
-| Microsoft Digital Defense Report 2024 (October 2024) | Official report | PRIMARY | 600M daily password attacks; AI IO use by Iran | [URL] |
-| NCSC UK "Near-Term Impact of AI on Cyber Threat" (January 24, 2024) | Government assessment | PRIMARY | "Almost certainly" increases attack volume; barrier to entry | [URL] |
-| NCSC UK "Impact of AI on Cyber Threat to 2027" (2025) | Government assessment | PRIMARY | Enhancement not novel TTPs; full autonomy unlikely before 2027 | [URL] |
-| Google GTIG "Adversarial Misuse of Generative AI" (January 2025) | Vendor primary research | PRIMARY | 40+ APTs on Gemini; APT42 heaviest user; DPRK most prolific | [URL] |
-| Google GTIG AI Threat Tracker (November 2025) | Vendor primary research | PRIMARY | LAMEHUG, PROMPTFLUX, PROMPTSTEAL; 5+ in-wild LLM malware families | [URL] |
-| Google Project Zero "Big Sleep" blog (published **November 1, 2024**; discovery October 2024) | Primary research blog | PRIMARY | First autonomous AI zero-day in production software: stack buffer underflow in SQLite `seriesBestIndex`, dev branch only, no CVE. **Distinct from CVE-2025-6965** (July 2025, integer truncation, production release) | https://projectzero.google/2024/10/from-naptime-to-big-sleep.html |
-| CERT-UA Advisory (July 17, 2025) | Government advisory | PRIMARY | LAMEHUG (CERT-UA) / PROMPTSTEAL (GTIG) attribution to APT28; Qwen API querying | [URL] |
-| Anthropic Report on GTG-1002 (November 13, 2025) | Company official report | PRIMARY | First agentic AI intrusion; 80–90% autonomy; 30 targets | [URL] |
-| CrowdStrike Global Threat Report 2025 | Vendor primary report | PRIMARY | 442% vishing increase; FAMOUS CHOLLIMA; phishing stats | [URL] |
-| CrowdStrike Global Threat Report 2026 | Vendor primary report | PRIMARY | 89% increase AI-enabled adversaries; prompt injection at 90+ orgs | [URL] |
-| FBI IC3 2024 Internet Crime Report | Government primary | PRIMARY | $16.6B total losses; BEC $2.77B; crypto $9.3B | [URL] |
-| FinCEN Deepfake Fraud Alert (November 2024) | Government advisory | PRIMARY | SAR increase for deepfake fraud since 2023 | [URL] |
-| CISA Advisory AA23-320A (Scattered Spider, November 2023) | Government advisory | PRIMARY | MGM breach; vishing methodology | [URL] |
-| DOJ DPRK IT Worker Indictment (December 2024) | Court/legal document | PRIMARY | 80+ identities; 100+ companies; AI-generated profiles | [URL] |
-| KnowBe4 DPRK worker disclosure (July 2024) | Company disclosure | PRIMARY | AI photo; face-swap ID; detailed supply chain | [URL] |
-| Euler Hermes statement on 2019 CEO fraud | Insurer primary witness | PRIMARY | First confirmed criminal voice cloning; €220K | [URL] |
-| Arup official statement + Hong Kong Police (May 2024) | Company + government | PRIMARY | $25M deepfake CFO fraud; 15 transfers; video deepfake | [URL] |
-| Trend Micro "Hype vs. Reality" (August 2023) | Vendor primary research | PRIMARY | WormGPT/FraudGPT capabilities NOT verified | [URL] |
-| SentinelOne LABScon 2025 presentation | Vendor primary research | PRIMARY | 7,000+ samples with embedded AI API keys found via VirusTotal retrohunt (primary report notes: "almost all turned out to be non-malicious" — vast majority were legitimate apps with accidentally leaked developer keys); 6,000+ unique API keys; confirmed LLM-integrated malware subset includes PROMPTSTEAL/LAMEHUG; MalTerminal disclosed as earliest known LLM-enabled malware sample (written pre-Nov 2023) | [URL] |
-| IBM X-Force Threat Intelligence Index 2024 | Vendor primary report | PRIMARY | No concrete evidence of GenAI-engineered attacks in 2023–2024 | [URL] |
-| Europol EU-SOCTA 2025 | Government/agency | PRIMARY | AI "fundamentally reshaping organized crime" | [URL] |
-| "Weaponizing Data Science for Social Engineering: Automated E2E Spear Phishing on Twitter (SNAP_R)" | Black Hat USA 2016 / John Seymour & Philip Tully (ZeroFOX) | PRIMARY | First automated ML spear-phishing tool; LSTM and Markov generation modes; 30–66% click-through; 6.85 tweets/min across 819 targets in 2-hour live bake-off | https://www.blackhat.com/docs/us-16/materials/us-16-Seymour-Tully-Weaponizing-Data-Science-For-Social-Engineering-Automated-E2E-Spear-Phishing-On-Twitter.pdf |
-| "Mayhem: The DARPA Cyber Grand Challenge Winning System" | IEEE Security & Privacy / ForAllSecure (CMU) | PRIMARY | Genesis of autonomous AI vulnerability discovery and exploitation; symbolic execution + concolic fuzzing closed-loop pipeline; CGC Final Event August 2016 | DOI: 10.1109/MSEC.2017.2759104 |
-| "DeepLocker: How AI Can Power a Stealthy New Breed of Malware" | IBM Research / Black Hat USA 2018 (Dhilung Kirat, Jiyong Jang, Marc Ph. Stoecklin) | PRIMARY | AI facial recognition (CNN, AlexNet referenced in slides) used as cryptographic trigger to gate payload decryption; payload unrecoverable via static analysis or sandbox without biometric trigger | https://securityintelligence.com/deeplocker-how-ai-can-power-a-stealthy-new-breed-of-malware/ |
-| "DeepExploit: Fully Automated Penetration Test Tool using Machine Learning" | Black Hat Arsenal 2018 / **Isao Takaesu** (**MBSD — Mitsui Bussan Secure Directions**) | PRIMARY | Reinforcement learning (A3C) agent orchestrating Metasploit Framework RPC API for autonomous exploitation sequencing; reward-shaped policy trained on shell-session success across live target environments. GitHub: github.com/13o-bbr-bbq/machine_learning_security/tree/master/DeepExploit | https://www.blackhat.com/us-18/arsenal/schedule/#deep-exploit-11908 |
-| UIUC autonomous hacking paper (April 2024, arXiv 2404.08144) | Academic | SECONDARY | 87% CVE exploitation rate with description; 7% without | https://arxiv.org/abs/2404.08144 |
-| UAE $35M voice cloning (2021 public disclosure) | Court documents via media | SECONDARY | $35M loss; 17 identified individuals | [URL] |
-| Vade Security Q4 2022 phishing report | Vendor quarterly | SECONDARY | 274% Q3→Q4 phishing surge post-ChatGPT launch | [URL] |
-| Hoxhunt phishing effectiveness research | Vendor research | SECONDARY | **AI surpassed human red team in phishing effectiveness (Feb–Mar 2025); 5-minute AI campaign generation vs. 16-hour human red team.** Note: Hoxhunt click-through rates are 2–4%; the "54% click-through" figure cited elsewhere in AI phishing reporting belongs to Heiding et al. (arXiv:2412.00586), not Hoxhunt | [URL] |
-| KELA Intelligence underground forum data | Vendor research | SECONDARY | 219% dark web AI tool mentions; 52% jailbreak discussions | [URL] |
-| SlashNext 1,265% phishing surge | Single vendor claim | WEAK | Cited for context only; methodology unclear | [URL] |
-| WormGPT/FraudGPT marketing claims | Underground advertisements | WEAK | No functional capability independently verified | [URL] |
-| OpenAI June 2025 threat report (ScopeCreep, DPRK IT workers) | Official report | PRIMARY | ScopeCreep LLM-assisted malware dev; DPRK job automation at scale | [URL] |
-| Anthropic August 2025 report (GTG-2002) | Official report | PRIMARY | Agentic extortion; Claude Code as operator; 17 orgs in one month | [URL] |
-| Microsoft IR report, November 2025 (SesameOp) | Primary vendor IR | PRIMARY | OpenAI Assistants API abused as covert C2/relay | [URL] |
-| Wiz, Snyk, Datadog Security Labs, Endor Labs, FutureSearch, Kaspersky, BleepingComputer, LiteLLM official advisory (TeamPCP / LiteLLM, March 2026) | Multi-vendor primary | PRIMARY | AI supply chain attack; LiteLLM installation footprint ~36% of monitored cloud environments (Wiz telemetry); 3–5 hour malicious window; CVE-2026-33634, CVSS4 9.4 | [URL] |
-| Mandiant M-Trends 2026 | Primary vendor report | PRIMARY | Voice phishing 11% of initial vectors; email phishing declined to 6% | [URL] |
-| Microsoft Digital Defense Report 2025 | Official report | PRIMARY | $4B fraud blocked/yr; 1.6M fake accounts/hr; AI-ID growth 195% | [URL] |
-| FBI IC3 Annual Report 2025 | Government primary | PRIMARY | 22,364 AI complaints; $893M adjusted losses; $632M investment scams | [URL] |
-| FBI IC3 PSA December 19, 2025 | Government advisory | PRIMARY | AI voice cloning of senior US officials since at least 2023 | [URL] |
-| Singapore CSA "Singapore Cyber Landscape 2023" (July 30, 2024) | Government primary | PRIMARY | ~13% of phishing sample AI-generated (small sample, caveated) | [URL] |
-| Heiding et al., "Devising and Detecting Phishing" (arXiv:2412.00586, Nov 30, 2024) — **arXiv preprint, not peer-reviewed at time of writing** | Academic preprint | SECONDARY | AI-automated phishing achieves 54% click-through vs. 12% control (101 participants, controlled study); AI with minimal human-in-loop: 56% | https://arxiv.org/abs/2412.00586 |
+> **Citation architecture note:** Inline `[Rn]` markers in the report body refer to the row numbers below. Where a URL is not present in the original source document provided for this review, the entry is marked `[link not available in provided draft]`; this does not imply the source is unverifiable — only that a URL was not included in the draft text reviewed.
+
+| # | Source | Type | Quality | Key Findings Used | Link/DOI |
+|---|--------|------|---------|------------------|----------|
+| R1 | OpenAI/Microsoft "Disrupting Malicious Uses of AI by State-Affiliated Threat Actors" (Feb 14, 2024) | Joint official disclosure | PRIMARY | Five APT groups using LLMs; assessed as exploratory | [link not available in provided draft] |
+| R2 | OpenAI "Disrupting Deceptive Uses of AI by Covert Influence Operations" (May 30, 2024) | Official report | PRIMARY | Five IO operations disrupted; none built real audience | [link not available in provided draft] |
+| R3 | OpenAI "Influence and Cyber Operations: An Update" (October 9, 2024) | Official report | PRIMARY | 20+ operations disrupted; SweetSpecter, CyberAv3ngers, Storm-0817 | [link not available in provided draft] |
+| R4 | OpenAI Threat Intelligence Report (February 21, 2025) | Official report | PRIMARY | Romance scam networks; Chinese IO targeting Japan | [link not available in provided draft] |
+| R5 | Microsoft Digital Defense Report 2023 (October 2023) | Official report | PRIMARY | AI for phishing, IO; attack volume statistics | [link not available in provided draft] |
+| R6 | Microsoft Digital Defense Report 2024 (October 2024) | Official report | PRIMARY | 600M daily password attacks; AI IO use by Iran | [link not available in provided draft] |
+| R7 | NCSC UK "Near-Term Impact of AI on Cyber Threat" (January 24, 2024) | Government assessment | PRIMARY | "Almost certainly" increases attack volume; barrier to entry | [link not available in provided draft] |
+| R8 | NCSC UK "Impact of AI on Cyber Threat to 2027" (2025) | Government assessment | PRIMARY | Enhancement not novel TTPs; full autonomy unlikely before 2027 | [link not available in provided draft] |
+| R9 | Google GTIG "Adversarial Misuse of Generative AI" (January 2025) | Vendor primary research | PRIMARY | 40+ APTs on Gemini; APT42 broadest documented state-actor AI use; DPRK most prolific in IT worker AI | [link not available in provided draft] |
+| R10 | Google GTIG AI Threat Tracker (November 2025) | Vendor primary research | PRIMARY | LAMEHUG, PROMPTFLUX, PROMPTSTEAL; 5+ in-wild LLM malware families documented | [link not available in provided draft] |
+| R11 | Google Project Zero "Big Sleep" blog (published November 1, 2024; discovery October 2024) | Primary research blog | PRIMARY | AI autonomous zero-day in production software: stack buffer underflow in SQLite `seriesBestIndex`, dev branch only, no CVE. **Distinct from CVE-2025-6965** (July 2025, integer truncation, production release) | https://projectzero.google/2024/10/from-naptime-to-big-sleep.html |
+| R12 | CERT-UA Advisory (July 17, 2025) | Government advisory | PRIMARY | LAMEHUG attribution to APT28; Qwen 2.5-Coder API querying at runtime | [link not available in provided draft] |
+| R13 | Anthropic Report on GTG-1002 (November 13, 2025) | Company official report | PRIMARY | High-autonomy AI-assisted intrusion; 80–90% AI autonomy (provider claim; disputed by peer analysts); ~30 targets | [link not available in provided draft] |
+| R14 | CrowdStrike Global Threat Report 2025 | Vendor primary report | PRIMARY | 442% vishing increase H1→H2 2024; FAMOUS CHOLLIMA 320+ infiltrations; DPRK 220% YoY growth | [link not available in provided draft] |
+| R15 | CrowdStrike Global Threat Report 2026 | Vendor primary report | PRIMARY | 89% increase AI-enabled adversaries; prompt injection at 90+ orgs; 29-min avg eCrime breakout | [link not available in provided draft] |
+| R16 | FBI IC3 2024 Internet Crime Report | Government primary | PRIMARY | $16.6B total losses; BEC $2.77B; crypto $9.3B | [link not available in provided draft] |
+| R17 | FinCEN Deepfake Fraud Alert (November 2024) | Government advisory | PRIMARY | SAR increase for deepfake fraud since 2023; systemic threat to financial sector | [link not available in provided draft] |
+| R18 | CISA Advisory AA23-320A (Scattered Spider, November 2023) | Government advisory | PRIMARY | MGM breach; vishing methodology; AI voice not confirmed in 2023 attack | [link not available in provided draft] |
+| R19 | DOJ DPRK IT Worker Indictment (December 2024) | Court/legal document | PRIMARY | 80+ US identities; 100+ companies; AI-generated profiles confirmed | [link not available in provided draft] |
+| R20 | KnowBe4 DPRK worker disclosure (July 2024) | Company disclosure | PRIMARY | AI-generated profile photo; face-swap on identity document; automated KYC bypass | [link not available in provided draft] |
+| R21 | Euler Hermes statement on 2019 CEO fraud | Insurer primary witness | PRIMARY | Earliest documented criminal voice cloning in this review; €220K; first cybercrime with AI per insurer | [link not available in provided draft] |
+| R22 | Arup official statement + Hong Kong Police confirmation (May 2024) | Company + government | PRIMARY | $25.6M deepfake CFO fraud; 15 wire transfers; multi-person real-time video deepfake | [link not available in provided draft] |
+| R23 | Trend Micro "The Reality Behind AI Threats" (August 2023) | Vendor primary research | PRIMARY | WormGPT/FraudGPT capabilities NOT independently verified; only promotional material found | [link not available in provided draft] |
+| R24 | SentinelOne LABScon 2025 presentation | Vendor primary research | PRIMARY | 7,000+ samples with embedded AI API keys (retrohunt on VirusTotal); "almost all turned out to be non-malicious" per primary report; 6,000+ unique keys; LAMEHUG/PROMPTSTEAL confirmed malicious subset (284 HuggingFace keys); MalTerminal earliest known LLM-enabled malware sample (PoC, pre-Nov 2023) | [link not available in provided draft] |
+| R25 | IBM X-Force Threat Intelligence Index 2024 | Vendor primary report | PRIMARY | No concrete evidence of GenAI-engineered attacks in 2023–2024 | [link not available in provided draft] |
+| R26 | Europol EU-SOCTA 2025 | Government/agency | PRIMARY | AI "fundamentally reshaping organized crime"; multilingual victim targeting | [link not available in provided draft] |
+| R27 | Seymour & Tully, "Weaponizing Data Science for Social Engineering: Automated E2E Spear Phishing on Twitter" (SNAP_R) | Black Hat USA 2016 / ZeroFOX | PRIMARY (research precursor) | LSTM and Markov generation modes; 30–66% CTR; 6.85 tweets/min; 819 targets over 2-hour bake-off | https://www.blackhat.com/docs/us-16/materials/us-16-Seymour-Tully-Weaponizing-Data-Science-For-Social-Engineering-Automated-E2E-Spear-Phishing-On-Twitter.pdf |
+| R28 | Brumley et al., "Hacking as a Service: The Business of Vulnerability Discovery" / CGC Mayhem documentation; "Mayhem: The DARPA Cyber Grand Challenge Winning System" | IEEE Security & Privacy / ForAllSecure (CMU) | PRIMARY (research precursor) | Fully automated vulnerability discovery and exploitation pipeline; symbolic execution + concolic fuzzing; CGC Final Event August 4, 2016 | DOI: 10.1109/MSEC.2017.2759104 |
+| R29 | Kirat, Jang & Stoecklin, "DeepLocker: How AI Can Power a Stealthy New Breed of Malware" | IBM Research / Black Hat USA 2018 Briefings | PRIMARY (research precursor) | CNN (AlexNet referenced in slides) as cryptographic trigger for payload decryption; payload unrecoverable without biometric trigger | https://securityintelligence.com/deeplocker-how-ai-can-power-a-stealthy-new-breed-of-malware/ |
+| R30 | Takaesu (MBSD), "DeepExploit: Fully Automated Penetration Test Tool using Machine Learning" | Black Hat Arsenal 2018 / MBSD | PRIMARY (research precursor) | A3C RL agent orchestrating Metasploit RPC API; reward-shaped policy on shell-session success; GitHub: github.com/13o-bbr-bbq/machine_learning_security/tree/master/DeepExploit | https://www.blackhat.com/us-18/arsenal/schedule/#deep-exploit-11908 |
+| R31 | Fang et al., "LLM Agents can Autonomously Exploit One-day Vulnerabilities" (arXiv 2404.08144, April 2024) | Academic (UIUC) | SECONDARY | 87% CVE exploitation rate with description; 7% without | https://arxiv.org/abs/2404.08144 |
+| R32 | UAE $35M voice cloning fraud (publicly disclosed October 2021) | Court documents via media | SECONDARY (court basis) | $35M loss; at least 17 individuals identified in UAE investigation | [link not available in provided draft] |
+| R33 | Vade Security Q4 2022 Phishing Report | Vendor quarterly | SECONDARY | 274% Q3→Q4 2022 phishing surge post-ChatGPT launch (causal link probable but unproven) | [link not available in provided draft] |
+| R34 | Hoxhunt phishing effectiveness research (2025) | Vendor research | SECONDARY | AI surpassed human red team in phishing effectiveness (Feb–Mar 2025); 5-min AI campaign generation vs. 16-hr human red team. CTR figures from Hoxhunt are 2–4%; 54% CTR belongs to Heiding et al. [R47], not Hoxhunt | [link not available in provided draft] |
+| R35 | KELA Intelligence underground forum data (2024) | Vendor research | SECONDARY | 219% dark web AI tool mentions increase; 52% rise in AI jailbreak discussions | [link not available in provided draft] |
+| R36 | SlashNext 1,265% phishing surge claim | Single vendor claim | WEAK | Cited for context only; methodology unclear; do not cite as authoritative | [link not available in provided draft] |
+| R37 | WormGPT/FraudGPT marketing claims (underground forums, 2023) | Underground advertisements | WEAK | No functional capability independently verified; no confirmed deployment | [link not available in provided draft] |
+| R38 | OpenAI June 2025 threat report (ScopeCreep, DPRK IT workers) | Official report | PRIMARY | ScopeCreep LLM-assisted Windows malware development; DPRK job-application automation at scale | [link not available in provided draft] |
+| R39 | Anthropic August 2025 report (GTG-2002) | Official report | PRIMARY | Agentic extortion; Claude Code as autonomous operator across 17 organisations in one month; ransom demands >$500K | [link not available in provided draft] |
+| R40 | Microsoft incident response report, November 2025 (SesameOp) | Primary vendor IR | PRIMARY | OpenAI Assistants API abused as covert C2 relay; traffic indistinguishable from legitimate AI usage | [link not available in provided draft] |
+| R41 | Wiz, Snyk, Datadog Security Labs, Endor Labs, FutureSearch, Kaspersky, BleepingComputer, LiteLLM official advisory (TeamPCP / LiteLLM, March 2026) | Multi-vendor primary | PRIMARY | AI supply chain attack; ~36% cloud environment installation footprint (Wiz telemetry); 3–5 hr malicious window; credential harvester + K8s toolkit + systemd backdoor; CVE-2026-33634, CVSS4 9.4 | [link not available in provided draft] |
+| R42 | Mandiant M-Trends 2026 | Primary vendor report | PRIMARY | Voice phishing 11% of initial infection vectors in 2025 investigations (up from lower baseline); email phishing declined to 6% | [link not available in provided draft] |
+| R43 | Microsoft Digital Defense Report 2025 | Official report | PRIMARY | $4B fraud blocked Apr 2024–Apr 2025; 1.6M fake account creation attempts/hr; AI-generated ID growth 195% | [link not available in provided draft] |
+| R44 | FBI IC3 Annual Report 2025 | Government primary | PRIMARY | 22,364 AI-related complaints; $893M adjusted losses; $632M from investment scams with AI nexus; $30.3M BEC with AI nexus | [link not available in provided draft] |
+| R45 | FBI IC3 PSA (December 19, 2025) | Government advisory | PRIMARY | AI voice cloning used to impersonate senior US officials since at least 2023; targets include government and military | [link not available in provided draft] |
+| R46 | Singapore Cyber Security Agency, "Singapore Cyber Landscape 2023" (July 30, 2024) | Government primary | PRIMARY | ~13% of 40 sampled phishing emails contained AI-generated content (caveated: imperfect detection tools, small sample) | [link not available in provided draft] |
+| R47 | Heiding, Schneier et al., "Devising and Detecting Phishing: Large Language Models vs. Smaller Human Models" (arXiv:2412.00586, submitted November 30, 2024) — **arXiv preprint, not peer-reviewed at time of writing** | Academic preprint | SECONDARY | AI-automated phishing: 54% CTR vs. 12% control (101 participants, controlled study); AI + minimal human-in-loop: 56% CTR. This 54% figure is attributable to this study, not to Hoxhunt | https://arxiv.org/abs/2412.00586 |
 
 ---
 
