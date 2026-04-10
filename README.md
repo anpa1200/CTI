@@ -27,6 +27,7 @@ Structured, citation-linked versions of long-form CTI articles: **PDF** and **HT
 | [**ATT&CK as a Working Tool**](ATT%26CK/) | Practitioner's guide: framework anatomy, 14 tactics, 5 hands-on use cases (mapping, gap analysis, Sigma + ATT&CK, threat hunting, adversary emulation). For CTI analysts, detection engineers, and SOC analysts. Mar 2026. | [PDF](ATT%26CK/ATT%26CK%20as%20a%20Working%20Tool_%20Theory%20and%20Hands-On%20Practical%20Usage%20_%20by%20Andrey%20Pautov%20_%20Mar%2C%202026%20_%20Medium.pdf) · [Medium →](https://medium.com/@1200km) |
 | [**Attribution Methodology**](Attribution/) | Practitioner's guide: building and defending threat actor attribution. Evidence types ranked by strength (IOC overlap → TTP consistency → operator mistakes), 5-level attribution spectrum, false flag detection, APT29 worked exercise. For CTI analysts. Mar 2026. | [PDF](Attribution/attribution.pdf) · [Medium →](https://medium.com/@1200km) |
 | [**Infrastructure Pivoting**](Infrastructure_pivoting/) | Field manual: expanding a single IOC into a full attacker infrastructure map. 7 pivot types (passive DNS, reverse IP, ASN, TLS certs, subdomains, Shodan/Censys, WHOIS), C2 tracing worked example. Includes `autoWF.py` — automated pivot tool (VirusTotal + SecurityTrails + crt.sh). Mar 2026. | [autoWF.py](Infrastructure_pivoting/autoWF.py) · [Medium →](https://medium.com/@1200km) |
+| [**AI in Offensive Operations**](AI_Threat_Actors/) | Evidence-based deep research report: how threat actors use AI. Chronological timeline 2019–2026, 10 major incidents (voice cloning, Arup $25M deepfake, LAMEHUG, GTG-1002 agentic intrusion), TTP analysis (ATT&CK-aligned), statistics, reality vs. hype, actor segmentation, 5-year forecast. Apr 2026. | [Report →](AI_Threat_Actors/README.md) |
 
 *More reports (malware writeups, tool analysis, IOCs) will be added in separate directories.*
 
@@ -63,10 +64,12 @@ CTI/
 ├── Attribution/              # Practitioner's guide to attribution methodology
 │   ├── README.md
 │   └── *.pdf
-└── Infrastructure_pivoting/  # Field manual: single IOC → full attacker infrastructure
-    ├── README.md
-    ├── autoWF.py             # Automated pivot tool (VT + SecurityTrails + crt.sh)
-    └── *.pdf
+├── Infrastructure_pivoting/  # Field manual: single IOC → full attacker infrastructure
+│   ├── README.md
+│   ├── autoWF.py             # Automated pivot tool (VT + SecurityTrails + crt.sh)
+│   └── *.pdf
+└── AI_Threat_Actors/         # Deep research: AI use by threat actors 2019–2026
+    └── README.md
 ```
 
 - **PDF:** Table of contents, clickable `[R1]`…`[Rx]` to references, original figures where available.
