@@ -91,7 +91,11 @@ The sectors most exposed today are financial services, professional services, an
 | Date | Event | Actor | Country | AI Use | Evidence | Why It Matters |
 |------|--------|-------|---------|--------|----------|----------------|
 | 2004 | ML spam filter evasion demonstrated at MIT Spam Conference | Academic / implicit criminal adoption | N/A | ML models used to evade ML-based spam filters via "good word" insertion | REPORTED (conference proceedings) | Origin of adversarial ML concept; criminal spam operators adopted techniques within years |
-| 2014 | Neural CAPTCHA-solving demonstrated | Academic | N/A | CNN-based CAPTCHA solvers achieving ~95% accuracy | REPORTED (Usenix WoOT paper) | Established that ML could reliably bypass ML-based bot-detection at scale |
+| 2014 | Neural CAPTCHA-solving demonstrated | Academic | N/A | ML-based CAPTCHA solvers demonstrated at scale; accuracy varied by target service (5–55% in Bursztein et al. USENIX WOOT 2014, not the ~95% figure cited in some secondary sources; ~95% accuracy in CNN-specific solvers emerged in later papers circa 2020) | REPORTED (Bursztein et al., USENIX WOOT 2014) | Established that ML could reliably bypass ML-based bot-detection at scale |
+| August 2016 | **SNAP_R — First automated ML spear-phishing tool** | Defensive research (John Seymour & Philip Tully, ZeroFOX) | USA | LSTM and Markov chain generation modes trained on target's Twitter history to produce personalized phishing tweets; 30–66% click-through in live bake-off at 6.85 tweets/min across 819 targets in 2-hour window | REPORTED (Black Hat USA 2016 / ZeroFOX, PRIMARY) | First publicly documented ML system automating personalized spear-phishing generation and delivery; architectural predecessor of LLM-driven phishing (2023–2026) |
+| August 2016 | **DARPA Cyber Grand Challenge — Mayhem wins autonomous hacking competition** | Defensive research (ForAllSecure / CMU, DARPA) | USA | Fully autonomous system combining symbolic execution (Z3 SMT solver) and concolic fuzzing to discover vulnerabilities, generate exploits, and patch binaries in previously unseen software without human intervention in real time | CONFIRMED (DARPA CGC Final Event, August 4, 2016, PRIMARY) | First publicly validated fully autonomous vulnerability discovery and exploitation system; establishes closed-loop AI-driven offensive security template that Big Sleep (2024) later realises with neural methods |
+| August 2018 | **DeepExploit (Reinforcement Learning Pentesting)** | Defensive research (Isao Takaesu / MBSD — Mitsui Bussan Secure Directions) | Japan | A3C reinforcement learning agent orchestrating Metasploit RPC API for autonomous exploitation sequencing against live targets; policy network trained via reward shaping on shell-session success | REPORTED (Black Hat Arsenal 2018 / Isao Takaesu, PRIMARY) | First publicly documented system treating exploitation sequencing as an RL optimization problem against live infrastructure; architectural predecessor to LLM-orchestrated pentesting frameworks (Stage 5b) |
+| August 2018 | **DeepLocker — CNN-gated payload delivery** | Defensive research (IBM Research: Dhilung Kirat, Jiyong Jang, Marc Ph. Stoecklin) | USA | Deep CNN (AlexNet referenced in primary slides) fine-tuned on target biometrics; model's penultimate-layer activations used as cryptographic key to decrypt payload only on correct target identification; PoC hidden in videoconferencing app | REPORTED (Black Hat USA 2018 Briefings / IBM Research, PRIMARY) | First documented malware design using a neural network as an activation trigger; payload unrecoverable via static analysis or sandbox detonation without presenting the precise biometric trigger |
 | March 2019 | **First confirmed criminal voice-cloning fraud** | Unknown criminal group | Origin unclear | AI voice synthesis cloned German CEO voice; €220,000 stolen | CONFIRMED (Euler Hermes insurer statement, PRIMARY) | Earliest verifiable documented criminal deployment of generative AI in an attack |
 | January 2020 (public Oct 2021) | UAE bank voice-cloning fraud | Unknown (17 identified in UAE investigation) | Unknown | "Deep voice" AI cloned company director's voice; combined with forged emails | REPORTED (UAE court documents referenced in media, SECONDARY with primary basis) | $35M loss; tenfold scale increase over 2019 case; first cross-jurisdictional AI fraud case |
 | August 2021 | Singapore GovTech GPT-3 phishing experiment | Defensive research (Singapore government) | Singapore | GPT-3-generated phishing emails outperformed human-crafted emails in click-through | REPORTED (Black Hat USA 2021 presentation) | First controlled public demonstration of LLM-generated phishing superiority |
@@ -123,7 +127,7 @@ The sectors most exposed today are financial services, professional services, an
 | July 30, 2024 | Singapore CSA publishes national cyber landscape report: ~13% of sampled phishing emails contained AI-generated content | N/A (government assessment) | Singapore | Quantitative sample of 40 unique phishing emails (~1% of 2023 reported attempts): 13% AI-generated content detected (detection tools caveated as imperfect) | CONFIRMED (Singapore Cyber Security Agency "Singapore Cyber Landscape 2023," PRIMARY) | One of the few official quantified measurements of AI-generated phishing content in a national dataset |
 | July 2024 | KnowBe4 discloses North Korean IT worker hired with AI-generated identity | FAMOUS CHOLLIMA | North Korea | AI-generated profile photo; face-swap used on identity document | CONFIRMED (KnowBe4 company disclosure, PRIMARY) | Detailed corporate case study of DPRK AI identity fraud supply chain |
 | October 2024 | OpenAI disrupts 20+ operations; names SweetSpecter, CyberAv3ngers, Storm-0817 | China (SweetSpecter), Iran (CyberAv3ngers, Storm-0817) | China, Iran | SweetSpecter: phished OpenAI employees; CyberAv3ngers: ICS/SCADA research; Storm-0817: Android malware debugging | CONFIRMED (OpenAI October 2024 report, PRIMARY) | Extended scope from IO to direct cyber operations; Iran documented as major LLM-assisted malware developer |
-| October 2024 | Google Big Sleep discovers zero-day in SQLite autonomously | Google Project Zero/DeepMind | USA (defensive research) | AI agent discovered CVE-2025-6965 stack buffer underflow; reported to developers who patched same day | CONFIRMED (Google Project Zero blog, PRIMARY) | First publicly documented AI autonomous zero-day discovery in real-world production software |
+| October 2024 (blog: Nov 1, 2024) | Google Big Sleep discovers zero-day in SQLite autonomously | Google Project Zero/DeepMind | USA (defensive research) | AI agent discovered a **stack buffer underflow** in SQLite's `seriesBestIndex` function (development branch only; fixed before any official release; **no CVE assigned**). Distinct from CVE-2025-6965, which is a separate July 2025 Big Sleep discovery (integer truncation/memory corruption, all versions prior to 3.50.2) | CONFIRMED (Google Project Zero blog published Nov 1, 2024, PRIMARY) | First publicly documented AI autonomous zero-day discovery in real-world production software |
 | November 2024 | FinCEN deepfake alert | FinCEN | USA | N/A (advisory) | CONFIRMED (FinCEN official advisory, PRIMARY) | Federal regulator officially documented rising deepfake fraud in SARs; signals systemic threat to financial sector |
 | Throughout 2024 | Iran's APT42 identified as heaviest APT user of Gemini | APT42 (IRGC-linked) | Iran | Reconnaissance, phishing lures, social engineering content, support for malware development | CONFIRMED (Google GTIG "Adversarial Misuse of Generative AI," January 2025, PRIMARY) | Largest documented state-actor AI footprint across multiple attack phases |
 | Throughout 2024 | DPRK groups identified as most prolific nation-state AI users | FAMOUS CHOLLIMA / Kimsuky | North Korea | IT worker schemes: LinkedIn research, cover letters, job applications; Gmail compromise research; crypto laundering | CONFIRMED (Google GTIG January 2025, CrowdStrike GTR 2025, PRIMARY) | Operational scale and breadth; 320+ companies infiltrated with AI-assisted identity management |
@@ -160,7 +164,7 @@ The sectors most exposed today are financial services, professional services, an
 **AI Component:** Text-to-speech AI software cloned the German CEO's voice, including his accent and speech patterns. Three calls were made: first to demand €220,000 transfer to a "Hungarian supplier within the hour"; second to falsely claim reimbursement; third attempt to extract additional funds (refused when victim became suspicious of Austrian mobile number).
 **Loss:** €220,000 (~$243,000 USD) — fully transferred, not recovered
 **Insurance:** Euler Hermes covered the claim and described it as "the first cybercrime they'd heard of using AI."
-**Source:** PRIMARY (Euler Hermes insurer statement; reported Wall Street Journal, September 2019)
+**Source:** PRIMARY (Euler Hermes insurer statement; reported Wall Street Journal, **August 30, 2019**)
 **Novel vs. Standard TTP:** Novel — no prior confirmed criminal use of AI voice synthesis. The attack template (CEO impersonation, urgent wire transfer) is standard BEC; the AI component was genuinely new.
 **Why It Matters:** Establishes 2019 as the start of the AI fraud timeline. All subsequent voice fraud incidents build on this template.
 
@@ -330,9 +334,13 @@ The sectors most exposed today are financial services, professional services, an
 
 ### TA0042 — Resource Development
 
-**AI Usage:** Generating spear-phishing lure content; developing fake identities for social media, employment, and infiltration; building malware scaffolding; automating account creation.
+> **Mapping note:** TA0042 covers all pre-compromise capability and identity building. **Identity & Infrastructure Fabrication** covers AI-generated personas and lure content. **T1587.001: Malware Development** covers AI-assisted malware engineering. AI-assisted scripting at execution time (e.g., LAMEHUG querying an LLM for runtime command generation) maps instead to TA0011 Command and Control.
 
-**Status: CONFIRMED** (multiple primary sources)
+**Status: CONFIRMED** (multiple primary sources across both sub-areas)
+
+**Identity & Infrastructure Fabrication**
+
+**AI Usage:** Generating spear-phishing lure content; developing fake identities for social media, employment, and infiltration; building malware scaffolding; automating account creation.
 
 - FAMOUS CHOLLIMA used AI-generated photos, face-swap on ID documents, and LLM-generated cover letters/LinkedIn profiles for IT worker infiltrations.
 - Crimson Sandstorm used ChatGPT to generate spear-phishing emails impersonating an international development agency.
@@ -341,21 +349,48 @@ The sectors most exposed today are financial services, professional services, an
 
 **Limitations:** AI-generated content retains detectable artifacts; AI-generated images may fail liveness detection in KYC flows with advanced anti-fraud tooling. AI-generated identities fail when subjected to human investigation of deep profile history.
 
+**T1587.001: Malware Development**
+
+**AI Usage:** LLM-assisted malware development, debugging, code generation, and capability development conducted before deployment against target networks.
+
+- Storm-0817 (Iran) used ChatGPT to debug Android malware during development (OpenAI October 2024, PRIMARY).
+- APT41 used Gemini for tool development and code translation in the capability-building phase (Google GTIG January 2025, PRIMARY).
+- APT42 used Gemini for malware development support (Google GTIG January 2025, PRIMARY).
+- ScopeCreep actor used OpenAI models to iteratively develop and debug a Windows malware payload pre-deployment (OpenAI June 2025, PRIMARY). `[Insert SHA256/IOC: ScopeCreep sample hashes per OpenAI June 2025 report]`
+- MalTerminal `[Insert SHA256/IOC: MalTerminal VirusTotal submission hash, SentinelOne LABScon 2025]` (written pre-November 2023; publicly disclosed September 2025 at LABScon by SentinelOne): Windows executable using OpenAI GPT-4 API (via a deprecated endpoint) to dynamically generate ransomware code or reverse shells on demand. Never confirmed deployed in live attacks; likely a red team tool or PoC. First publicly revealed as "potentially the earliest known LLM-enabled malware" at LABScon 2025.
+
+**Limitations:** LLMs produce functional but generic code; bespoke, sophisticated malware still requires skilled human developers. LLM code generation does not replace zero-day research.
+
 ---
 
 ### TA0001 — Initial Access
 
-**AI Usage:** AI-enhanced phishing (language quality, personalization); AI-generated voice for vishing/help desk attacks; deepfake video for fraud authorization.
+> **Mapping note:** TA0001 covers AI-enabled techniques for gaining initial network access. **Voice & Video Impersonation** covers AI-generated voice/video used to deceive targets. **T1566: Phishing & Social Engineering** covers AI-generated content used for network access. Voice/deepfake fraud used for financial authorization (not network access) additionally maps to T1656 (Impersonation) and TA0040 Impact.
 
-**Status: CONFIRMED** (multiple primary sources)
+**Status: CONFIRMED — highest maturity of any AI-enabled TTP**
+
+**Voice & Video Impersonation (Vishing/Deepfakes)**
+
+**AI Usage:** AI-generated voice for vishing/help desk attacks; deepfake video for fraud authorization.
 
 - Vishing: CrowdStrike documented 442% increase H1→H2 2024, explicitly attributed to AI voice synthesis accessibility.
 - Deepfake CFO fraud: Arup ($25M); UAE bank ($35M); 2019 CEO fraud ($243K).
-- Phishing text generation: Crimson Sandstorm, APT42, Emerald Sleet confirmed.
 - Help desk social engineering: Scattered Spider (2023) used human operators; follow-on campaigns reportedly adopted AI voice agents.
-- Quantified effectiveness: AI-generated phishing emails achieved 54% click-through vs. 12% for human-written control (SECONDARY; multiple vendor citations, methodology varies).
 
-**Limitations:** AI voice cloning quality degrades under scrutiny; verification call-backs and out-of-band confirmation disrupt attacks. AI phishing at volume risks triggering automated volume-based detection.
+**Limitations:** AI voice cloning quality degrades under scrutiny; verification call-backs and out-of-band confirmation disrupt attacks.
+
+**T1566: Phishing & Social Engineering**
+
+**AI Usage:** Grammar improvement, personalization, multilingual translation, voice/video deepfakes for authorization fraud, romance scam script generation, influence operation content.
+
+- Phishing text generation: Crimson Sandstorm, APT42, Emerald Sleet confirmed (OpenAI/Microsoft February 2024; Google GTIG January 2025, PRIMARY).
+- OpenAI disrupted romance scam networks using ChatGPT to manage multiple simultaneous victim conversations (February 2025, PRIMARY).
+- AI generates convincing phishing emails in 5 minutes vs. 16 hours for human red team (Hoxhunt, SECONDARY).
+- Doppelganger (Russia) used AI to translate and generate influence content in 6+ languages at scale impossible without AI.
+- AI vs. human red team: AI surpassed human red team effectiveness by February–March 2025 (Hoxhunt, SECONDARY).
+- Quantified effectiveness: AI-generated phishing emails achieved 54% click-through vs. 12% for human-written control in a controlled 101-participant study (Heiding et al., arXiv:2412.00586, SECONDARY arXiv preprint). Note: this 54% figure is from Heiding et al., not Hoxhunt; Hoxhunt click-through rates are in the 2–4% range.
+
+**Limitations:** Personalized AI phishing at volume can trigger volume-based detection. AI cannot reliably tailor attacks based on real-time conversational cues without human oversight or agentic design.
 
 ---
 
@@ -374,41 +409,6 @@ The sectors most exposed today are financial services, professional services, an
 - SesameOp represents a higher-impact pattern than Pattern A: no custom infrastructure required; traffic blends into enterprise AI egress; detection requires behavioral profiling of AI API usage, not IP/domain blocklists.
 
 **Limitations:** Pattern A — requires outbound HTTPS to AI provider APIs; detectable via egress analysis; API key revocation degrades ongoing campaigns. Pattern B — requires maintaining a valid AI provider account; account termination breaks C2; detection possible via anomalous API usage patterns (volume, threading, unusual payload structures).
-
----
-
-### TA0042 / T1587.001 — Resource Development (Malware Development)
-
-> **Mapping note:** Malware development is a **pre-compromise** activity classified under TA0042 Resource Development, sub-technique T1587.001 (Develop Capabilities: Malware). It precedes Initial Access and Execution on the ATT&CK kill chain. AI-assisted scripting at execution time (e.g., LAMEHUG querying an LLM for runtime command generation) maps instead to TA0011 Command and Control, covered in that section.
-
-**AI Usage:** LLM-assisted malware development, debugging, code generation, and capability development conducted before deployment against target networks.
-
-**Status: CONFIRMED** (multiple primary sources)
-
-- Storm-0817 (Iran) used ChatGPT to debug Android malware during development (OpenAI October 2024, PRIMARY).
-- APT41 used Gemini for tool development and code translation in the capability-building phase (Google GTIG January 2025, PRIMARY).
-- APT42 used Gemini for malware development support (Google GTIG January 2025, PRIMARY).
-- ScopeCreep actor used OpenAI models to iteratively develop and debug a Windows malware payload pre-deployment (OpenAI June 2025, PRIMARY). `[Insert SHA256/IOC: ScopeCreep sample hashes per OpenAI June 2025 report]`
-- MalTerminal `[Insert SHA256/IOC: MalTerminal VirusTotal submission hash, SentinelOne LABScon 2025]` (written pre-November 2023; publicly disclosed September 2025 at LABScon by SentinelOne): Windows executable using OpenAI GPT-4 API (via a deprecated endpoint) to dynamically generate ransomware code or reverse shells on demand. Never confirmed deployed in live attacks; likely a red team tool or PoC. First publicly revealed as "potentially the earliest known LLM-enabled malware" at LABScon 2025.
-
-**Limitations:** LLMs produce functional but generic code; bespoke, sophisticated malware still requires skilled human developers. LLM code generation does not replace zero-day research.
-
----
-
-### TA0001 / T1566 — Initial Access (Phishing & Social Engineering)
-
-> **Mapping note:** T1566 (Phishing) and associated social engineering techniques are sub-techniques of TA0001 Initial Access, not TA0043 Reconnaissance. TA0043 covers pre-compromise information gathering (covered in the Reconnaissance section above). This section covers AI-enhanced phishing content generation and social engineering as an access vector. Voice/deepfake fraud used for financial authorization (not network access) maps additionally to T1656 (Impersonation) and TA0040 Impact.
-
-**AI Usage:** Grammar improvement, personalization, multilingual translation, voice/video deepfakes for authorization fraud, romance scam script generation, influence operation content.
-
-**Status: CONFIRMED — highest maturity of any AI-enabled TTP**
-
-- OpenAI disrupted romance scam networks using ChatGPT to manage multiple simultaneous victim conversations (February 2025, PRIMARY).
-- AI generates convincing phishing emails in 5 minutes vs. 16 hours for human red team with comparable click-through rates (Hoxhunt, SECONDARY).
-- Doppelganger (Russia) used AI to translate and generate influence content in 6+ languages at scale impossible without AI.
-- AI vs. human red team: AI surpassed human red team effectiveness by February–March 2025 (Hoxhunt, SECONDARY).
-
-**Limitations:** Personalized AI phishing at volume can trigger volume-based detection. AI cannot reliably tailor attacks based on real-time conversational cues without human oversight or agentic design.
 
 ---
 
@@ -526,8 +526,8 @@ The sectors most exposed today are financial services, professional services, an
 
 | Metric | Figure | Source | Quality |
 |--------|--------|--------|---------|
-| AI-generated phishing click-through rate | 54% | Multiple vendor citations (Hoxhunt); supported by peer-reviewed arXiv study (101 participants) | SECONDARY (methodology varies across citations) |
-| Fully AI-automated phishing click-through (controlled study) | 54% (matching skilled human experts at 54%); AI with minimal human-in-loop: 56% | Peer-reviewed arXiv study (101 participants) | SECONDARY (academic, human subjects) |
+| AI-generated phishing click-through rate | 54% | **Heiding et al. arXiv preprint (arXiv:2412.00586, 101 participants, controlled study)** — not a Hoxhunt figure; Hoxhunt click-through rates are 2–4%. The 54% figure is specific to Heiding et al.'s controlled experiment with human subjects | SECONDARY (academic preprint, controlled study) |
+| Fully AI-automated phishing click-through (controlled study) | 54% (matching skilled human experts at 54%); AI with minimal human-in-loop: 56% | **Heiding et al. arXiv preprint** (arXiv:2412.00586, 101 participants) — **arXiv preprint, not peer-reviewed at time of writing** | SECONDARY (academic preprint, human subjects) |
 | Control/baseline phishing click-through (same study) | 12% | Same arXiv study | SECONDARY (academic) |
 | Fraction of recipients falling for AI phishing | 60% | Harvard research | SECONDARY (academic) |
 | AI phishing campaign generation time | 5 minutes | Hoxhunt | SECONDARY |
@@ -535,7 +535,7 @@ The sectors most exposed today are financial services, professional services, an
 | AI surpassing human red team in phishing | Feb–Mar 2025 | Hoxhunt | SECONDARY |
 | Portion of national phishing sample containing AI-generated content | ~13% of 40 sampled phishing emails (~1% of 2023 reported attempts) | Singapore CSA "Singapore Cyber Landscape 2023," July 2024 | PRIMARY (with caveat: detection tools imperfect, small sample) |
 
-*Note: The arXiv controlled study (101 participants) is the strongest methodology available for phishing effectiveness comparisons. The 54% figure is robust across multiple citations. Treat the 1,265% surge figure (SlashNext) with skepticism — single vendor, unclear methodology.*
+*Note: Heiding et al. (arXiv:2412.00586, 101 participants) provides the strongest controlled methodology for phishing effectiveness comparisons; it is an arXiv preprint, not a peer-reviewed publication, but the 54% figure is the most reproducible in the literature. The 54% figure is attributable to that study, not to Hoxhunt (whose click-through rates are 2–4%). Treat the 1,265% surge figure (SlashNext) with skepticism — single vendor, unclear methodology.*
 
 ---
 
@@ -665,7 +665,7 @@ The FBI's 2025 IC3 annual report (covering calendar year 2025) is the first to i
 | Setting | Finding | Status |
 |---------|---------|--------|
 | UIUC (April 2024): GPT-4 exploits 87% of CVEs with description, sandboxed | Autonomous vulnerability exploitation proven in controlled environment | Research (no real victims) |
-| Google Big Sleep (October 2024): Zero-day in SQLite discovered autonomously | First AI autonomous zero-day discovery in production software | Defensive research (no malicious deployment) |
+| Google Big Sleep (discovered Oct 2024; blog Nov 1, 2024): Stack buffer underflow in SQLite discovered autonomously — no CVE assigned (dev branch only, fixed pre-release). Separate from CVE-2025-6965 (Jul 2025, integer truncation) | First AI autonomous zero-day discovery in real-world production software | Defensive research (no malicious deployment) |
 | Unit 42 red team: AI simulates full ransomware kill chain in 25 minutes | AI can execute full attack in test environment | Red team exercise |
 | GTG-1002 (November 2025): 80–90% autonomous intrusion across ~30 targets | Anthropic claims first real-world agentic intrusion confirmed; **disputed by peer analysts** | CONFIRMED (Anthropic primary) / DISPUTED on autonomy degree |
 | GTG-2002 (August 2025): Claude Code as extortion operator at 17 organisations | Corroborating agentic AI extortion case from same provider | CONFIRMED (Anthropic primary) |
@@ -762,8 +762,110 @@ NCSC noted that AI lowers barriers for hacktivists. Documented evidence is limit
 
 ## 9. Technical Evolution
 
+### 9.1 The Genesis Architecture: Technical Anatomy of Early AI Weapons (2016–2018)
+
+Before LLMs entered the threat landscape, a discrete generation of AI-native offensive tools emerged from academic and defensive research communities between 2016 and 2018. These tools are not historical curiosities — they represent the first architectural templates for AI-augmented attack automation, and their design patterns prefigure every major pattern visible in the 2023–2026 threat landscape. Understanding their internals is prerequisite to understanding why the current generation of LLM-integrated malware is qualitatively different from, and in some respects less sophisticated than, what was built a decade earlier.
+
+---
+
+#### SNAP_R (2016) — LSTM and Markov Generation Modes for Targeted Spear-Phishing at Scale
+
+**Origin:** Developed by researchers John Seymour and Philip Tully (ZeroFOX) and presented at **Black Hat USA 2016** (with supplementary materials at DEF CON 24). SNAP_R stands for Social Network Automated Phishing with Reconnaissance.
+
+**Architectural Design:**
+
+SNAP_R implemented two independent generative models as selectable alternatives — not a combined "hybrid pipeline" as sometimes characterised in secondary sources:
+
+1. **LSTM (Long Short-Term Memory) language model** — trained on a corpus of Twitter posts scraped from a target's public social media history. The LSTM learned the syntactic patterns, vocabulary, topical preferences, and stylistic quirks of each individual target. This produced a character-level or token-level probability distribution over plausible next-token sequences that mimicked the target's own writing style.
+
+2. **Markov chain model** — an alternative generation mode using variable-order Markov chains trained on the same per-target corpus. The Markov model offered lower computational overhead than the LSTM but with reduced contextual coherence over longer sequences. Both models operated independently with different accuracy/speed tradeoffs; practitioners selected one per deployment. Secondary sources describing a "LSTM + Markov hybrid architecture" conflate two separate modes into a single pipeline that does not reflect the primary implementation.
+
+**Operational Pipeline:**
+
+- **Reconnaissance phase:** Automated scraping of target's public Twitter/social media history using Twitter API. Feature extraction of dominant topics, named entities, and stylistic patterns fed as training context.
+- **Generation phase:** Selected model (LSTM or Markov, per operator choice) produces candidate phishing tweet bodies crafted to appear consistent with the target's established communication style.
+- **Delivery phase:** Tweets include embedded malicious URLs (the actual lure payload). The high personalization rate was designed to defeat pattern-based phishing detection and exploit the implicit trust generated by stylistic familiarity.
+
+**Measured Outcomes:** In the researchers' live operational bake-off, SNAP_R achieved a click-through rate of **30–66%** (confirmed clicks ~30%; total engagement including unknown referrers reaching ~66%), compared to baselines of 5–14% for mass phishing campaigns. Demonstrated throughput was approximately **6.85 tweets per minute**, reaching 819 total targets over a 2-hour operational window. **Important correction:** the 819-target total for the bake-off has been widely misread in secondary sources as a per-minute rate, producing an erroneous "~800 tweets/minute" figure that does not appear in the primary paper. The primary Black Hat USA 2016 presentation is the authoritative source; the 6.85 tweets/minute figure is the correct operational throughput.
+
+**Architectural Significance:** SNAP_R is the direct architectural predecessor of the LLM-generated spear-phishing TTPs documented in 2023–2026. The fundamental design — use AI to learn target-specific linguistic patterns, generate personalized lure content, automate delivery — is identical to what OpenAI documented with APT42 in 2024 and what the Singapore GovTech GPT-3 experiment demonstrated in 2021. The difference is only implementation: SNAP_R required training a bespoke per-target model; modern LLMs achieve comparable personalization zero-shot from a few scraped posts used as prompt context.
+
+---
+
+#### DARPA Mayhem (2016) — Symbolic Execution + Fuzzing for Autonomous Zero-Day Generation
+
+**Origin:** Mayhem was developed by Carnegie Mellon University's ForAllSecure team as the winning entry of DARPA's Cyber Grand Challenge (CGC) in August 2016. The challenge required fully autonomous systems to discover vulnerabilities in previously unseen binaries, generate exploits, and patch their own systems — all without human intervention, in real time.
+
+**Architectural Design:**
+
+Mayhem's architecture is best understood as a hybrid of three distinct automated reasoning systems:
+
+1. **Symbolic Execution Engine (SE):** Mayhem used a path-exploration symbolic executor that treated program inputs as symbolic variables (rather than concrete values). By maintaining a set of path constraints — logical formulas describing the conditions required to reach a particular program state — the SE engine systematically explored reachable execution paths through target binaries. When a path constraint set was satisfiable in a way that reached a potentially exploitable state (null pointer dereference, buffer overflow, use-after-free), the engine queried an SMT solver (Satisfiability Modulo Theories, specifically Z3) to produce a concrete input that would trigger that state. This input becomes the exploit primitive.
+
+2. **Fuzzing Engine (Concolic/Directed):** Pure symbolic execution is computationally expensive and does not scale to large binaries due to path explosion. Mayhem integrated a concolic fuzzer — a hybrid that alternates between concrete test execution (fast, but limited path coverage) and symbolic analysis (slow, but capable of reaching deep paths). Concolic execution injects concrete values to "unstick" symbolic exploration when constraint solving becomes intractable, allowing Mayhem to cover a larger surface area of the target binary than either approach alone.
+
+3. **Exploit Generation and Payload Assembly:** On identifying a triggered crash state, Mayhem's exploit generator classified the vulnerability type (stack buffer overflow, heap overflow, format string, etc.) and assembled a proof-of-concept exploit using pre-computed payload templates adapted to the control-flow state of the crashing execution. Exploit quality varied; the CGC environment used simplified binaries and a controlled network stack (DECREE OS), which substantially reduced real-world exploit generalizability.
+
+**Why It Matters Architecturally:**
+
+Mayhem is the first publicly validated system to close the full loop from *binary input → vulnerability discovery → exploit generation* without human operator involvement. In the CGC final, Mayhem achieved a net positive score on both offense and defense concurrently — patching vulnerabilities in its own service binaries while simultaneously developing and deploying exploits against opponent systems. (The specific percentage of vulnerabilities patched is widely cited in coverage but is not directly verifiable against primary DARPA CGC documentation; this report avoids a specific figure for that reason.)
+
+**Relationship to Current AI Threat Landscape:** Mayhem is not an ML system in the modern sense — it does not use neural networks. Its relevance is architectural: it demonstrated that a *fully automated pipeline* could traverse the discovery-exploitation cycle on previously unseen binaries. Google Project Zero's Big Sleep system follows the same closed-loop architectural template but replaces symbolic execution with LLM-guided code path analysis. **Note on Big Sleep chronology:** The October 2024 Big Sleep discovery (a stack buffer underflow in SQLite's `seriesBestIndex` function, found in a development branch and fixed before any official release, with no CVE assigned) and the July 2025 discovery (CVE-2025-6965, an integer truncation/memory corruption flaw in SQLite affecting all versions prior to 3.50.2) are two separate, distinct vulnerabilities. Secondary sources frequently conflate them; this report treats them as separate events. The transition from formal methods (SMT solvers) to neural methods (LLMs) for vulnerability discovery is the key technical evolution between 2016 and the mid-2020s — the target architecture is the same; the reasoning engine changed.
+
+---
+
+#### DeepExploit (2018) — A3C Reinforcement Learning Orchestrating Metasploit
+
+**Origin:** Developed by Isao Takaesu (Mitsui Bussan Secure Directions, MBSD) and publicly released at Black Hat USA Arsenal in August 2018 (also presented at Black Hat EU 2018 Arsenal and DEF CON 26 AI Village). DeepExploit is a fully automated penetration testing framework that uses reinforcement learning to autonomously select and sequence exploitation actions against live targets.
+
+**Architectural Design:**
+
+DeepExploit's core innovation is the integration of **Asynchronous Advantage Actor-Critic (A3C)** reinforcement learning with the Metasploit Framework's RPC API — treating the penetration testing process as a Markov Decision Process (MDP) solvable by a policy-gradient RL agent.
+
+1. **State Space:** The agent's observation at each timestep consists of structured data about the target: open port set (from Nmap scan), service fingerprint strings, detected OS version, known vulnerability identifiers from Metasploit's database associated with detected services, and prior action outcomes (success/fail/partial flags). This state vector is encoded as a fixed-dimension feature array.
+
+2. **Action Space:** At each step, the A3C agent selects from a discrete action set consisting of available Metasploit modules applicable to the observed target state — specifically exploit modules, auxiliary scanners, and post-exploitation modules. The action space is dynamically filtered at each step to only include modules Metasploit considers candidate matches for the observed service fingerprints, bounding the effective action space to tractable size.
+
+3. **Reward Function:** Positive reward is granted upon successful module execution resulting in a shell session (meterpreter or standard). Partial positive reward for successful auxiliary reconnaissance that expands the observed state. Negative reward (penalty) for failed exploit attempts, timed-out connections, and IDS alert signatures triggered. The reward shaping was specifically designed to discourage noisy exploitation attempts that increase detection probability.
+
+4. **A3C Architecture:** DeepExploit used A3C (not simpler Q-learning variants) because A3C's asynchronous parallel actor design allows multiple simultaneous environment interactions across different target hosts — effectively enabling the agent to learn from concurrent exploitation attempts in parallel rather than sequentially. Each actor thread interacts with a separate Metasploit RPC instance; gradient updates are pushed asynchronously to a shared global policy network. This architecture made DeepExploit practical for multi-host environments where parallelism is operationally expected.
+
+5. **Transfer Learning Module:** One of DeepExploit's documented features was a "transfer learning" capability: exploitation knowledge acquired against one target configuration could partially initialize the policy network for related target configurations, reducing convergence time required before the agent achieved reliable exploit selection — an early instantiation of the generalization problem that LLM-based tools later address via foundation model pre-training.
+
+**Operational Outcomes:** In demonstration environments, DeepExploit autonomously identified and exploited target VMs without human intervention, selecting correct Metasploit modules from the available action space in fewer steps than a naive random policy and achieving higher success rates than baseline scripted automation.
+
+**Architectural Significance:** DeepExploit is the earliest publicly documented system to treat exploitation sequencing as an RL optimization problem against live infrastructure. The design pattern — RL agent using structured observation of target state to select from a tool library of offensive primitives — prefigures the LLM-as-orchestration-layer architecture documented in Stage 5b of this report (PentestGPT and derivatives, 2023–2024). The fundamental structure is identical: an intelligent controller selecting from a discrete set of offensive tool actions based on observed target state. The implementation differs (RL policy network vs. LLM prompt-response loop), but the threat model implication is the same: reduction of operator expertise requirement for multi-step exploitation sequencing.
+
+---
+
+#### DeepLocker (2018) — CNN-Gated Payload Delivery via Neural Network Trigger
+
+**Origin:** Developed by IBM Research (Dhilung Kirat, Jiyong Jang, and Marc Ph. Stoecklin) and presented at Black Hat USA 2018 Briefings track (August 9, 2018). DeepLocker was explicitly framed as a proof-of-concept "evasion technique" rather than a weapon, but its architecture represents a qualitative departure from any prior malware design pattern.
+
+**Architectural Design:**
+
+DeepLocker's central innovation is the use of a trained neural network not as an attack capability but as the **payload decryption condition** — a classifier whose correct classification output is the decryption key.
+
+1. **Payload Encryption:** The malicious payload (in the PoC, a WannaCry-style ransomware module) is encrypted using symmetric encryption. The decryption key is **never stored on disk or in the binary**. It is instead derived as a function of the neural network's internal activations. (The primary IBM presentation slides and blog post describe the neural key derivation mechanism but do not specify a particular cipher such as AES-256; the specific algorithm is not confirmed in available primary sources.)
+
+2. **Neural Network as Trigger:** DeepLocker embeds a pre-trained deep convolutional neural network as a payload activation gate. The IBM presentation slides reference AlexNet as the example CNN architecture used in the PoC; the specific model is fine-tuned on a small dataset of target-specific features — in the demonstrated PoC, facial recognition images of the intended target victim. The model's penultimate layer activations (a fixed-dimension floating-point vector) are mapped to a deterministic key derivation function (KDF), producing the decryption key only when the model achieves confident correct classification of the target. *Note: secondary sources frequently cite VGG-16 as the CNN used; this claim is not substantiated in the IBM Black Hat 2018 presentation slides or the associated blog post, which reference AlexNet.*
+
+3. **Trigger Condition Evaluation:** The malware continuously captures local sensor data (in the PoC: webcam frames, but the architecture supports any observable: GPS coordinates, voice signature, network environment fingerprint, BSSID set). Each captured frame is passed through the embedded CNN. When the model's output confidence exceeds a threshold for the target identity, the activation vector is fed into the KDF to reconstruct the decryption key and decrypt the payload in-memory.
+
+4. **Evasion Properties:** Because the payload remains encrypted and the decryption key is never present in static form, traditional signature-based and static analysis methods cannot recover the payload. Sandbox detonation — the standard dynamic analysis fallback — will not trigger decryption unless the sandbox environment can present the precise trigger condition (i.e., the target's actual face to the webcam, or the exact GPS coordinates). This makes behavioral sandbox analysis ineffective as a detection mechanism against this architecture.
+
+5. **Covert Channel via Legitimate Application:** IBM's PoC embedded DeepLocker within a legitimate videoconferencing application binary — the neural network inference ran as a background thread using the application's legitimate webcam access, indistinguishable from normal application behavior.
+
+**Architectural Significance:** DeepLocker introduces the concept of **AI-conditioned payload delivery** — the neural model is not used to generate attack content or select attack actions, but to define an ultra-precise activation policy that restricts payload detonation to a target population potentially as small as one individual. No conventional malware architecture achieves this specificity: traditional targeted malware uses environment checks (registry keys, hostname strings, language settings, IP ranges) that are trivially bypassed in sandboxes. The CNN trigger cannot be bypassed without presenting the actual biometric trigger — the sandbox cannot fake a face the model was specifically trained to recognize. This represents an architectural hardening of targeted malware delivery against the primary defensive mechanism (sandbox detonation and dynamic analysis) that had governed malware detection since approximately 2010. While no in-the-wild DeepLocker variant has been confirmed, the architecture is fully implementable with commodity AI tooling available from 2018 onward, and the underlying design pattern — ML model as trigger condition — is applicable to any multimodal input observable from a compromised host.
+
+---
+
+**Summary Assessment:** These four systems — SNAP_R, Mayhem, DeepExploit, and DeepLocker — collectively defined the design space of AI-augmented offensive tooling before the LLM era. They demonstrate that the architectural concepts underlying current AI threat actor TTPs (ML-driven personalized generation, closed-loop autonomous exploitation, policy-driven tool orchestration, CNN-gated payload delivery) were all technically instantiated no later than 2018. The subsequent LLM democratization did not invent these patterns; it lowered the implementation barrier and expanded the accessible threat actor population. This historical context is essential for accurate threat modeling: organizations that frame AI offensive capability as a post-2022 phenomenon are already behind the conceptual state of the art by at least four years.
+
+---
+
 ### Stage 1: Adversarial ML and CAPTCHA Bypass (2004–2018)
-Early exploitation of AI against AI: ML spam filters evaded by ML-generated content (2004). Neural CAPTCHA solvers achieving ~95% accuracy by 2014. Commercial CAPTCHA-solving services mainstream by 2017–2020. This stage is largely invisible in current threat reporting but established the template: use AI to defeat AI-based defenses.
+Early exploitation of AI against AI: ML spam filters evaded by ML-generated content (2004). ML-based CAPTCHA solvers demonstrated by 2014, with accuracy ranging from 5–55% depending on the service implementation (Bursztein et al., USENIX WOOT 2014); CNN-based solvers achieving higher accuracy emerged in subsequent years. Commercial CAPTCHA-solving services mainstream by 2017–2020. This stage is largely invisible in current threat reporting but established the template: use AI to defeat AI-based defenses.
 
 ---
 
@@ -905,12 +1007,12 @@ Based on current trajectory:
 
 | # | Date | Milestone | Evidence Quality |
 |---|------|-----------|-----------------|
-| 1 | March 2019 | First confirmed criminal AI voice cloning attack (UK CEO fraud, €220K) | PRIMARY |
-| 2 | January 2020 | First large-scale AI voice cloning fraud ($35M, UAE bank) | SECONDARY (court basis) |
-| 3 | November 2022 | ChatGPT launch — LLM democratization; jailbreaking starts within days | Structural event |
-| 4 | July 2023 | WormGPT/FraudGPT emergence — underground AI market established (capabilities unverified) | WEAK (claims only) |
-| 5 | February 14, 2024 | OpenAI/Microsoft joint disclosure: five nation-state APTs confirmed using LLMs | PRIMARY |
-| 6 | January 2024 | Arup CFO deepfake fraud ($25M) — multi-person real-time video deepfake deployed | PRIMARY |
+| 1 | August 2016 | DARPA Cyber Grand Challenge (Mayhem) — First fully autonomous AI vulnerability discovery and exploitation system | PRIMARY |
+| 2 | March 2019 | First confirmed criminal AI voice cloning attack (UK CEO fraud, €220K) | PRIMARY |
+| 3 | January 2020 | First large-scale AI voice cloning fraud ($35M, UAE bank) | SECONDARY (court basis) |
+| 4 | November 2022 | ChatGPT launch — LLM democratization; jailbreaking starts within days | Structural event |
+| 5 | January 2024 | Arup CFO deepfake fraud ($25M) — multi-person real-time video deepfake deployed | PRIMARY |
+| 6 | February 14, 2024 | OpenAI/Microsoft joint disclosure: five nation-state APTs confirmed using LLMs | PRIMARY |
 | 7 | July 2025 | LAMEHUG (CERT-UA) / PROMPTSTEAL (GTIG) confirmed in wild — first malware querying LLM at execution time (APT28) | PRIMARY |
 | 8 | August 2025 | GTG-2002 — Claude Code as autonomous extortion operator at 17 organisations | PRIMARY |
 | 9 | November 2025 | SesameOp — first legitimate AI API (OpenAI Assistants) abused as covert C2 relay | PRIMARY |
@@ -989,7 +1091,7 @@ Based on the documented threat landscape, organized by priority:
 | NCSC UK "Impact of AI on Cyber Threat to 2027" (2025) | Government assessment | PRIMARY | Enhancement not novel TTPs; full autonomy unlikely before 2027 | [URL] |
 | Google GTIG "Adversarial Misuse of Generative AI" (January 2025) | Vendor primary research | PRIMARY | 40+ APTs on Gemini; APT42 heaviest user; DPRK most prolific | [URL] |
 | Google GTIG AI Threat Tracker (November 2025) | Vendor primary research | PRIMARY | LAMEHUG, PROMPTFLUX, PROMPTSTEAL; 5+ in-wild LLM malware families | [URL] |
-| Google Project Zero "Big Sleep" blog (October 2024) | Primary research blog | PRIMARY | First autonomous AI zero-day in production software | [URL] |
+| Google Project Zero "Big Sleep" blog (published **November 1, 2024**; discovery October 2024) | Primary research blog | PRIMARY | First autonomous AI zero-day in production software: stack buffer underflow in SQLite `seriesBestIndex`, dev branch only, no CVE. **Distinct from CVE-2025-6965** (July 2025, integer truncation, production release) | https://projectzero.google/2024/10/from-naptime-to-big-sleep.html |
 | CERT-UA Advisory (July 17, 2025) | Government advisory | PRIMARY | LAMEHUG (CERT-UA) / PROMPTSTEAL (GTIG) attribution to APT28; Qwen API querying | [URL] |
 | Anthropic Report on GTG-1002 (November 13, 2025) | Company official report | PRIMARY | First agentic AI intrusion; 80–90% autonomy; 30 targets | [URL] |
 | CrowdStrike Global Threat Report 2025 | Vendor primary report | PRIMARY | 442% vishing increase; FAMOUS CHOLLIMA; phishing stats | [URL] |
@@ -1005,10 +1107,14 @@ Based on the documented threat landscape, organized by priority:
 | SentinelOne LABScon 2025 presentation | Vendor primary research | PRIMARY | 7,000+ samples with embedded AI API keys found via VirusTotal retrohunt (primary report notes: "almost all turned out to be non-malicious" — vast majority were legitimate apps with accidentally leaked developer keys); 6,000+ unique API keys; confirmed LLM-integrated malware subset includes PROMPTSTEAL/LAMEHUG; MalTerminal disclosed as earliest known LLM-enabled malware sample (written pre-Nov 2023) | [URL] |
 | IBM X-Force Threat Intelligence Index 2024 | Vendor primary report | PRIMARY | No concrete evidence of GenAI-engineered attacks in 2023–2024 | [URL] |
 | Europol EU-SOCTA 2025 | Government/agency | PRIMARY | AI "fundamentally reshaping organized crime" | [URL] |
+| "Weaponizing Data Science for Social Engineering: Automated E2E Spear Phishing on Twitter (SNAP_R)" | Black Hat USA 2016 / John Seymour & Philip Tully (ZeroFOX) | PRIMARY | First automated ML spear-phishing tool; LSTM and Markov generation modes; 30–66% click-through; 6.85 tweets/min across 819 targets in 2-hour live bake-off | https://www.blackhat.com/docs/us-16/materials/us-16-Seymour-Tully-Weaponizing-Data-Science-For-Social-Engineering-Automated-E2E-Spear-Phishing-On-Twitter.pdf |
+| "Mayhem: The DARPA Cyber Grand Challenge Winning System" | IEEE Security & Privacy / ForAllSecure (CMU) | PRIMARY | Genesis of autonomous AI vulnerability discovery and exploitation; symbolic execution + concolic fuzzing closed-loop pipeline; CGC Final Event August 2016 | DOI: 10.1109/MSEC.2017.2759104 |
+| "DeepLocker: How AI Can Power a Stealthy New Breed of Malware" | IBM Research / Black Hat USA 2018 (Dhilung Kirat, Jiyong Jang, Marc Ph. Stoecklin) | PRIMARY | AI facial recognition (CNN, AlexNet referenced in slides) used as cryptographic trigger to gate payload decryption; payload unrecoverable via static analysis or sandbox without biometric trigger | https://securityintelligence.com/deeplocker-how-ai-can-power-a-stealthy-new-breed-of-malware/ |
+| "DeepExploit: Fully Automated Penetration Test Tool using Machine Learning" | Black Hat Arsenal 2018 / **Isao Takaesu** (**MBSD — Mitsui Bussan Secure Directions**) | PRIMARY | Reinforcement learning (A3C) agent orchestrating Metasploit Framework RPC API for autonomous exploitation sequencing; reward-shaped policy trained on shell-session success across live target environments. GitHub: github.com/13o-bbr-bbq/machine_learning_security/tree/master/DeepExploit | https://www.blackhat.com/us-18/arsenal/schedule/#deep-exploit-11908 |
 | UIUC autonomous hacking paper (April 2024, arXiv 2404.08144) | Academic | SECONDARY | 87% CVE exploitation rate with description; 7% without | https://arxiv.org/abs/2404.08144 |
 | UAE $35M voice cloning (2021 public disclosure) | Court documents via media | SECONDARY | $35M loss; 17 identified individuals | [URL] |
 | Vade Security Q4 2022 phishing report | Vendor quarterly | SECONDARY | 274% Q3→Q4 phishing surge post-ChatGPT launch | [URL] |
-| Hoxhunt phishing effectiveness research | Vendor research | SECONDARY | 54% vs 12% click-through; AI surpassed humans Feb 2025 | [URL] |
+| Hoxhunt phishing effectiveness research | Vendor research | SECONDARY | **AI surpassed human red team in phishing effectiveness (Feb–Mar 2025); 5-minute AI campaign generation vs. 16-hour human red team.** Note: Hoxhunt click-through rates are 2–4%; the "54% click-through" figure cited elsewhere in AI phishing reporting belongs to Heiding et al. (arXiv:2412.00586), not Hoxhunt | [URL] |
 | KELA Intelligence underground forum data | Vendor research | SECONDARY | 219% dark web AI tool mentions; 52% jailbreak discussions | [URL] |
 | SlashNext 1,265% phishing surge | Single vendor claim | WEAK | Cited for context only; methodology unclear | [URL] |
 | WormGPT/FraudGPT marketing claims | Underground advertisements | WEAK | No functional capability independently verified | [URL] |
@@ -1021,7 +1127,7 @@ Based on the documented threat landscape, organized by priority:
 | FBI IC3 Annual Report 2025 | Government primary | PRIMARY | 22,364 AI complaints; $893M adjusted losses; $632M investment scams | [URL] |
 | FBI IC3 PSA December 19, 2025 | Government advisory | PRIMARY | AI voice cloning of senior US officials since at least 2023 | [URL] |
 | Singapore CSA "Singapore Cyber Landscape 2023" (July 30, 2024) | Government primary | PRIMARY | ~13% of phishing sample AI-generated (small sample, caveated) | [URL] |
-| Peer-reviewed arXiv phishing study (101 participants, controlled) | Academic peer-reviewed | SECONDARY | AI-automated phishing achieves 54% click-through matching human experts | [URL] |
+| Heiding et al., "Devising and Detecting Phishing" (arXiv:2412.00586, Nov 30, 2024) — **arXiv preprint, not peer-reviewed at time of writing** | Academic preprint | SECONDARY | AI-automated phishing achieves 54% click-through vs. 12% control (101 participants, controlled study); AI with minimal human-in-loop: 56% | https://arxiv.org/abs/2412.00586 |
 
 ---
 
