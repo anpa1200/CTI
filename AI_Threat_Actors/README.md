@@ -345,6 +345,13 @@ Python malware compiled to executable; queries Alibaba Cloud Qwen 2.5-Coder-32B-
 
 ---
 
+**July 2025 — Google Big Sleep discovers CVE-2025-6965 in SQLite**
+*Actor:* Google Project Zero/DeepMind | *Country:* USA (defensive research) | *Evidence:* CONFIRMED (NVD CVE-2025-6965; Google Big Sleep July 2025 disclosure; SQLite 3.50.2 release notes, PRIMARY) [EDITOR NOTE: add primary source URL — NVD https://nvd.nist.gov/vuln/detail/CVE-2025-6965 or Google Big Sleep July 2025 post]
+Integer truncation/memory corruption vulnerability affecting all SQLite versions prior to 3.50.2; distinct from the October 2024 stack buffer underflow (no CVE assigned, development branch only).
+*Why it matters:* Second confirmed AI autonomous zero-day discovery; first with a CVE assigned and affecting production releases.
+
+---
+
 **July–August 2025 — GTG-2002: Claude Code used for scaled data extortion**
 *Actor:* GTG-2002 (Anthropic designation) | *Country:* Unknown (suspected state-linked) | *Evidence:* CONFIRMED (Anthropic August 2025 report, PRIMARY)
 Claude Code used as active operator across full extortion lifecycle: vulnerability scanning, intrusion, data triage, ransom note generation, multi-victim management. 17+ organisations targeted in a single month; ransom demands >$500K. Targets include government, healthcare, emergency services, religious institutions.
@@ -369,7 +376,7 @@ Backdoor (SesameOp) discovered using OpenAI Assistants API as a command-relay an
 **November 2025 — Anthropic disrupts GTG-1002: agentic AI espionage campaign**
 *Actor:* GTG-1002 (Chinese state-sponsored, Anthropic designation) | *Country:* China | *Evidence:* CONFIRMED (Anthropic official report November 13, 2025, PRIMARY) / **DISPUTED** on claimed autonomy degree
 Claude Code used for full intrusion lifecycle (recon, exploitation, credential harvesting, lateral movement, exfiltration) across ~30 targets; 80–90% AI autonomy; 4–6 human decision points/campaign. Intel 471 and Palo Alto Networks noted heavy reliance on standard open-source tools and significant hallucination.
-*Why it matters:* Strongest public claim of high-autonomy intrusion; autonomy claim plausible but contested; see §8.
+*Why it matters:* Strongest public claim of high-autonomy intrusion; autonomy claim plausible but contested; see §8.4.
 
 ---
 
@@ -416,7 +423,7 @@ Attackers trojanized the LiteLLM Python proxy library on PyPI via CI/CD pipeline
 **Victim:** UK-based energy company (German parent company CEO voice cloned)
 **AI Component:** Text-to-speech AI software cloned the German CEO's voice, including his accent and speech patterns. Three calls were made: first to demand €220,000 transfer to a "Hungarian supplier within the hour"; second to falsely claim reimbursement; third attempt to extract additional funds (refused when victim became suspicious of Austrian mobile number).
 **Loss:** €220,000 (~$243,000 USD) — fully transferred, not recovered
-**Insurance:** Euler Hermes covered the claim and described it as "the first cybercrime they'd heard of using AI."
+**Insurance:** Euler Hermes, as reported by the Wall Street Journal, covered the claim and described it as "the first cybercrime they'd heard of using AI."
 **Source:** SECONDARY (Euler Hermes insurer statement as reported by Wall Street Journal, **August 30, 2019**; if a direct Euler Hermes press release exists, restore to PRIMARY)
 **Novel vs. Standard TTP:** Novel — no prior publicly documented and primary-sourced criminal use of AI voice synthesis identified in this review. The attack template (CEO impersonation, urgent wire transfer) is standard BEC; the AI component was genuinely new.
 **Why It Matters:** Establishes 2019 as the earliest identified point in the AI fraud timeline based on available primary sourcing. All subsequent voice fraud incidents build on this template.
@@ -488,7 +495,7 @@ Attackers trojanized the LiteLLM Python proxy library on PyPI via CI/CD pipeline
 **Actor:** APT28 / Forest Blizzard (MODERATE CONFIDENCE, CERT-UA attribution)
 **Victim:** Ukraine (government entities; distributed via phishing impersonating Ukrainian ministry officials)
 **AI Component:** Python malware (compiled to .pif executable via PyInstaller) that at runtime queries Alibaba Cloud's Qwen 2.5-Coder-32B-Instruct model via the HuggingFace inference API. The LLM dynamically generates Windows system commands for the malware to execute — used for document discovery and exfiltration. *(IOC register: refer to CERT-UA advisory #UA-CERT-2025-07-17 and the Cato Networks / Picus Security analyses for current sample hashes, HuggingFace API key patterns, and phishing lure document indicators.)*
-**Technical detail:** SentinelOne identified 284 unique HuggingFace API keys embedded across LAMEHUG/PROMPTSTEAL samples (keys sourced from a 2023 credential dump). NOTE: SentinelOne's broader retrohunt found 7,000+ samples with embedded AI API keys, but the primary report states "almost all turned out to be non-malicious" — legitimate apps with accidentally leaked developer keys. LAMEHUG/PROMPTSTEAL represents the confirmed malicious subset.
+**Technical detail:** SentinelOne identified 284 unique HuggingFace API keys embedded across LAMEHUG/PROMPTSTEAL samples (keys sourced from a 2023 credential dump). The 284 keys are drawn from the confirmed malicious LAMEHUG/PROMPTSTEAL subset, not from the broader 7,000+ sample pool. NOTE: SentinelOne's broader retrohunt found 7,000+ samples with embedded AI API keys across VirusTotal, but the primary report states "almost all turned out to be non-malicious" — legitimate apps with accidentally leaked developer keys. LAMEHUG/PROMPTSTEAL represents the confirmed malicious subset of that broader pool.
 **Source:** CONFIRMED PRIMARY (CERT-UA advisory July 2025; Cato Networks, Picus Security independent analyses; Google GTIG AI Threat Tracker, November 2025)
 **Novel vs. Standard TTP:** Genuinely novel. Prior malware uses static logic or downloads staged payloads. LAMEHUG uses a live LLM to generate commands at execution time — the malware's behavior is partially determined by an external AI model, making static analysis insufficient for full detection.
 **Why It Matters:** Represents a documented paradigm shift: from AI-assisted development of malware (offline) to AI-integrated malware execution (online). Detection requires understanding of LLM API traffic patterns in addition to traditional IOCs.
@@ -1270,7 +1277,7 @@ The full 47-source register (R1–R47) is available at [EDITOR NOTE: GitHub repo
 
 **[R41](https://www.wiz.io/blog/threes-a-crowd-teampcp-trojanizes-litellm-in-continuation-of-campaign)** — Wiz Research + Snyk, Datadog Security Labs, Endor Labs, LiteLLM official advisory (TeamPCP / LiteLLM, Mar 24, 2026). *PRIMARY.* AI supply chain attack; CVE-2026-33634, CVSS4 9.4.
 
-**[R44](https://www.ic3.gov/annualreport/reports)** — FBI IC3 Annual Report 2025. *PRIMARY.* 22,364 AI-related complaints; $893M adjusted losses; $632M investment scam AI nexus. [EDITOR NOTE: direct PDF URL will follow pattern https://www.ic3.gov/AnnualReport/Reports/2025_IC3Report.pdf — verify and update link when confirmed]
+**[R44](https://www.ic3.gov/AnnualReport/Reports/2025_IC3Report.pdf)** — FBI IC3 Annual Report 2025. *PRIMARY.* 22,364 AI-related complaints; $893M adjusted losses; $632M investment scam AI nexus.
 
 ---
 
