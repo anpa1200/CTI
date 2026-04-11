@@ -18,6 +18,24 @@ All major judgments carry an explicit confidence rating:
 
 ---
 
+## Table of Contents
+
+1. [Executive Summary](#1-executive-summary)
+2. [Key Judgments](#2-key-judgments)
+3. [Chronological Timeline](#3-chronological-timeline)
+4. [Major Incidents](#4-major-incidents)
+5. [TTP Analysis (ATT&CK-Aligned)](#5-ttp-analysis-attck-aligned)
+6. [Statistics and Measurable Trends](#6-statistics-and-measurable-trends)
+7. [Reality vs. Hype](#7-reality-vs-hype)
+8. [Actor Segmentation](#8-actor-segmentation)
+9. [Technical Evolution](#9-technical-evolution)
+10. [Forecast](#10-forecast)
+11. [Final Conclusions](#11-final-conclusions)
+14. [Defender Recommendations](#14-defender-recommendations)
+15. [Selected Sources](#15-selected-sources)
+
+---
+
 ## 1. Executive Summary
 
 AI has crossed from a theoretical offensive threat into a documented, operationally deployed capability — but the transition has been uneven, slower than vendor narratives suggest, and concentrated in specific use cases rather than across the full kill chain.
