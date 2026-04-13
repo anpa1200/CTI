@@ -157,7 +157,7 @@ Before building rules, it helps to be precise about what each tier detects and w
 | TTP-based | Sysmon (Windows), auditd (Linux), EDR with telemetry, cloud API logs | Memory forensics, kernel telemetry |
 | Anomaly | Baseline telemetry (30+ days), UEBA or ML platform | Enriched entity context, HR/identity data |
 
-All detection rules in this guide are written in **Sigma** format unless the logic requires a specific platform (noted where used). Sigma is SIEM-agnostic and can be transpiled to Splunk SPL, Microsoft Sentinel KQL, Elastic EQL, and others via `sigma-cli`.
+All detection rules in this guide are written in **Sigma** format unless the logic requires a specific platform (noted where used). Sigma is SIEM-agnostic and can be transpiled to Splunk SPL, Microsoft Sentinel KQL, Elastic Lucene/ES|QL, and others via `sigma-cli`. Exception: Section 8 (Anomaly Detection) rules cannot be expressed in standard Sigma, which does not support statistical baselines or ML-based detection. Section 8 rules are written as implementation-agnostic pseudocode with platform-specific fragments for Splunk MLTK and Microsoft Sentinel. Treat them as design specifications, not deployable rule files.
 
 ---
 
@@ -402,8 +402,8 @@ description: >
   in device-code phishing campaigns targeting M365 and Azure AD tenants.
   Baseline your normal token-request rate before setting thresholds.
 references:
-  - https://www.microsoft.com/en-us/security/blog/2023/05/24/volt-typhoon-targets-us-critical-infrastructure-with-living-off-the-land-techniques/
   - https://msrc.microsoft.com/blog/2024/01/microsoft-actions-following-attack-by-nation-state-actor-midnight-blizzard/
+  - https://www.microsoft.com/en-us/security/blog/2023/09/14/midnight-blizzard-compromises-microsoft-corporate-email-accounts/
 author: Detection Engineering
 date: 2024-01-26
 tags:
@@ -421,11 +421,12 @@ detection:
     TokenIssuerType: 'AzureAD'
     AuthenticationProtocol: 'deviceCode'
   timeframe: 10m
-  condition: selection | count(UserPrincipalName) by IPAddress > 5
+  condition: selection | count(UserPrincipalName) by IPAddress > 5  # PLACEHOLDER — replace with value from your 90-day baseline p99 per source IP. The value 5 is illustrative only.
 falsepositives:
   - Automated provisioning workflows performing device enrollment
   - VPN concentrators appearing as single IP for many users
-  - Tune threshold based on 30-day baseline per source IP
+  - "Reference: Midnight Blizzard (APT29), NOT Volt Typhoon — these are distinct threat actors with no shared TTPs in this technique."
+  - "Threshold calibration required: run 'count(distinct UserPrincipalName) by IPAddress, bin(TimeGenerated, 10m)' against 90 days of historical SigninLogs. Set threshold at p99.5 of that distribution per IP, not a global constant."
 level: high
 
 # Splunk equivalent:
@@ -528,7 +529,7 @@ detection:
       - '\WinRAR.exe'
       - '\WinZip.exe'
   timeframe: 3m
-  condition: selection_archive and not filter_legitimate_archivers | count(TargetFilename) by Image > 5
+  condition: (selection_archive and not filter_legitimate_archivers) | count(TargetFilename) by Image > 5  # Parentheses required — pipe operator has lower precedence than 'and'/'not' in Sigma
 falsepositives:
   - Backup software creating many archives rapidly
   - CI/CD build pipelines packaging artifacts
@@ -789,29 +790,37 @@ tags:
 logsource:
   category: image_load
   product: windows
+  service: sysmon
+  # Sysmon Event ID 7 (ImageLoaded): the fields Signed and SignatureStatus
+  # describe the LOADED DLL/image, not the loading (parent) process.
+  # To verify the loading process is itself a signed legitimate binary,
+  # you must join this event with a preceding Event ID 1 (ProcessCreate)
+  # on ProcessId, or use EDR-level enrichment that annotates the loading
+  # process's signing status at query time.
+  # There is no 'DllSigned' field in Sysmon — that field does not exist.
 detection:
-  selection_signed_binary:
-    Signed: 'true'
-    SignatureStatus: 'Valid'
-  selection_unsigned_dll:
+  selection_unsigned_dll_in_userpath:
     ImageLoaded|startswith:
       - 'C:\Users\'
       - 'C:\ProgramData\'
       - 'C:\Windows\Temp\'
       - 'C:\Temp\'
     ImageLoaded|endswith: '.dll'
-  filter_dll_signed:
-    # The loaded DLL itself is signed — not side-loading
-    DllSigned: 'true'
+    Signed: 'false'
   filter_known_paths:
     ImageLoaded|contains:
       - '\AppData\Local\Microsoft\'
       - '\AppData\Local\Google\'
-  condition: selection_signed_binary and selection_unsigned_dll and not filter_dll_signed and not filter_known_paths
+  condition: selection_unsigned_dll_in_userpath and not filter_known_paths
+  # LIMITATION: This rule detects unsigned DLLs loaded from user-writable paths.
+  # It cannot natively verify within a single Sysmon Event ID 7 whether the
+  # LOADING process is itself a signed legitimate binary. For full confidence,
+  # enrich with EDR telemetry that annotates the loading process signing status,
+  # or join with Event ID 1 (ProcessCreate) on the loading process's PID.
 falsepositives:
   - Legitimate applications that ship with unsigned helper DLLs in user paths
-  - Some Python distributions load unsigned DLLs
-  - Build a signed DLL allowlist for your environment
+  - Some Python distributions and development toolchains load unsigned DLLs
+  - Build an environment-specific unsigned DLL allowlist per application
 level: high
 ```
 
@@ -819,60 +828,101 @@ level: high
 
 ### 7.3 Bring Your Own Vulnerable Driver — Lazarus POORTRY/WHIPEDOUT (T1014)
 
-Lazarus used a Dell-signed but vulnerable driver (`DBUtil_2_3.sys`, later `POORTRY`) to disable EDR processes from kernel space. The universal footprint: a legitimate-but-vulnerable driver is loaded by a non-OS process, followed shortly by a security tool being terminated. This TTP rule chains the driver load to the subsequent service/process termination.
+Lazarus used a Dell-signed but vulnerable driver (`DBUtil_2_3.sys`, later `POORTRY`) to disable EDR processes from kernel space. The BYOVD pattern produces two distinct detectable events: the driver load (Sysmon Event ID 6) and the subsequent security-tool process termination (Sysmon Event ID 5). These are written as two separate rules below. They must be correlated by the analyst or by a SIEM join within a 10-minute window on `host.name` — a single event alone is lower confidence.
+
+> **WARNING:** Never deploy hash-based rules with placeholder or unverified hashes. Pull current vulnerable driver hashes from [https://www.loldrivers.io](https://www.loldrivers.io) before production deployment. The example Dell DBUtil hash below is illustrative — verify it is still current and correct before use.
+
+**Rule 7.3a — Vulnerable Driver Load (Sysmon Event ID 6)**
 
 ```yaml
-title: Vulnerable Driver Load Followed by Security Tool Termination (BYOVD)
+title: Known Vulnerable Driver Loaded (BYOVD - Phase 1)
 id: 9e3f6a2c-4d1b-4e9f-c2a6-3e8f1b4c7d2e
 status: experimental
 description: >
-  Detects the Bring Your Own Vulnerable Driver (BYOVD) pattern used by
-  Lazarus Group: a known-vulnerable or non-standard driver is loaded,
-  followed by termination of a security product process. POORTRY and
-  WHIPEDOUT were used to kill EDR agents from kernel space.
-  This rule requires driver load telemetry (Sysmon Event ID 6) and
-  process termination events.
+  Detects loading of a known-vulnerable signed driver consistent with
+  BYOVD (Bring Your Own Vulnerable Driver) technique used by Lazarus Group
+  (POORTRY, WHIPEDOUT, Dell DBUtil). Phase 1 of a two-rule correlation.
+  Correlate with Rule 7.3b (security tool termination) within 10 minutes
+  on the same host for high-confidence alert.
+  WARNING: Pull current hash list from loldrivers.io before deployment.
+  Never deploy with placeholder hashes.
 references:
   - https://www.mandiant.com/resources/blog/hunting-attestation-signed-malware
   - https://www.microsoft.com/en-us/security/blog/2022/10/19/hunting-for-kernel-driver-abuse/
   - https://attack.mitre.org/techniques/T1014/
+  - https://www.loldrivers.io
 author: Detection Engineering
 date: 2022-11-01
 tags:
   - attack.defense_evasion
   - attack.t1014
-  - attack.t1562.001
   - lazarus
 logsource:
   category: driver_load
   product: windows
   service: sysmon
-
-# Part 1: Known vulnerable driver hashes (update regularly from LoLDrivers.io)
 detection:
   selection_vuln_driver:
+    # Maintain current hash blocklist from loldrivers.io — do not hardcode hashes here
+    # Example (Dell DBUtil_2_3.sys — verify current hash from loldrivers.io before deploying):
+    # SHA256: 0296e2ce999e67c76352613a718e11516fe1b0efc3ffdb8918fc999dd76a73a5
     Hashes|contains:
-      # Dell DBUtil
-      - 'SHA256=0296e2ce999e67c76352613a718e11516fe1b0efc3ffdb8918fc999dd76a73a5'
-      # POORTRY variants (illustrative — maintain updated list)
-      - 'SHA256=a4bc07e4f52a4402bde10979e2abb6e4f2462e24a0f02e7a3a5e1c3ae0d4b5f6'
+      - 'YOUR_VERIFIED_HASH_FROM_LOLDRIVERS'  # replace before deployment
     Signed: 'true'
     SignatureStatus: 'Valid'
   condition: selection_vuln_driver
-
-# Part 2 (correlation): Within 10 minutes, a security product process terminates
-# Requires joining with process termination events (Event ID 5/Sysmon 5)
-# Target processes to watch:
-#   MsMpEng.exe, CSFalconService.exe, CylanceSvc.exe, cb.exe, SentinelAgent.exe
-
 falsepositives:
-  - Legitimate use of vulnerable drivers by old software (patch or remove)
-  - Maintain LoLDrivers.io blocklist in your driver control policy
-level: critical
-
-# Supplementary: Use Windows Defender Application Control (WDAC) or
-# Microsoft Vulnerable Driver Blocklist to prevent the load entirely.
+  - Legitimate use of vulnerable drivers by legacy software (remediate: patch or remove)
+  - Maintain and sync loldrivers.io blocklist via CI/CD pipeline
+  - Supplement with Windows Defender Application Control (WDAC) or Microsoft Vulnerable Driver Blocklist
+level: high
 ```
+
+**Rule 7.3b — Security Tool Process Termination (Sysmon Event ID 5)**
+
+```yaml
+title: Security Product Process Terminated (BYOVD - Phase 2)
+id: 1f4a7c2e-8b3d-4f1a-e7c4-2b8f5d3a9e1c
+status: experimental
+description: >
+  Detects unexpected termination of a known security product process.
+  Phase 2 of a two-rule BYOVD correlation. On its own this is medium
+  confidence (crash or update can cause same signal). Correlate with
+  Rule 7.3a (vulnerable driver load) within 10 minutes on same host
+  for high-confidence BYOVD alert.
+references:
+  - https://www.mandiant.com/resources/blog/hunting-attestation-signed-malware
+  - https://attack.mitre.org/techniques/T1562/001/
+author: Detection Engineering
+date: 2022-11-01
+tags:
+  - attack.defense_evasion
+  - attack.t1562.001
+  - lazarus
+logsource:
+  category: process_termination
+  product: windows
+  service: sysmon
+detection:
+  selection_security_tool_terminated:
+    Image|endswith:
+      - '\MsMpEng.exe'
+      - '\CSFalconService.exe'
+      - '\CylanceSvc.exe'
+      - '\cb.exe'
+      - '\SentinelAgent.exe'
+      - '\bdagent.exe'
+      - '\ekrn.exe'
+  condition: selection_security_tool_terminated
+falsepositives:
+  - Legitimate EDR agent update or restart (correlate with update event logs)
+  - Planned maintenance with change ticket
+  - Service crash due to unrelated bug
+level: medium  # Escalate to critical when correlated with Rule 7.3a within 10 minutes
+```
+
+**Correlation note:** In Microsoft Sentinel, join these two rules on `Computer` (host) within a 10-minute window using a scheduled analytics rule. In Splunk, use `| join` on `host` across both searches within the same time window. A standalone fire of either rule alone warrants investigation but not incident declaration.
+
 
 ---
 
@@ -1139,6 +1189,21 @@ A practical approach to managing alert volume across all five tiers is a per-inc
 
 Multiple simultaneous rule fires on the same entity within a time window should be multiplicatively weighted, not additively: an atomic IOC hit plus a TTP rule fire plus an anomaly alert on the same user, same hour, is almost certainly a real incident.
 
+**Combined entity risk score formula:**
+When N rules fire on the same entity within the same detection window (60 minutes):
+
+```
+combined_score = max(individual_scores) + Σ(remaining_scores × 0.5)
+```
+
+Example: TTP rule (70) + Anomaly multi-dimension (65) + Atomic behavioral (25) fire on the same user within the same hour:
+
+```
+combined_score = 70 + (65 × 0.5) + (25 × 0.5) = 70 + 32.5 + 12.5 = 115 → Incident declaration
+```
+
+This formula prevents linear inflation while still rewarding corroborating signals. Adjust the 0.5 coefficient based on your environment's baseline false-positive correlation. A coefficient closer to 1.0 rewards independent signals more aggressively; closer to 0.25 is appropriate when your rules share log sources and tend to co-fire on the same benign events.
+
 ---
 
 ## 10. Tuning, Validation, and Measurement
@@ -1193,10 +1258,12 @@ Monitor fidelity → Review on 30-day cycle
 ```
 
 Tools for this pipeline:
-- **[sigma-cli](https://github.com/SigmaHQ/sigma-cli):** Convert Sigma to Splunk, Sentinel, Elastic, and others
+- **[sigma-cli](https://github.com/SigmaHQ/sigma-cli):** Convert Sigma to Splunk SPL, Microsoft Sentinel KQL, Elastic Lucene/ES|QL, and others
 - **[pySigma](https://github.com/SigmaHQ/pySigma):** Python library for programmatic Sigma rule management
-- **[Roota](https://github.com/SecurityRiskAdvisors/VECTR):** Rule management and tracking
+- **[VECTR](https://github.com/SecurityRiskAdvisors/VECTR):** Campaign tracking and red team exercise management (SecurityRiskAdvisors)
 - **[MITRE ATT&CK Navigator](https://mitre-attack.github.io/attack-navigator/):** Coverage visualization
+
+> **Note for Elastic users:** `sigma-cli` converts Sigma rules to Elastic **Lucene** queries and **ES|QL** via the `elasticsearch` or `esql` backend. It does **not** produce native **EQL** (Elastic Event Query Language), which has distinct sequence syntax (`sequence by ... [process where ...] [network where ...]`). The correlational rules in Section 6 that use EQL sequence syntax must be written or adapted manually — they cannot be auto-generated from Sigma using current backends (as of early 2026).
 
 ---
 
