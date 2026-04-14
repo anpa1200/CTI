@@ -18,6 +18,7 @@ By [Andrey Pautov](https://medium.com/@1200km) — April 2026
 8. [Anomaly Detection Rules](#8-anomaly-detection-rules)
 9. [The Detection Chain: Layering All Five Tiers](#9-the-detection-chain-layering-all-five-tiers)
 10. [Tuning, Validation, and Measurement](#10-tuning-validation-and-measurement)
+11. [Rule Lifecycle and Versioning](#11-rule-lifecycle-and-versioning)
 12. [Evasion Considerations: What Sophisticated Actors Do to Beat Each Layer](#12-evasion-considerations-what-sophisticated-actors-do-to-beat-each-layer)
 13. [Key Sources](#13-key-sources)
 
@@ -146,7 +147,7 @@ Before building rules, it helps to be precise about what each tier detects and w
 
 **TTP-Based Rules** detect a *technique*, not a specific tool implementing that technique. A TTP-based rule for credential dumping fires whether the actor uses Mimikatz, ProcDump, comsvcs.dll, or a custom tool — because all of them must access LSASS memory in a way that leaves a detectable behavioral footprint, regardless of file hash.
 
-**Anomaly Detection Rules** establish a behavioral baseline per entity (user, host, service account, application) and alert on statistically significant deviations. They require historical data, a meaningful baseline period, and tolerance tuning. They are the hardest to build, the noisiest when poorly tuned, and the hardest for an adversary to evade in a well-baselned environment.
+**Anomaly Detection Rules** establish a behavioral baseline per entity (user, host, service account, application) and alert on statistically significant deviations. They require historical data, a meaningful baseline period, and tolerance tuning. They are the hardest to build, the noisiest when poorly tuned, and the hardest for an adversary to evade in a well-baselined environment.
 
 ### Required Log Sources by Layer
 
@@ -158,7 +159,36 @@ Before building rules, it helps to be precise about what each tier detects and w
 | TTP-based | Sysmon (Windows), auditd (Linux), EDR with telemetry, cloud API logs | Memory forensics, kernel telemetry |
 | Anomaly | Baseline telemetry (30+ days), UEBA or ML platform | Enriched entity context, HR/identity data |
 
-All detection rules in this guide are written in **Sigma** format unless the logic requires a specific platform (noted where used). Sigma is SIEM-agnostic and can be transpiled to Splunk SPL, Microsoft Sentinel KQL, Elastic Lucene/ES|QL, and others via `sigma-cli`. Exception: Section 8 (Anomaly Detection) rules cannot be expressed in standard Sigma, which does not support statistical baselines or ML-based detection. Section 8 rules are written as implementation-agnostic pseudocode with platform-specific fragments for Splunk MLTK and Microsoft Sentinel. Treat them as design specifications, not deployable rule files.
+**Rule format guide:** This article uses four distinct formats, indicated in each section header or code block:
+
+| Label | Meaning | sigma-cli compatible? |
+|---|---|---|
+| **Sigma** | Standard YAML with `detection:` block — transpilable via sigma-cli | Yes |
+| **Platform-native** | KQL (Sentinel), SPL (Splunk), or EQL (Elastic) — no Sigma equivalent | No |
+| **Template** | Sigma shell requiring population before deployment (`status: template`) | Not until populated |
+| **Design spec / Pseudocode** | Structural description of a detection — not directly deployable | No |
+
+Section 4 contains standard single-event Sigma rules — one event, one match, transpilable without backend caveats. Section 5 contains Sigma aggregation rules using the `| count() by` and `timeframe:` syntax: these are valid Sigma, but aggregation pipe support varies by backend — verify transpilation output for your target platform before deploying. Section 6 and §7.4 contain platform-native analytics that cannot be expressed in Sigma (multi-source joins, sequence syntax, historical window logic). Section 7.1–7.3b are standard single-event Sigma. Section 8 rules are design specs with KQL reference fragments — not deployable as-is. **Rule maturity by section:**
+
+| Section | Format | Maturity |
+|---|---|---|
+| 4.1 SUNBURST DLL load | Sigma | Triage trigger — fires on both malicious and benign loads; hash validation required |
+| 4.2 Web shell by IIS worker | Sigma | Experimental — tune `filter_legitimate` for your CI/CD pipeline |
+| 4.3 Trojanized installer | Sigma | Experimental — high false positive rate without signed-installer allowlist |
+| 4.4 TEARDROP PowerShell | Sigma | Experimental — very specific parent; low noise in most environments |
+| 4.5 Linux /proc/mem (auditd) | Sigma | Experimental — requires SIEM-level PATH record join; cannot deploy directly |
+| 5.1 OAuth token spike | Sigma | Experimental — threshold is a placeholder; replace before deploying |
+| 5.2 Web exploitation attempts | Sigma | Experimental — IIS fields; adjust for your web server product |
+| 5.3 Bulk archive staging | Sigma | Experimental — tune archiver allowlist for your environment |
+| 6.1 OAuth → Graph access | Platform-native (KQL) | Requires SigninLogs + MicrosoftGraphActivityLogs both ingested |
+| 6.2 APT41 exploitation chain | Design spec (Splunk SPL) | Pseudocode — adapt index names and time windows |
+| 6.3 Lazarus phish → C2 chain | Platform-native (EQL) | Requires Sysmon events in Elastic |
+| 7.1 LSASS memory access | Sigma | Experimental — tune filter_legitimate for your EDR agent |
+| 7.2 DLL side-loading | Sigma | Experimental — tune filter_known_paths for your software estate |
+| 7.3a Vulnerable driver (BYOVD) | Sigma | Template — will not fire until loldrivers.io hashes are populated |
+| 7.3b Security tool termination | Sigma | Experimental — medium confidence alone; correlate with 7.3a |
+| 7.4 Golden SAML | Platform-native (KQL) | Requires high_priv_accounts Watchlist; review with identity team |
+| 8.1–8.4 | Design spec + KQL fragments | Reference implementations — not deployable without UEBA/baseline setup |
 
 ---
 
@@ -173,15 +203,18 @@ SUNBURST was delivered as a trojanized update to `SolarWinds.Orion.Core.Business
 ```yaml
 title: SUNBURST Backdoor DLL Load - SolarWinds Orion
 id: 4a3f1c2e-8b7d-4e9f-a2c5-1d6e8f3b7a4c
-status: stable
+status: experimental
 description: >
-  Detects the loading of the trojanized SolarWinds Orion business layer DLL
-  associated with the SUNBURST backdoor (APT29/Midnight Blizzard).
-  The legitimate DLL was replaced with a backdoored version during the
-  supply chain compromise discovered in December 2020.
+  Fires when the SolarWinds Orion business layer DLL is loaded by the expected
+  Orion host process. This is a triage trigger, not a high-confidence alert:
+  the detection condition (parent + DLL path) matches both the trojanized and
+  the legitimate DLL equally. The analyst must compare the loaded DLL hash
+  against vendor-supplied known-good hashes to determine whether this event
+  represents the SUNBURST backdoor or a normal Orion update. Use this rule to
+  ensure every Orion DLL load is reviewed, not to declare an incident.
 references:
-  - https://www.fireeye.com/blog/threat-research/2020/12/evasive-attacker-leverages-solarwinds-supply-chain-compromises-with-sunburst-backdoor.html
-  - https://msrc-blog.microsoft.com/2020/12/13/customer-guidance-on-recent-nation-state-cyber-attacks/
+  - https://www.mandiant.com/resources/blog/evasive-attacker-leverages-solarwinds-supply-chain-compromises-with-sunburst-backdoor
+  - https://msrc.microsoft.com/blog/2020/12/customer-guidance-on-recent-nation-state-cyber-attacks/
 author: Detection Engineering
 date: 2020-12-14
 modified: 2024-01-01
@@ -197,17 +230,17 @@ detection:
   selection:
     ImageLoaded|endswith: '\SolarWinds.Orion.Core.BusinessLayer.dll'
     Image|endswith: '\SolarWinds\Orion\SolarWinds.BusinessLayerHost.exe'
-  filter_legitimate_hash:
-    # Hashes of known-good DLL versions - maintain and update this list
-    ImageLoaded|contains: '\SolarWinds\Orion\'
   condition: selection
 falsepositives:
   - Legitimate SolarWinds Orion updates — verify DLL hash against known-good
-    values from vendor. Alert on any hash NOT in your approved baseline.
-level: high
+    values from vendor in your triage workflow. Alert on any hash NOT in your
+    approved baseline. This rule fires on the parent/child relationship; hash
+    validation is a manual triage step, not part of the detection condition.
+level: medium  # Triage trigger only — fires on benign Orion updates too. Confidence is
+               # determined by the analyst's hash comparison, not by this rule alone.
 ```
 
-**Detection note:** The hash check is intentionally omitted from the core detection logic — instead the rule fires on the parent/child relationship, and your triage workflow should compare the loaded DLL hash against vendor-supplied known-good hashes. This means the rule survives a packer-modified variant.
+**Detection note:** This is a triage rule, not a high-confidence alert. It fires on the parent/child process relationship — which matches both the malicious and legitimate DLL equally. Every fire requires the analyst to compare the loaded DLL hash against vendor-supplied known-good values before any escalation. The rule's value is ensuring no Orion DLL load goes unreviewed, not detecting the backdoor directly. Hash validation against vendor-supplied known-good values is a manual triage step: compare the loaded DLL hash against your approved SolarWinds baseline after the rule fires. This design keeps the detection alive against packer-modified variants while ensuring the analyst always verifies the hash before escalating.
 
 ---
 
@@ -218,7 +251,7 @@ APT41 consistently deploys web shells immediately after exploiting public-facing
 ```yaml
 title: Web Shell Created by IIS Worker Process
 id: 7b2e4f1a-3c9d-4b8e-f1a7-2e5c8d3b6f9a
-status: stable
+status: experimental
 description: >
   Detects file creation of known web shell extensions in IIS web root paths
   by the IIS worker process (w3wp.exe). APT41 consistently uses this pattern
@@ -333,7 +366,7 @@ TEARDROP was APT29's second-stage memory-only dropper used to load Cobalt Strike
 ```yaml
 title: Heavily Encoded PowerShell with Suspicious Parent (TEARDROP Pattern)
 id: 2f8a1c4e-6d3b-4f7a-c2e8-5b1d4f8c3e7a
-status: stable
+status: experimental
 description: >
   Detects PowerShell executing with base64-encoded commands and suspicious
   parent processes. Associated with APT29 TEARDROP dropper behavior
@@ -409,37 +442,50 @@ tags:
 logsource:
   product: linux
   service: auditd
+  # SCHEMA NOTE: In auditd SYSCALL records, a0–a3 are syscall arguments
+  # stored as hex integers, NOT as string paths. The filepath accessed by
+  # open/openat appears in a correlated PATH record (type=PATH, nametype=NORMAL)
+  # sharing the same serial number. Standard Sigma cannot express this
+  # cross-record join natively; the detection below uses the auditd key field
+  # (set via -k in audit rules) as the primary filter, combined with the
+  # SIEM-level PATH record join described in the implementation note.
+  #
+  # Use the auditd -k (key) flag to tag relevant syscalls, then filter in
+  # your SIEM on the key and join PATH records to confirm the /proc/*/mem path.
 detection:
   selection_proc_mem_open:
     type: 'SYSCALL'
     syscall:
       - 'open'
       - 'openat'
-    a0|contains: '/proc/'
-    a0|endswith: '/mem'
-    # uid != 0 — non-root caller
+    key: 'proc_mem_access'   # set by auditd rule: -k proc_mem_access
     uid|not: '0'
+    # Path filter (/proc/<pid>/mem) must be applied at SIEM level by joining
+    # the PATH record (type=PATH, nametype=NORMAL, name|contains='/proc/')
+    # that shares the same serial number as this SYSCALL record.
   selection_ptrace_peek:
     type: 'SYSCALL'
     syscall: 'ptrace'
-    # PTRACE_PEEKDATA = 2, PTRACE_PEEKTEXT = 1
+    key: 'ptrace_peek'       # set by auditd rule: -k ptrace_peek
+    # a0 holds PTRACE_PEEKDATA (2) or PTRACE_PEEKTEXT (1)
+    # auditd logs a0–a3 as unsigned decimal integers WITHOUT 0x prefix
+    # in most kernel/auditd configurations. PTRACE_PEEKTEXT=1, PTRACE_PEEKDATA=2.
     a0:
       - '1'
       - '2'
     uid|not: '0'
   filter_target_process_benign:
-    # Allow only if the target PID is NOT one of the credential-holding processes
-    # Implement by joining with PROCTITLE/OBJ_PID auditd records for sshd, sudo, etc.
-    # This filter is environment-specific — see implementation note below
+    # Filter known-safe callers by the CALLING process name (comm field)
+    # For target-process filtering (sshd, sudo), join OBJ_PID records
+    # in the SIEM — see implementation note below
     comm|not:
       - 'gdb'
       - 'strace'
-  # Implementation note: auditd does not directly expose the target PID's
-  # process name in the SYSCALL record for /proc/<pid>/mem reads.
-  # To identify that the TARGET process is a credential holder (sshd, sudo,
-  # cloud-credential-helper), correlate the numeric PID from the path
-  # against a concurrent PROCTITLE or EXECVE record using a SIEM join
-  # on the pid field within a short time window.
+  # Implementation note: auditd does not expose the target PID's process name
+  # in the SYSCALL record for /proc/<pid>/mem reads. To confirm the TARGET
+  # process is a credential holder (sshd, sudo, cloud-credential-helper),
+  # extract the numeric PID from the PATH record name field, then join against
+  # a concurrent PROCTITLE or EXECVE record with matching pid in the SIEM.
   condition: (selection_proc_mem_open or selection_ptrace_peek) and not filter_target_process_benign
 falsepositives:
   - Debuggers (gdb, strace) run by developers — allowlist by supplementary
@@ -453,10 +499,16 @@ level: high
 **Auditd prerequisite rules** (add to `/etc/audit/rules.d/credential-memory.rules`):
 
 ```bash
-# Monitor /proc/*/mem opens by any non-root process
--a always,exit -F arch=b64 -S open,openat -F path=/proc -F uid!=0 -k proc_mem_access
+# Monitor open/openat syscalls by any non-root process and tag with key.
+# NOTE: -F path=/proc monitors the /proc directory inode only — it does NOT
+# match /proc/<pid>/mem subdirectory paths. Path filtering must be done at
+# the SIEM layer by joining the PATH record (nametype=NORMAL) that shares
+# the same serial number as this SYSCALL record.
+-a always,exit -F arch=b64 -S open,openat -F uid!=0 -k proc_mem_access
 
-# Monitor ptrace PEEKDATA/PEEKTEXT calls by non-root
+# Monitor ptrace PEEKDATA (a0=2) and PEEKTEXT (a0=1) calls by non-root.
+# auditd -F a0= uses decimal values; auditd logs a0 in hex in the record,
+# but the -F filter and Sigma a0 field both use decimal integers.
 -a always,exit -F arch=b64 -S ptrace -F a0=1 -F uid!=0 -k ptrace_peek
 -a always,exit -F arch=b64 -S ptrace -F a0=2 -F uid!=0 -k ptrace_peek
 ```
@@ -469,6 +521,8 @@ Collection rules introduce temporal context. Rather than a single event, they wa
 
 Thresholds should be derived from your baseline, not invented. If you don't know your normal authentication failure rate, you will either miss attacks or generate constant noise.
 
+> **Backend note:** The rules in this section use Sigma's aggregation syntax (`timeframe:` + `condition: ... | count() by ...`). This syntax is valid Sigma, but backend support varies. The Splunk, Elastic, and Sentinel backends in sigma-cli each transpile aggregation pipes differently. Test the transpiled output against your specific backend before deploying — the aggregated SPL or KQL may require minor adjustments to threshold syntax or field grouping.
+
 ### 5.1 APT29 — Spike in OAuth Token Requests from a New IP
 
 APT29's 2023-2024 Microsoft intrusion abused OAuth device-code flow to obtain tokens for Microsoft Graph API access. The pattern involved a single source IP generating many token requests across multiple accounts. A collection rule catches the volume before a correlational rule catches the sequence.
@@ -476,12 +530,18 @@ APT29's 2023-2024 Microsoft intrusion abused OAuth device-code flow to obtain to
 ```yaml
 title: OAuth Token Request Spike from Single Source IP
 id: 1e3c7f9a-4b2d-4e8c-f7a3-9c1e4b7f2d8a
-status: stable
+status: experimental
 description: >
   Detects an unusually high volume of OAuth2 token requests originating from
   a single IP address within a short time window. APT29 used this pattern
   in device-code phishing campaigns targeting M365 and Azure AD tenants.
   Baseline your normal token-request rate before setting thresholds.
+  Attribution note: this technique is associated with Midnight Blizzard (APT29),
+  NOT Volt Typhoon — these are distinct threat actors with no shared TTPs in
+  this technique.
+  Threshold note: run 'count(distinct UserPrincipalName) by IPAddress,
+  bin(TimeGenerated, 10m)' against 90 days of historical SigninLogs and set
+  the threshold at p99.5 of that distribution per IP, not a global constant.
 references:
   - https://msrc.microsoft.com/blog/2024/01/microsoft-actions-following-attack-by-nation-state-actor-midnight-blizzard/
   - https://www.microsoft.com/en-us/security/blog/2023/09/14/midnight-blizzard-compromises-microsoft-corporate-email-accounts/
@@ -506,8 +566,6 @@ detection:
 falsepositives:
   - Automated provisioning workflows performing device enrollment
   - VPN concentrators appearing as single IP for many users
-  - "Reference: Midnight Blizzard (APT29), NOT Volt Typhoon — these are distinct threat actors with no shared TTPs in this technique."
-  - "Threshold calibration required: run 'count(distinct UserPrincipalName) by IPAddress, bin(TimeGenerated, 10m)' against 90 days of historical SigninLogs. Set threshold at p99.5 of that distribution per IP, not a global constant."
 level: high
 
 # Splunk equivalent:
@@ -526,7 +584,7 @@ APT41 systematically probes and exploits public-facing services. Their pattern f
 ```yaml
 title: Repeated Web Application Exploitation Attempts from Single Source
 id: 3d7b2e5a-8f1c-4d9e-a3b7-2f5c8d1e4b7f
-status: stable
+status: experimental
 description: >
   Detects multiple web application exploitation attempt signatures
   (SQL injection, command injection, path traversal, deserialization)
@@ -543,7 +601,11 @@ tags:
   - apt41
 logsource:
   category: webserver
-  product: apache  # adjust for nginx, IIS
+  product: iis
+  # Field names below (sc-status, cs-uri-query, c-ip) are IIS W3C Extended
+  # Log Format fields. For Apache Combined Log Format, replace with:
+  # sc-status → status, cs-uri-query → request, c-ip → clientip.
+  # Adjust logsource product accordingly.
 detection:
   selection_exploit_pattern:
     sc-status:
@@ -577,7 +639,7 @@ Before exfiltrating cryptocurrency wallet files or financial documents, Lazarus 
 ```yaml
 title: Bulk Archive Creation Suggesting Data Staging
 id: 6f2a4c8e-1b9d-4f3a-e8c2-4b7f1d6c9e2a
-status: stable
+status: experimental
 description: >
   Detects rapid creation of multiple archive files (ZIP, 7z, RAR, tar) by
   a single non-standard process. Lazarus Group consistently stages data into
@@ -630,49 +692,60 @@ The discipline here is choosing the right entities for joining and keeping corre
 
 The 2024 Midnight Blizzard intrusion into Microsoft's corporate network followed a specific sequence: device-code phishing → token grant → immediate access to Microsoft Graph API for email and file enumeration. The correlation across authentication logs and application activity logs is highly specific.
 
-```yaml
-title: OAuth Token Grant Followed by Immediate Microsoft Graph Privileged Access
-id: 8a3f1e6c-2d4b-4f8a-c1e3-6f8b3d2e5c7a
-status: stable
-description: >
-  Correlates an OAuth2 token grant via device-code flow with immediate
-  subsequent access to privileged Microsoft Graph API endpoints (mail,
-  directory, files) from the same IP within a short window.
-  This sequence is characteristic of APT29 post-phishing reconnaissance.
-  A legitimate user who just authenticated should not immediately enumerate
-  directory objects and read mail from an unfamiliar IP.
-references:
-  - https://msrc.microsoft.com/blog/2024/01/microsoft-actions-following-attack-by-nation-state-actor-midnight-blizzard/
-  - https://www.microsoft.com/en-us/security/blog/2024/01/25/midnight-blizzard-guidance-for-responders-on-nation-state-attack/
-author: Detection Engineering
-date: 2024-01-28
-tags:
-  - attack.credential_access
-  - attack.t1528
-  - attack.discovery
-  - attack.t1087.004
-  - apt29
-# This rule requires correlation between Azure AD Sign-In Logs
-# and Microsoft Graph Activity Logs in Microsoft Sentinel
+**PLATFORM-NATIVE ANALYTIC — Microsoft Sentinel KQL**
+*(Not expressible as standard Sigma: requires cross-table join between SigninLogs and MicrosoftGraphActivityLogs with temporal window logic. Sigma has no native multi-source join or timeframe-with-offset semantics.)*
 
-# KQL implementation (Microsoft Sentinel):
-# let TokenGrants = SigninLogs
-#     | where AuthenticationProtocol == "deviceCode"
-#     | where ResultType == 0
-#     | project TokenTime=TimeGenerated, IPAddress, UserPrincipalName, CorrelationId;
-# let GraphAccess = MicrosoftGraphActivityLogs
-#     | where RequestUri has_any ("/me/messages", "/users", "/me/drive", "/directory")
-#     | where ResponseStatusCode between (200 .. 299)
-#     | project GraphTime=TimeGenerated, IPAddress, UserPrincipalName=UserId, RequestUri;
-# TokenGrants
-# | join kind=inner (GraphAccess) on IPAddress, UserPrincipalName
-# | where GraphTime between (TokenTime .. (TokenTime + 5m))
-# | project TokenTime, GraphTime, IPAddress, UserPrincipalName, RequestUri, CorrelationId
+**Prerequisites:**
+- `SigninLogs` ingested into Log Analytics workspace (Azure AD diagnostic settings)
+- `MicrosoftGraphActivityLogs` ingested (Microsoft 365 diagnostic settings → Log Analytics)
+- Both tables must be present for the join to produce results
 
-falsepositives:
-  - Legitimate users immediately accessing email after OAuth grant on new device
-  - Allowlist known corporate IP ranges and managed device identifiers
-level: critical
+**ATT&CK:** T1528 (Steal Application Access Token), T1087.004 (Cloud Account Discovery)  
+**Tags:** apt29, midnight-blizzard  
+**References:**
+- Microsoft MSRC, January 2024: https://msrc.microsoft.com/blog/2024/01/microsoft-actions-following-attack-by-nation-state-actor-midnight-blizzard/
+- Microsoft Security Blog, January 2024: https://www.microsoft.com/en-us/security/blog/2024/01/25/midnight-blizzard-guidance-for-responders-on-nation-state-attack/
+
+**False positives:** Legitimate users accessing email immediately after OAuth grant on a new device. Allowlist known corporate IP ranges and managed device identifiers.
+
+**Confidence when fires:** Critical — device-code token grant → privileged Graph access within 5 minutes is highly anomalous.
+
+```kql
+// Platform: Microsoft Sentinel
+// IMPORTANT JOIN NOTE: MicrosoftGraphActivityLogs.UserId is an Azure AD
+// object GUID (e.g. "f47ac10b-58cc-4372-a567-0e02b2c3d479").
+// SigninLogs.UserPrincipalName is a UPN string (e.g. "user@contoso.com").
+// Joining on UserPrincipalName when the GraphAccess side carries a GUID
+// returns zero results. Join on UserId (GUID) present in both tables.
+let TokenGrants =
+    SigninLogs
+    | where AuthenticationProtocol == "deviceCode"
+    | where ResultType == 0
+    | project
+        TokenTime         = TimeGenerated,
+        UserId,                    // GUID — join key
+        UserPrincipalName,         // UPN — display only
+        IPAddress,
+        CorrelationId;
+let GraphAccess =
+    MicrosoftGraphActivityLogs
+    | where RequestUri has_any ("/me/messages", "/users", "/me/drive", "/directory")
+    | where ResponseStatusCode between (200 .. 299)
+    | project
+        GraphTime  = TimeGenerated,
+        UserId,                    // GUID — join key
+        RequestUri;
+TokenGrants
+| join kind=inner (GraphAccess) on UserId
+| where GraphTime between (TokenTime .. (TokenTime + 5m))
+| project
+    TokenTime,
+    GraphTime,
+    UserId,
+    UserPrincipalName,
+    IPAddress,
+    RequestUri,
+    CorrelationId
 ```
 
 ---
@@ -681,58 +754,53 @@ level: critical
 
 APT41's intrusion pattern is highly predictable: exploit a public-facing service, write a web shell, use the web shell to execute discovery commands, then move laterally via WMI or WinRM. Each step leaves traces in different log sources; the correlational rule joins them.
 
-```yaml
-title: Web Shell Execution Leading to Network Lateral Movement
-id: 4c8e2a1f-7b3d-4c9e-f2a8-1c4e7b3f6d9a
-status: stable
-description: >
-  Correlates three-phase APT41 intrusion pattern:
-  Phase 1 - Web shell file created under web server process
-  Phase 2 - Discovery commands executed by web application process
-  Phase 3 - Lateral movement via WMI or WinRM from the same host
-  within a 30-minute window.
-  Each phase alone may be ambiguous; the three-phase sequence is
-  high-confidence for APT41-style post-exploitation.
-references:
-  - https://www.mandiant.com/resources/blog/apt41-us-state-governments
-  - https://www.justice.gov/opa/pr/seven-international-cyber-defendants-including-apt41-associates-charged-connection-computer
-author: Detection Engineering
-date: 2022-09-15
-tags:
-  - attack.persistence
-  - attack.t1505.003
-  - attack.discovery
-  - attack.t1016
-  - attack.lateral_movement
-  - attack.t1021.006
-  - apt41
+**PLATFORM-NATIVE DESIGN SPEC — Splunk SPL pseudocode**
+*(Not expressible as standard Sigma: requires multi-event temporal join across three different log sources — Sysmon Event IDs 11, 1, and 3 — within a time-windowed sequence. Sigma has no native multi-source sequence correlation syntax.)*
 
-# Splunk implementation:
-# Phase 1 - Web shell creation
-# index=sysmon EventCode=11 Image IN ("*\\w3wp.exe","*\\java.exe")
-#   TargetFilename IN ("*.aspx","*.php","*.jsp")
-#   | eval phase1_time=_time, host_key=host
-#   | table host_key, phase1_time, TargetFilename
-#
-# Phase 2 - Discovery execution from web process (within 5 min of phase 1)
-# index=sysmon EventCode=1
-#   ParentImage IN ("*\\w3wp.exe","*\\java.exe")
-#   Image IN ("*\\whoami.exe","*\\net.exe","*\\ipconfig.exe","*\\nltest.exe")
-#   | eval phase2_time=_time, host_key=host
-#
-# Phase 3 - WMI/WinRM lateral movement (within 30 min of phase 1)
-# index=sysmon EventCode=3
-#   Image IN ("*\\wmiprvse.exe","*\\wsmprovhost.exe")
-#   DestinationPort IN ("5985","5986","135")
-#   NOT DestinationIp IN (cidrMatch("10.0.0.0/8"), cidrMatch("192.168.0.0/16"))
-#   | eval phase3_time=_time, host_key=host
-#
-# Join all three phases on host within 30m window
+**ATT&CK:** T1505.003 (Web Shell), T1016 (System Network Configuration Discovery), T1021.006 (WinRM Lateral Movement)  
+**Tags:** apt41  
+**References:**
+- Mandiant: https://www.mandiant.com/resources/blog/apt41-us-state-governments
+- DOJ indictment: https://www.justice.gov/opa/pr/seven-international-cyber-defendants-including-apt41-associates-charged-connection-computer
 
-falsepositives:
-  - Legitimate application deployments that write ASPX and then run diagnostics
-  - Coordinate with change management to suppress during planned deployments
-level: critical
+**False positives:** Legitimate application deployments writing ASPX followed by diagnostics. Coordinate with change management to suppress during planned deployments.
+
+**Confidence when fires:** Critical — three-phase chain within 30 minutes is high-confidence APT41-style post-exploitation.
+
+```splunk
+| comment "DESIGN SPEC — adapt index names, field names, and time windows to your environment"
+| comment "Phase 1: Web shell file creation by web application process"
+index=YOUR_SYSMON_INDEX EventCode=11
+    Image IN ("*\\w3wp.exe","*\\java.exe","*\\tomcat.exe")
+    TargetFilename IN ("*.aspx","*.asp","*.php","*.jsp","*.jspx")
+| eval phase1_time=_time, host_key=host
+| table host_key, phase1_time, TargetFilename
+
+| comment "Phase 2: Discovery commands from web process (within 5 min of phase 1)"
+| join type=inner host_key [
+    search index=YOUR_SYSMON_INDEX EventCode=1
+        ParentImage IN ("*\\w3wp.exe","*\\java.exe","*\\tomcat.exe")
+        Image IN ("*\\whoami.exe","*\\net.exe","*\\ipconfig.exe",
+                  "*\\nltest.exe","*\\systeminfo.exe","*\\quser.exe")
+    | eval phase2_time=_time, host_key=host
+    | where phase2_time >= phase1_time AND phase2_time <= phase1_time + 300
+    | table host_key, phase2_time
+]
+
+| comment "Phase 3: WMI/WinRM lateral movement (within 30 min of phase 1)"
+| join type=inner host_key [
+    search index=YOUR_SYSMON_INDEX EventCode=3
+        Image IN ("*\\wmiprvse.exe","*\\wsmprovhost.exe")
+        DestinationPort IN ("5985","5986","135")
+        NOT [ search index=YOUR_SYSMON_INDEX EventCode=3
+              | where cidrmatch("10.0.0.0/8", DestinationIp)
+                   OR cidrmatch("192.168.0.0/16", DestinationIp)
+                   OR cidrmatch("172.16.0.0/12", DestinationIp) ]
+    | eval phase3_time=_time, host_key=host
+    | where phase3_time >= phase1_time AND phase3_time <= phase1_time + 1800
+    | table host_key, phase3_time
+]
+| table host_key, phase1_time, phase2_time, phase3_time, TargetFilename
 ```
 
 ---
@@ -741,46 +809,43 @@ level: critical
 
 Dream Job and TraderTraitor operations follow a documented sequence: user opens a weaponized document or installer, a dropper establishes persistence (Run key or scheduled task), and then a C2 beacon makes its first outbound connection. The correlational rule joins process creation, registry modification, and network events.
 
-```yaml
-title: Suspicious Document Execution Chain to Persistence and C2
-id: 7a1e4c2f-9d3b-4e7a-c1f4-2e9c7b3a6f1d
-status: experimental
-description: >
-  Correlates Lazarus Dream Job / TraderTraitor delivery chain:
-  Stage 1 - Office or PDF process spawns unexpected child (macro/exploit execution)
-  Stage 2 - Child process creates Run key or scheduled task (persistence)
-  Stage 3 - A new process beacons to an external IP on non-standard port
-  All three stages linked by parent-child process relationship on same host
-  within a 15-minute window.
-references:
-  - https://www.clearskysec.com/operation-dream-job/
-  - https://www.cisa.gov/sites/default/files/2023-04/aa23-108a_joint_csa_dprk_cryptocurrency_theft_0.pdf
-author: Detection Engineering
-date: 2023-05-01
-tags:
-  - attack.initial_access
-  - attack.t1566.001
-  - attack.persistence
-  - attack.t1547.001
-  - attack.command_and_control
-  - attack.t1071.001
-  - lazarus
+**PLATFORM-NATIVE ANALYTIC — Elastic EQL**
+*(Not expressible as standard Sigma: requires a native EQL `sequence` construct with `maxspan` and `by host.name` binding across three event categories. Sigma has no equivalent multi-event sequence syntax, and sigma-cli does not transpile to EQL.)*
 
-# EQL (Elastic) implementation:
-# sequence with maxspan=15m by host.name
-#   [process where process.parent.name in ("WINWORD.EXE","EXCEL.EXE","AcroRd32.exe","msiexec.exe")
-#      and process.name in ("powershell.exe","cmd.exe","wscript.exe","mshta.exe")]
-#   [registry where registry.path like~ "*\\Software\\Microsoft\\Windows\\CurrentVersion\\Run*"
-#      and process.name in ("powershell.exe","cmd.exe","wscript.exe","mshta.exe","reg.exe")]
-#   [network where network.direction == "egress"
-#      and not cidrMatch(destination.ip, "10.0.0.0/8","172.16.0.0/12","192.168.0.0/16")
-#      and destination.port not in (80, 443)]
+**ATT&CK:** T1566.001 (Spearphishing Attachment), T1547.001 (Registry Run Keys), T1071.001 (Web Protocol C2)  
+**Tags:** lazarus, dream-job, trader-traitor  
+**References:**
+- ClearSky, Operation Dream Job: https://www.clearskysec.com/operation-dream-job/
+- CISA AA23-108A: https://www.cisa.gov/sites/default/files/2023-04/aa23-108a_joint_csa_dprk_cryptocurrency_theft_0.pdf
 
-falsepositives:
-  - Macro-enabled Office templates that legitimately modify Run keys (rare)
-  - Software installers using Office interop
-  - Verify Authenticode chain on the parent process
-level: critical
+**False positives:** Macro-enabled Office templates that legitimately modify Run keys (rare). Software installers using Office interop. Verify Authenticode chain on the parent process before escalating.
+
+**Confidence when fires:** Critical — three-stage chain on same host within 15 minutes.
+
+```eql
+/* Platform: Elastic Security (EQL Rule)
+   Requires: Sysmon-enriched endpoint events ingested into Elastic.
+   NOTE: the ':' operator in EQL is case-insensitive and supports wildcards.
+   'like~' is NOT a valid EQL operator — use ':' for wildcard matching. */
+sequence with maxspan=15m by host.name
+  /* Stage 1: Office/PDF spawns unexpected child */
+  [process where
+     process.parent.name in (
+         "WINWORD.EXE","EXCEL.EXE","POWERPNT.EXE",
+         "AcroRd32.exe","msiexec.exe")
+     and process.name in (
+         "powershell.exe","cmd.exe","wscript.exe","mshta.exe")]
+  /* Stage 2: Child creates Run key or scheduled task persistence */
+  [registry where
+     registry.path : "*\\Software\\Microsoft\\Windows\\CurrentVersion\\Run*"
+     and process.name in (
+         "powershell.exe","cmd.exe","wscript.exe","mshta.exe","reg.exe")]
+  /* Stage 3: New process beacons to external IP on non-standard port */
+  [network where
+     network.direction == "egress"
+     and not cidrMatch(destination.ip,
+         "10.0.0.0/8","172.16.0.0/12","192.168.0.0/16","127.0.0.0/8")
+     and destination.port not in (80, 443)]
 ```
 
 ---
@@ -789,14 +854,14 @@ level: critical
 
 TTP-based detection is the most durable layer. A rule that detects a technique survives tool changes, infrastructure rotation, and even operator changes within a group. The core insight: **every technique has a minimum behavioral footprint that no implementation can fully avoid**, because the footprint is determined by what the technique does to the operating system, not by how it does it.
 
-### 7.1 LSASS Memory Access — Credential Dumping (T1003.001)
+### 7.1 LSASS Memory Access (T1003.001) — Technique Used by All Three Actor Groups
 
 All three APTs use credential dumping. APT29 uses Mimikatz variants and custom tooling. APT41 uses ProcDump and comsvcs.dll. Lazarus uses custom LSASS readers. All of them must open a handle to `lsass.exe` with read-memory access rights. The TTP rule catches all variants.
 
 ```yaml
 title: LSASS Memory Read Access by Non-System Process
 id: 5e2c7a3f-1b8d-4e5c-a3f7-8c2e5b1d4a7f
-status: stable
+status: experimental
 description: >
   Detects processes opening a handle to LSASS with memory-read access rights.
   This is the universal footprint of LSASS-based credential dumping regardless
@@ -844,20 +909,22 @@ level: critical
 
 ---
 
-### 7.2 DLL Side-Loading — Characteristic APT41 Technique (T1574.002)
+### 7.2 DLL Side-Loading (T1574.002) — Technique Illustrated by APT41 Operations
 
 APT41 is one of the most consistent users of DLL side-loading in documented threat activity. The technique requires a signed legitimate executable loading an unsigned or attacker-controlled DLL from the same directory. The TTP rule detects this regardless of which signed binary is abused.
 
 ```yaml
 title: Signed Executable Loading Unsigned DLL from Non-Standard Path
 id: 2b7f4e1a-6c3d-4b8f-e1a2-7c4b6d3f8e1a
-status: stable
+status: experimental
 description: >
   Detects a signed, legitimate executable loading an unsigned DLL from
   a user-writable or non-standard path. DLL side-loading (T1574.002) is
-  a signature technique of APT41 and is used to execute malicious code
-  under the cover of a trusted process. This rule does not care which
-  binary is abused — it catches the structural pattern.
+  used to execute malicious code under the cover of a trusted process.
+  This rule is technique-based — it does not care which binary is abused
+  or which actor is operating. APT41 is used as the illustrative example
+  because of their documented consistent use of this pattern, but the rule
+  will fire on any actor that exploits this technique.
 references:
   - https://www.mandiant.com/resources/blog/apt41-dual-espionage-and-cyber-crime-operation
   - https://attack.mitre.org/techniques/T1574/002/
@@ -918,15 +985,16 @@ Lazarus used a Dell-signed but vulnerable driver (`DBUtil_2_3.sys`, later `POORT
 ```yaml
 title: Known Vulnerable Driver Loaded (BYOVD - Phase 1)
 id: 9e3f6a2c-4d1b-4e9f-c2a6-3e8f1b4c7d2e
-status: experimental
+status: template
 description: >
   Detects loading of a known-vulnerable signed driver consistent with
   BYOVD (Bring Your Own Vulnerable Driver) technique used by Lazarus Group
   (POORTRY, WHIPEDOUT, Dell DBUtil). Phase 1 of a two-rule correlation.
   Correlate with Rule 7.3b (security tool termination) within 10 minutes
   on the same host for high-confidence alert.
-  WARNING: Pull current hash list from loldrivers.io before deployment.
-  Never deploy with placeholder hashes.
+  WARNING: This rule will NOT fire until you populate the hash blocklist.
+  Pull current vulnerable driver hashes from loldrivers.io and add them
+  to the detection block before deployment. Never deploy with placeholder hashes.
 references:
   - https://www.mandiant.com/resources/blog/hunting-attestation-signed-malware
   - https://www.microsoft.com/en-us/security/blog/2022/10/19/hunting-for-kernel-driver-abuse/
@@ -944,11 +1012,19 @@ logsource:
   service: sysmon
 detection:
   selection_vuln_driver:
-    # Maintain current hash blocklist from loldrivers.io — do not hardcode hashes here
-    # Example (Dell DBUtil_2_3.sys — verify current hash from loldrivers.io before deploying):
-    # SHA256: 0296e2ce999e67c76352613a718e11516fe1b0efc3ffdb8918fc999dd76a73a5
+    # -----------------------------------------------------------------------
+    # TEMPLATE — rule will not fire until hashes are populated.
+    # Obtain current vulnerable driver hashes from https://www.loldrivers.io
+    # and replace the sentinel string below with real SHA256 hashes.
+    # Example entry format (verify against loldrivers.io before use):
+    #   Hashes|contains:
+    #     - 'a3ad5f25e6...actual_sha256_from_loldrivers'
+    # -----------------------------------------------------------------------
+    # The sentinel string below is intentionally unmatchable — it ensures
+    # the rule produces zero results until real hashes are substituted.
+    # DO NOT remove it without replacing it with actual loldrivers.io hashes.
     Hashes|contains:
-      - 'YOUR_VERIFIED_HASH_FROM_LOLDRIVERS'  # replace before deployment
+      - 'LOLDRIVERS_HASH_REQUIRED_SEE_DESCRIPTION'
     Signed: 'true'
     SignatureStatus: 'Valid'
   condition: selection_vuln_driver
@@ -1011,48 +1087,44 @@ level: medium  # Escalate to critical when correlated with Rule 7.3a within 10 m
 
 Golden SAML attacks forge SAML assertions to authenticate as any user in federated identity environments. APT29 used this after compromising ADFS signing certificates. The behavioral footprint: a SAML authentication succeeds from an IP and device that have no prior authentication history, with no corresponding MFA event, for a highly privileged account.
 
-```yaml
-title: SAML Authentication Without Prior MFA and From New Location
-id: 3c9e7a1f-5b4d-4c8e-f9a3-1c7e4b2f5d8a
-status: stable
-description: >
-  Detects potential Golden SAML attacks: a SAML-based authentication
-  succeeding for a high-privileged account where:
-  - No MFA event was recorded in the session
-  - The source IP has no prior authentication history for this user
-  - The authentication bypasses Conditional Access policies that should apply
-  APT29 used this after exfiltrating ADFS token-signing certificates.
-references:
-  - https://www.cyberark.com/resources/threat-research-blog/golden-saml-newly-discovered-attack-technique-forges-authentication-to-cloud-services
-  - https://www.mandiant.com/resources/blog/detecting-aws-access-key-misuse
-author: Detection Engineering
-date: 2021-03-01
-tags:
-  - attack.credential_access
-  - attack.t1556.006
-  - attack.defense_evasion
-  - apt29
+**PLATFORM-NATIVE ANALYTIC — Microsoft Sentinel KQL**
+*(No `detection:` block: this logic requires a `leftanti` join against a 30-day historical window and a Watchlist variable — constructs that have no equivalent in Sigma syntax. sigma-cli would reject a Sigma rule with no `detection:` block.)*
 
-# KQL (Microsoft Sentinel):
-# SigninLogs
-# | where AuthenticationRequirement != "multiFactorAuthentication"
-# | where ResourceDisplayName contains "Federation"
-# | where ConditionalAccessStatus == "notApplied"
-# | where HomeTenantId != ResourceTenantId  // cross-tenant federation sign-in
-# | join kind=leftanti (
-#     SigninLogs
-#     | where TimeGenerated > ago(30d)
-#     | summarize PreviousLogins=count() by UserPrincipalName, IPAddress
-#     | where PreviousLogins > 0
-# ) on UserPrincipalName, IPAddress
-# | where UserPrincipalName in (high_priv_accounts)  // maintain this list
-# | project TimeGenerated, UserPrincipalName, IPAddress, AppDisplayName, Location
+**ATT&CK:** T1556.006 (Modify Authentication Process — Golden SAML)  
+**Tags:** apt29  
+**References:**
+- CyberArk Labs, *Golden SAML: Newly Discovered Attack Technique Forges Authentication to Cloud Services*, November 2019: https://www.cyberark.com/resources/threat-research-blog/golden-saml-newly-discovered-attack-technique-forges-authentication-to-cloud-services
+- Mandiant, *UNC2452 and the SolarWinds Supply Chain Compromise*, 2021 follow-up reporting on APT29 ADFS abuse: https://www.mandiant.com/resources/blog/apt29-continues-targeting-microsoft
 
-falsepositives:
-  - Legitimate federated sign-ins from new corporate IP ranges
-  - Service accounts using certificate-based auth without MFA
-  - Review with identity team before deploying
-level: critical
+**False positives:** Legitimate federated sign-ins from new corporate IP ranges. Service accounts using certificate-based auth without MFA. Review with identity team before deploying.
+
+**Confidence when fires:** Critical — SAML bypass with no MFA, new IP, and no prior history for a high-privileged account is highly anomalous.
+
+```kql
+// Platform: Microsoft Sentinel
+// Define high_priv_accounts — choose one approach:
+// Option A: Sentinel Watchlist (recommended for production)
+//   let high_priv_accounts = (_GetWatchlist('HighPrivAccounts') | project UPN);
+// Option B: Hardcoded list (acceptable for initial testing only)
+//   let high_priv_accounts = datatable(UPN:string)[
+//       "admin@contoso.com", "globaladmin@contoso.com"
+//   ] | project UPN;
+// Build this list from Azure AD Privileged Identity Management (PIM) directory roles:
+// Global Administrator, Exchange Administrator, SharePoint Administrator, etc.
+let high_priv_accounts = (_GetWatchlist('HighPrivAccounts') | project UPN);
+SigninLogs
+| where AuthenticationRequirement != "multiFactorAuthentication"
+| where ResourceDisplayName contains "Federation"
+| where ConditionalAccessStatus == "notApplied"
+| where HomeTenantId != ResourceTenantId  // cross-tenant federation sign-in
+| join kind=leftanti (
+    SigninLogs
+    | where TimeGenerated > ago(30d)
+    | summarize PreviousLogins=count() by UserPrincipalName, IPAddress
+    | where PreviousLogins > 0
+) on UserPrincipalName, IPAddress
+| where UserPrincipalName in (high_priv_accounts)
+| project TimeGenerated, UserPrincipalName, IPAddress, AppDisplayName, Location
 ```
 
 ---
@@ -1101,7 +1173,7 @@ APT29 relevance: Compromised service accounts were used in
   authenticated 09:00-17:00 local time.
 ```
 
-#### Minimal deployable implementation — 8.1
+#### Reference KQL implementation — 8.1 (review prerequisites before deploying)
 
 ```kql
 // Platform: Microsoft Sentinel
@@ -1184,7 +1256,7 @@ APT41 relevance: KEYPLUG, DEADEYE, and DUSTPAN were all delivered
   in the application's historical load profile.
 ```
 
-#### Minimal deployable implementation — 8.2
+#### Reference KQL implementation — 8.2 (review prerequisites before deploying)
 
 ```kql
 // Platform: Microsoft Sentinel
@@ -1281,7 +1353,7 @@ Lazarus relevance: TraderTraitor actors use compromised credentials
   this pattern across multiple exchange compromises.
 ```
 
-#### Minimal deployable implementation — 8.3
+#### Reference KQL implementation — 8.3 (review prerequisites before deploying)
 
 ```kql
 // Platform: Microsoft Sentinel
@@ -1297,18 +1369,21 @@ Lazarus relevance: TraderTraitor actors use compromised credentials
 let BaselineDays   = 90d;
 let DetectionMins  = 60;
 let WithdrawalVerbs = dynamic(["withdrawal", "transfer", "send", "payout"]);
-// Build per-user hourly baseline: mean and approximate SD via percentile proxy
+// Build per-user hourly baseline: mean and p95 as approximate spread proxy.
+// Note: percentile(HourlyRequests, 95) is an approximation (T-Digest) —
+// sufficient for anomaly thresholding but not exact statistical inference.
 let UserBaseline =
     CryptoExchangeAPILogs_CL
     | where TimeGenerated > ago(BaselineDays)
     | where RequestType_s has_any (WithdrawalVerbs)
+    // Step 1: count requests per user per hour bucket
     | summarize
-        by_hour = bin(TimeGenerated, 1h),
-        UserAccount_s
+        HourlyRequests = count()
+      by UserAccount_s, hour_bucket = bin(TimeGenerated, 1h)
+    // Step 2: aggregate per-user statistics across all hour buckets
     | summarize
-        HourlyRequests    = count(),
-        BaslineMean       = avg(todouble(HourlyRequests)),
-        Baseline95thPct   = percentile(todouble(HourlyRequests), 95)
+        BaselineMean    = avg(todouble(HourlyRequests)),
+        Baseline95thPct = percentile(todouble(HourlyRequests), 95)
       by UserAccount_s;
 // Measure current window
 let CurrentWindow =
@@ -1332,6 +1407,10 @@ CurrentWindow
 | extend
     VolumeScore  = iff(CurrentRequestCount > Baseline95thPct * 2, 40, 0),
     NewIPScore   = 40,   // already filtered to new IPs via leftanti join
+    // hourofday(now()) returns UTC hour, not local time. For non-UTC
+    // organizations, adjust: hourofday(now() + Xh) where X is your UTC offset.
+    // Example: UTC+3 → hourofday(now() + 3h). Hardcode offset or derive from
+    // a Watchlist if your org spans multiple timezones.
     HourScore    = iff(hourofday(now()) < 6 or hourofday(now()) > 22, 25, 0)
 | extend TotalRiskScore = VolumeScore + NewIPScore + HourScore
 | where TotalRiskScore >= 60
@@ -1383,13 +1462,18 @@ APT29 relevance: Documented in Microsoft's January 2024 disclosure.
   above the same user's historical baseline.
 ```
 
-#### Minimal deployable implementation — 8.4
+#### Reference KQL implementation — 8.4 (review prerequisites before deploying)
 
 ```kql
 // Platform: Microsoft Sentinel
 // Requires: SigninLogs and MicrosoftGraphActivityLogs both ingested.
 //   MicrosoftGraphActivityLogs requires Microsoft 365 diagnostic settings
 //   configured to send Graph activity to the Log Analytics workspace.
+// Schema note: both SigninLogs and MicrosoftGraphActivityLogs carry a UserId
+//   field that is the same Azure AD object GUID. The join below uses UserId
+//   (GUID) as the join key in both tables. Do NOT join on UserPrincipalName
+//   against MicrosoftGraphActivityLogs.UserId — UPN vs GUID type mismatch
+//   returns zero results. See §6.1 notes for full explanation.
 // Baseline assumption: 90-day rolling per-user session volume percentile.
 //   This query approximates the 90th percentile using a summarize over
 //   the baseline window. For production, replace with a custom Anomaly
@@ -1400,12 +1484,26 @@ let SensitiveGraphPaths = dynamic([
     "/me/messages", "/users", "/me/drive",
     "/directory", "/me/mailFolders", "/groups"
 ]);
+// Schema notes for MicrosoftGraphActivityLogs (verified against Microsoft docs):
+//   UserId            — string (Azure AD object GUID, e.g. "f47ac10b-...")
+//   RequestUri        — string
+//   ResponseBytes     — long  (native type; tolong() below is redundant but harmless)
+//   ResponseStatusCode — int  (between 200..299 comparison is valid against int)
+//   CallerIPAddress   — NOT present in standard MicrosoftGraphActivityLogs schema;
+//                       enrich via SigninLogs join on CorrelationId if source IP needed
+// Schema notes for SigninLogs (relevant fields):
+//   UserId            — string (same Azure AD object GUID as above — valid join key)
+//   UserPrincipalName — string (UPN, e.g. "user@contoso.com" — display only, not join key)
+//   AuthenticationProtocol — string ("deviceCode" for device-code flow)
+//   ResultType        — int   (0 = success)
+//   IPAddress         — string
+//   Location          — dynamic (LocationDetails object; project extracts the dynamic field)
 // Step 1: Build per-user baseline — 90th percentile of ResponseBytes per session
 let UserVolumeBaseline =
     MicrosoftGraphActivityLogs
     | where TimeGenerated > ago(BaselineDays)
     | where RequestUri has_any (SensitiveGraphPaths)
-    | summarize SessionBytes = sum(tolong(ResponseBytes)) by UserId, bin(TimeGenerated, 1h)
+    | summarize SessionBytes = sum(ResponseBytes) by UserId, bin(TimeGenerated, 1h)
     | summarize Baseline90thPct = percentile(SessionBytes, 90) by UserId;
 // Step 2: Identify device-code token grants in the last detection window
 let RecentTokenGrants =
@@ -1415,22 +1513,23 @@ let RecentTokenGrants =
     | where ResultType == 0
     | project
         TokenTime         = TimeGenerated,
-        UserId            = UserId,
-        UserPrincipalName,
+        UserId,            // GUID join key
+        UserPrincipalName, // UPN — display only
         IPAddress,
         Location;
-// Step 3: Measure Graph activity in the 60 minutes following each token grant
+// Step 3: Measure Graph activity in the 60 minutes following each token grant.
+// Look back 2× the detection window (DetectionMins * 2 * 1m) to ensure we capture
+// Graph events that occurred before the query execution time.
 let PostGrantActivity =
     MicrosoftGraphActivityLogs
     | where TimeGenerated > ago(DetectionMins * 2 * 1m)
     | where RequestUri has_any (SensitiveGraphPaths)
     | where ResponseStatusCode between (200 .. 299)
     | project
-        GraphTime         = TimeGenerated,
-        UserId,
+        GraphTime     = TimeGenerated,
+        UserId,        // GUID join key
         RequestUri,
-        ResponseBytes     = tolong(ResponseBytes),
-        IPAddress         = tostring(parse_json(RequestUri));
+        ResponseBytes; // long — no cast needed, native type in schema
 // Step 4: Join and flag sessions exceeding baseline
 RecentTokenGrants
 | join kind=inner (PostGrantActivity) on UserId
@@ -1441,9 +1540,13 @@ RecentTokenGrants
     DistinctAPICalls   = count()
   by UserId, UserPrincipalName, IPAddress, TokenTime, Location
 | join kind=inner (UserVolumeBaseline) on UserId
+// Null guard: users with insufficient baseline data (< 90 days of Graph activity)
+// will have a null or zero Baseline90thPct. Exclude them to avoid divide-by-zero
+// and spurious alerts on accounts with no established baseline.
+| where isnotnull(Baseline90thPct) and Baseline90thPct > 0
 | where TotalResponseBytes > Baseline90thPct * 3   // >3× 90th percentile = anomaly
 | extend
-    BaselneExceedanceFactor = round(TotalResponseBytes / (Baseline90thPct + 1), 1)
+    BaselineExceedanceFactor = round(TotalResponseBytes / (Baseline90thPct + 1), 1)
 | project
     TokenTime,
     UserPrincipalName,
@@ -1451,10 +1554,10 @@ RecentTokenGrants
     Location,
     TotalResponseBytes,
     Baseline90thPct,
-    BaselneExceedanceFactor,
+    BaselineExceedanceFactor,
     DistinctAPICalls,
     EndpointsAccessed
-| order by BaselneExceedanceFactor desc
+| order by BaselineExceedanceFactor desc
 ```
 
 ---
@@ -1476,7 +1579,7 @@ The following chain illustrates how all five tiers interact for the 3CX supply c
 [COLLECTION]     Within a 48-hour window, >5 hosts in the same environment
                  execute the trojanized 3CX installer and subsequently connect
                  to the same C2 FQDN cluster in HTTPS egress logs
-                 (raw2[.]githubusercontent[.]com / icon-staging repositories)
+                 (raw[.]githubusercontent[.]com / icon-staging repositories)
                  → MEDIUM confidence — abnormal install-rate pattern across
                    multiple endpoints to identical external infrastructure
                  ↓
@@ -1499,7 +1602,9 @@ The following chain illustrates how all five tiers interact for the 3CX supply c
 [ANOMALY]        The service account associated with the 3CX application
                  begins authenticating to internal file servers and domain
                  controllers it has never previously accessed, at 02:00 local
-                 time — 3.8 SD above its historical access-time distribution
+                 time — well outside its historical access-time distribution
+                 (for illustration: multiple standard deviations above the
+                 per-hour mean, exact figure depends on your baseline model)
                  and accessing resources with zero prior session history
                  → Confirms lateral movement from compromised endpoint;
                    blast radius expanded to include downstream identity
@@ -1530,6 +1635,8 @@ A practical approach to managing alert volume across all five tiers is a per-inc
 | Anomaly (multi-dimension scored) | 65 | >90 triggers incident declaration |
 
 Multiple simultaneous rule fires on the same entity within a time window should be multiplicatively weighted, not additively: an atomic IOC hit plus a TTP rule fire plus an anomaly alert on the same user, same hour, is almost certainly a real incident.
+
+> **Scoring model disclaimer:** The base scores and thresholds in this table are illustrative starting points, not validated empirical values. They must be calibrated against your environment's actual false-positive rates and rule fidelity. Do not deploy with these exact numbers without a tuning period.
 
 **Combined entity risk score formula:**
 When N rules fire on the same entity within the same detection window (60 minutes):
@@ -1590,7 +1697,7 @@ Two complementary metrics matter:
 
 ### 10.4 Detection-as-Code Workflow
 
-All rules in this guide are in Sigma format, enabling a detection-as-code pipeline:
+Sigma rules in this guide (Sections 4 and 5, and the TTP rules 7.1–7.3) follow a detection-as-code pipeline:
 
 ```
 CTI Report → Extract TTP/IOC → Write Sigma Rule → Code Review → 
@@ -1607,7 +1714,7 @@ Tools for this pipeline:
 
 > **Note for Elastic users:** `sigma-cli` converts Sigma rules to Elastic **Lucene** queries and **ES|QL** via the `elasticsearch` or `esql` backend. It does **not** produce native **EQL** (Elastic Event Query Language), which has distinct sequence syntax (`sequence by ... [process where ...] [network where ...]`). The correlational rules in Section 6 that use EQL sequence syntax must be written or adapted manually — they cannot be auto-generated from Sigma using current backends (as of early 2026).
 
-### 10.5 Rule Lifecycle and Versioning
+## 11. Rule Lifecycle and Versioning
 
 Detection rules are not static artifacts. They decay as infrastructure changes, attackers adapt, and platform schemas evolve. A production detection program needs an explicit lifecycle policy.
 
@@ -1699,7 +1806,7 @@ Anomaly detection is the hardest tier to evade, and the evasion strategies are c
 
 - **Slow baseline poisoning:** Operate at low, legitimate-looking volume for 90 days or more before executing the high-value action. If the attacker's traffic during the baselining period is indistinguishable from legitimate activity (because it IS low-volume legitimate-looking activity), the baseline absorbs it. When the attacker finally increases volume or changes behavior, the new baseline includes the attacker's footprint, and the anomaly threshold is set relative to a contaminated baseline. This requires long dwell time but is within reach of patient state-sponsored actors with 6–12 month pre-positioning timelines.
 - **Behavioral mimicry:** If the attacker has observed the victim's behavioral patterns (working hours, typical API call volume, device fingerprint, geographic login locations), they can deliberately mimic those patterns to remain within the normal band. A victim who always logs in from London between 09:00–17:00 and generates 50 API calls per session is relatively easy to impersonate if the attacker knows those parameters.
-- **Targeting baseling gaps:** Anomaly detection requires a baseline. New users, recently provisioned service accounts, new applications, or systems onboarded after a major change have short or absent baseline histories. These entities have high uncertainty in their anomaly models and are therefore poor targets for anomaly detection but excellent targets for attackers. A new employee's account has no established behavioral baseline; any activity from it is, by definition, "normal" for that entity.
+- **Targeting baselining gaps:** Anomaly detection requires a baseline. New users, recently provisioned service accounts, new applications, or systems onboarded after a major change have short or absent baseline histories. These entities have high uncertainty in their anomaly models and are therefore poor targets for anomaly detection but excellent targets for attackers. A new employee's account has no established behavioral baseline; any activity from it is, by definition, "normal" for that entity.
 - **Baselining horizon exploitation:** Most anomaly rules use a fixed lookback window (30, 60, 90 days). An attacker who compromises an account, conducts low-volume operations for 31 days, and then escalates has effectively aged their malicious activity outside the short-term anomaly window while remaining inside the baseline period — making their activity look like an established pattern.
 
 **Key insight:** A well-resourced actor who has already conducted extensive reconnaissance may understand your environment's behavioral baseline better than your own detection team does. Anomaly detection is hardest against patient actors with long dwell times — precisely the actors who represent the highest risk. The correct response is not to abandon anomaly detection but to ensure that the baseline includes multiple dimensions simultaneously (time, volume, geography, access pattern) so that mimicking all dimensions simultaneously becomes operationally difficult.
@@ -1714,37 +1821,60 @@ No single tier is sufficient. The correct architecture is all five tiers running
 
 ## 13. Key Sources
 
-**APT29 / Midnight Blizzard**
-- FireEye/Mandiant, *Highly Evasive Attacker Leverages SolarWinds Supply Chain to Compromise Multiple Global Victims With SUNBURST Backdoor*, December 2020
+### Adversary Behavior — Primary Intelligence Reports
+
+**APT29 / Midnight Blizzard (SVR)**
+- Mandiant, *Highly Evasive Attacker Leverages SolarWinds Supply Chain* (SUNBURST), December 2020 — [mandiant.com](https://www.mandiant.com/resources/blog/evasive-attacker-leverages-solarwinds-supply-chain-compromises-with-sunburst-backdoor)
 - Microsoft MSTIC, *Analyzing Solorigate: the compromised DLL file*, December 2020
 - CISA, Advisory AA20-352A — *Advanced Persistent Threat Compromise of Government Agencies, Critical Infrastructure, and Private Sector Organizations*, December 2020
 - Microsoft Security Response Center, *Microsoft Actions Following Attack by Nation State Actor Midnight Blizzard*, January 2024
 - CyberArk Labs, *Golden SAML: Newly Discovered Attack Technique Forges Authentication to Cloud Services*, November 2019
+- Mandiant, APT29 ADFS abuse follow-up, 2021: https://www.mandiant.com/resources/blog/apt29-continues-targeting-microsoft
 
-**APT41 / Double Dragon**
+**APT41 / Double Dragon (MSS-linked)**
 - Mandiant, *Double Dragon: APT41, a Dual Espionage and Cyber Crime Operation*, August 2019
 - Mandiant, *APT41 and Recent Activity*, August 2022
 - U.S. Department of Justice, *Seven International Cyber Defendants, Including "APT41" Associates, Charged*, September 2020
 - CISA, Advisory AA22-277A — *Impacket and Exfiltration Tool Used to Steal Sensitive Information from Defense Industrial Base Organization*, October 2022
 - Kaspersky GReAT, *Operation ShadowHammer*, April 2019
 
-**Lazarus Group / TraderTraitor**
+**Lazarus Group / TraderTraitor (RGB)**
 - Kaspersky GReAT, *Operation AppleJeus: Lazarus hits cryptocurrency exchange*, August 2018
-- CISA/FBI/Treasury, *TraderTraitor: North Korean State-Sponsored APT Targets Blockchain Companies*, April 2022
+- CISA/FBI/Treasury, *TraderTraitor: North Korean State-Sponsored APT Targets Blockchain Companies*, April 2022 (AA22-108A)
 - ClearSky, *Operation Dream Job*, January 2020
-- Mandiant, *Lazarus and the Three RATs*, March 2021
-- Mandiant, *Staying a Step Ahead: Mitigating the DPRK IT Worker Threat*, June 2022
+- Mandiant / CrowdStrike, *3CX Supply Chain Compromise*, April 2023 — [mandiant.com](https://www.mandiant.com/resources/blog/3cx-software-supply-chain-compromise)
 - FBI, *Flash: Identification of Lazarus Group Cryptocurrency Theft*, March 2023
 - CISA, Advisory AA21-048A — *AppleJeus: Analysis of North Korea's Cryptocurrency Malware*, February 2021
 
-**Detection Frameworks and References**
+**BYOVD — Vulnerable Driver Research**
+- Mandiant, *Hunting Attestation Signed Malware (POORTRY/WHIPEDOUT)*, August 2022
+- Microsoft Security Blog, *Hunting for Kernel Driver Abuse*, October 2022
+- LoLDrivers project — [loldrivers.io](https://www.loldrivers.io) — community-maintained vulnerable/malicious driver hash reference
+
+---
+
+### Telemetry and Schema References
+
+- Microsoft, *MicrosoftGraphActivityLogs schema* — [learn.microsoft.com/azure/azure-monitor/reference/tables/microsoftgraphactivitylogs](https://learn.microsoft.com/en-us/azure/azure-monitor/reference/tables/microsoftgraphactivitylogs)
+- Microsoft, *SigninLogs schema* — [learn.microsoft.com/azure/azure-monitor/reference/tables/signinlogs](https://learn.microsoft.com/en-us/azure/azure-monitor/reference/tables/signinlogs)
+- Microsoft, *DeviceImageLoadEvents (MDE Advanced Hunting)* — [learn.microsoft.com/defender-xdr/advanced-hunting-deviceimageloadevents-table](https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-deviceimageloadevents-table)
+- Linux man pages, *ptrace(2)* — [man7.org/linux/man-pages/man2/ptrace.2.html](https://www.man7.org/linux/man-pages/man2/ptrace.2.html)
+- Linux Audit documentation, *audit.rules(7)* — reference for `-F a0=` filter syntax and syscall argument encoding
+
+---
+
+### Detection Frameworks, Tooling, and Validation Datasets
+
 - MITRE ATT&CK, *Enterprise Matrix*, current version — [attack.mitre.org](https://attack.mitre.org)
 - MITRE, *Cyber Analytics Repository (CAR)* — [car.mitre.org](https://car.mitre.org)
 - David Bianco, *The Pyramid of Pain*, 2013 — [detect-respond.blogspot.com](https://detect-respond.blogspot.com/2013/03/the-pyramid-of-pain.html)
-- SigmaHQ, *Sigma Rule Repository* — [github.com/SigmaHQ/sigma](https://github.com/SigmaHQ/sigma)
-- Red Canary, *Atomic Red Team* — [github.com/redcanaryco/atomic-red-team](https://github.com/redcanaryco/atomic-red-team)
-- OTRF, *Mordor / Security Datasets* — [github.com/OTRF/Security-Datasets](https://github.com/OTRF/Security-Datasets)
-- LoLDrivers project — [loldrivers.io](https://www.loldrivers.io) — vulnerable/malicious driver reference
+- SigmaHQ, *Sigma Rule Specification* — [github.com/SigmaHQ/sigma](https://github.com/SigmaHQ/sigma)
+- SigmaHQ, *sigma-cli* (Sigma to SPL/KQL/Lucene/ES|QL transpiler) — [github.com/SigmaHQ/sigma-cli](https://github.com/SigmaHQ/sigma-cli)
+- Elastic, *Event Query Language (EQL) Reference* — [elastic.co/guide/en/elasticsearch/reference/current/eql.html](https://www.elastic.co/guide/en/elasticsearch/reference/current/eql.html)
+- Red Canary, *Atomic Red Team* (ATT&CK-mapped test cases) — [github.com/redcanaryco/atomic-red-team](https://github.com/redcanaryco/atomic-red-team)
+- OTRF, *Mordor / Security Datasets* (pre-recorded APT simulation telemetry) — [github.com/OTRF/Security-Datasets](https://github.com/OTRF/Security-Datasets)
+- SecurityRiskAdvisors, *VECTR* (campaign tracking and red team management) — [github.com/SecurityRiskAdvisors/VECTR](https://github.com/SecurityRiskAdvisors/VECTR)
+- MITRE, *ATT&CK Navigator* — [mitre-attack.github.io/attack-navigator](https://mitre-attack.github.io/attack-navigator/)
 
 ---
 
