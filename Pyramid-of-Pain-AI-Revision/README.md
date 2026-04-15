@@ -117,7 +117,7 @@ If TTP-based detection is under pressure from adaptive AI agents, the question i
 
 The limit of this durability must be stated explicitly: an AI agent that observes its own behavioral footprint and adapts to remain within the target's established baseline can defeat threshold-based anomaly detection. Slow exfiltration at the 90th percentile of historical outbound volume, lateral movement that mimics peer-group authentication patterns, and working-hours-only operation are not exotic concepts — they are documented in advanced red team tooling and academic research on adversarial UEBA evasion. Against a sophisticated AI agent explicitly designed to profile and operate within normal behavioral envelopes, anomaly detection is a higher bar than signature detection, not an insurmountable one.
 
-This is why anomaly detection has moved from the top of a wish list to the center of a realistic detection program — and why its limits matter as much as its strengths.
+Anomaly detection occupies the center of a realistic detection program because it is the control that survives the widest variance in adversary tooling and technique. Its limits — documented above — are as operationally relevant as its strengths.
 
 ---
 
@@ -125,14 +125,13 @@ This is why anomaly detection has moved from the top of a wish list to the cente
 
 The Pyramid of Pain remains a useful framework for understanding *why* different detection investments have different durability. It does not need to be discarded — it needs to be extended.
 
-A practical revision for the AI age looks like this:
+A practical revision for the AI age:
 
 ```
-══════════════════════════════════ ANALYTICAL CONTEXT (not direct detection signals)
-[Strategic Intent / Mission]       ← Inferred from behavioral pattern; not observable directly
-[Operational Tempo]               ← Distinguishes human vs. automated actors when not jittered
-══════════════════════════════════ BEHAVIORAL DETECTION (direct, durable)
-[BEHAVIORAL BASELINE DEVIATION]   ← Most durable direct signal; defeats tool and TTP variation
+══════════════════════════════════ DIRECT DETECTION SIGNALS (ordered by durability)
+[BEHAVIORAL BASELINE DEVIATION]   ← Most durable; defeats tool and TTP variation
+[Operational Tempo]               ← Detectable when actor prioritizes speed over stealth;
+                                       defeated by jitter/sleep timers (see §3)
 ══════════════════════════════════ AI compression boundary
 [TTPs]                             ← Durable for human-directed; low attacker cost for AI agents
 [Tools]                            ← Substantially reduced for single-use tooling
@@ -142,11 +141,13 @@ A practical revision for the AI age looks like this:
 [Hash Values]                      ← Unchanged (was always fragile)
 ```
 
-The critical insight: the AI compression boundary sits between the tools layer and the TTP layer. Everything below it is now cheaper for attackers than it was in 2013. Everything above the boundary retains its original cost structure for human-directed attacks — and behavioral baseline deviation sits above all of it because it detects *the gap between what was normal and what is happening now*, regardless of which tool or technique produced that gap.
+**Strategic Intent is excluded from this model.** It is a post-incident analytical conclusion — the answer to "what was the adversary trying to achieve," reconstructed from behavioral evidence after investigation closes. Including it in a detection pyramid conflates analytical output with detection signal. Analysts infer intent; sensors do not observe it. Strategic Intent belongs in a threat intelligence assessment, not an alert pipeline.
 
-This durability is real and material, with a caveat that belongs in any honest treatment: it holds against actors who are not explicitly modeling and adapting to the defender's behavioral baseline. Against a sophisticated AI agent designed to operate within normal behavioral envelopes — the adversarial UEBA evasion problem — behavioral detection becomes a cat-and-mouse problem rather than an architectural anchor. This scenario is documented in red team research and not yet prevalent in confirmed production intrusions as of early 2026; it is the direction the threat is moving, not where it has fully arrived.
+The AI compression boundary sits between the tools layer and the TTP layer. Everything below it is now cheaper for attackers to rotate than it was in 2013. Behavioral baseline deviation sits above all detection layers because it detects *the gap between what was normal and what is happening now*, regardless of which tool or technique produced that gap.
 
-This does not mean signature-based and TTP-based detection should be abandoned. They catch the majority of less sophisticated actors who are not using AI assistance. But the detection investment that survives the widest range of threat actors — including AI-assisted ones — is behavioral anomaly detection.
+That durability holds against actors who are not explicitly modeling the defender's behavioral baseline. Against a sophisticated AI agent designed to operate within normal behavioral envelopes — the adversarial UEBA evasion problem documented in §5.7 — behavioral detection becomes a cat-and-mouse problem. This is the direction the threat is moving; confirmed production use of baseline-aware AI attack agents is not yet extensively documented in public reporting as of early 2026.
+
+Signature-based and TTP-based detection remain operationally necessary — they catch the majority of less sophisticated actors who are not using AI assistance. Behavioral anomaly detection is the layer that survives the widest range of threat actor capability, including AI-assisted actors who do not implement baseline evasion.
 
 ---
 
@@ -258,7 +259,9 @@ Container and Kubernetes environments introduce process anomaly categories that 
 
 - **DaemonSet abuse:** A DaemonSet scheduled outside of known namespaces or with a container image not in the approved registry is a persistence and lateral movement primitive. DaemonSets run on every node; a malicious one provides access to all cluster hosts simultaneously. Baseline: what DaemonSets exist, in which namespaces, with which images — any new entry warrants immediate review.
 - **Sidecar injection into running pods:** Injecting a container into an existing pod at runtime bypasses image admission controls. The behavioral anomaly is a running pod that has more containers than its original spec defined, or a container whose image was not present at pod creation time.
-- **Unexpected `kubectl exec` into production pods:** Interactive shell sessions into production pods are rare in disciplined environments. Any `kubectl exec` into a non-debug pod, particularly in production namespaces, from a user account that does not normally perform this action, is a significant anomaly. Most SIEMs do not parse Kubernetes audit logs by default — this detection requires explicit pipeline configuration.
+- **Unexpected `kubectl exec` into production pods:** Interactive shell sessions into production pods are rare in disciplined environments. Any `kubectl exec` into a non-debug pod, particularly in production namespaces, from a user account that does not normally perform this action, is a significant anomaly.
+
+> **Transgression — K8s Audit Pipeline:** Most organizations fail at all Kubernetes behavioral detections — DaemonSet abuse, sidecar injection, kubectl exec — because Kubernetes API Server audit logs are rarely forwarded to the SIEM. The volume of K8s audit events at cluster scale is prohibitive without source-side filtering: a 50-node production cluster running CI/CD workloads can generate tens of millions of audit events per hour, most of them `get`, `list`, and `watch` operations against the API server that carry no security relevance. Organizations that attempt to forward unfiltered K8s audit logs to a SIEM either incur cost that kills the integration within weeks, or configure log-level sampling that drops the high-severity events. Behavioral detection of Kubernetes-native threats is a myth if the audit pipeline is not filtered at the API Server's audit policy level before forwarding. Architects must configure `audit-policy.yaml` to pass only `ResponseComplete` events for high-value resource types (`daemonsets`, `pods`, `clusterrolebindings`, `secrets`, `exec`) at `Metadata` or `RequestResponse` level, and drop or downsample routine read operations (`get`, `list`, `watch`) for standard namespaces. Without this filtering, no SIEM integration survives contact with production cluster volume.
 - **Pod security context escalation:** A pod created with `privileged: true`, `hostPID: true`, or `hostNetwork: true` that is not in the pre-approved privileged workload list. These flags provide near-complete access to the underlying node and are not required for normal application workloads.
 
 ---
@@ -404,8 +407,8 @@ Different anomaly types require different statistical approaches. Choosing the w
 | Method | Best for | Limitation |
 |---|---|---|
 | **Z-score** | Normally distributed metrics (login count, file access count) | Fails on skewed data; outlier-sensitive baseline |
-| **Modified Z-score (MAD)** | Skewed distributions with outliers (byte volumes, transaction amounts) | Requires median calculation; less intuitive to tune |
-| **Isolation Forest** | Multidimensional anomaly detection (C2 beaconing: periodicity + volume + destination) | Black-box; naïve implementations with minimal feature sets produce false-positive rates that make the system operationally unusable within days of deployment — feature engineering, tuning against environment-specific traffic, and periodic retraining are mandatory, not optional |
+| **Modified Z-score (MAD)** | Skewed distributions with outliers (byte volumes, transaction amounts) | Requires median calculation; less intuitive to tune. Score: $M_i = \frac{0.6745(X_i - \tilde{X})}{\text{MAD}}$, where $\text{MAD} = \text{median}(\|X_i - \tilde{X}\|)$. Flag when $\|M_i\| > 3.5$ |
+| **Isolation Forest** | Multidimensional anomaly detection (C2 beaconing: periodicity + volume + destination) | Black-box; naïve implementations with minimal feature sets produce false-positive rates that make the system operationally unusable within days of deployment — feature engineering, tuning against environment-specific traffic, and periodic retraining are mandatory, not optional. Anomaly score: $s(x,\psi) = 2^{-E[h(x)]/c(\psi)}$, where $c(\psi) = 2H(\psi-1) - 2(\psi-1)/\psi$ and $H$ is the harmonic number. Training complexity $O(t \cdot \psi \log \psi)$ for $t$ trees and subsample size $\psi$ |
 | **LSTM / Autoencoder** | Sequential and time-series data (user session sequences, process API call sequences) | Requires significant training data; expensive to maintain |
 | **Statistical process control** | Continuous monitoring with control limits (packet rate, authentication rate) | Assumes stable baseline; sensitive to concept drift |
 | **Peer group analysis** | Comparing an entity to its behavioral peer group (similar job roles, same subnet) | Requires meaningful peer group definition |
@@ -421,7 +424,7 @@ For most detection engineering teams, the right starting point is not ML — it 
 4. Tune F based on observed false-positive rate
 ```
 
-This is not sophisticated statistics, but it produces per-entity thresholds that adapt to different behavioral scales, which is the most important property of an anomaly detection system. A global threshold treats the analyst who legitimately downloads 10,000 files per day the same as the employee whose normal download count is 50.
+Per-entity percentile baselines are not sophisticated statistics. They are the foundational requirement: thresholds that adapt to each entity's own behavioral scale rather than a population average. A global threshold treats the analyst who legitimately downloads 10,000 files per day identically to the employee whose normal count is 50 — producing false positives on the former and missing the signal on the latter.
 
 Add ML methods for specific high-value detection categories (C2 beaconing, user session sequence modeling) after the percentile baseline system is operational. Building ML models before you have reliable feature pipelines and baseline data is the most common anomaly detection failure mode.
 
@@ -439,9 +442,9 @@ Raw log data from enterprise telemetry pipelines (UDM/Chronicle, Sentinel, Splun
 
 ## 7. Building an Anomaly Detection Program
 
-The taxonomy above describes what to detect. The harder operational question is in what order, with what infrastructure, and against what data sources.
+Method selection (§6) determines accuracy. Deployment sequencing, infrastructure provisioning, and failure-mode management determine whether the program survives contact with production. The order below reflects data availability, detection fidelity, and operational impact — not theoretical completeness.
 
-**Start with the highest signal-to-noise categories first.**
+**Deploy in signal-to-noise order.**
 
 The following order reflects a practical deployment sequence based on data availability, detection fidelity, and operational impact:
 
@@ -468,7 +471,9 @@ Anomaly detection without a baseline is just threshold-based alerting with extra
 - Regular baseline refresh (see concept drift below)
 - Explicit exclusion of known-bad data from baseline training (if a host was compromised during the baseline period, its anomalous activity becomes the baseline)
 
-The infrastructure implications are often underestimated. A 90-day per-entity behavioral baseline across an enterprise with 50,000 users, 100,000 endpoints, and dozens of SaaS applications generates hundreds of terabytes of normalized telemetry. Platforms like Google SecOps (Chronicle) or Microsoft Sentinel with UEBA modules handle this at the data-plane level — but the query compute cost of recalculating baselines on a rolling window, running entity-resolution to deduplicate identities across systems, and joining behavioral features at query time for correlation alerts is substantial. Organizations that attempt to build per-entity baselines on general-purpose SIEM infrastructure without dedicated analytics infrastructure frequently discover that the baseline queries saturate compute quotas before the detection logic runs. Understand the storage and compute commitment before committing to per-entity baselines at scale.
+The infrastructure implications are often underestimated. A 90-day per-entity behavioral baseline across an enterprise with 50,000 users, 100,000 endpoints, and dozens of SaaS applications generates hundreds of terabytes of normalized telemetry. Platforms like Google SecOps (Chronicle) or Microsoft Sentinel with UEBA modules handle this at the data-plane level — but the query compute cost of recalculating baselines on a rolling window, running entity-resolution to deduplicate identities across systems, and joining behavioral features at query time for correlation alerts is substantial. Organizations that attempt to build per-entity baselines on general-purpose SIEM infrastructure without dedicated analytics infrastructure frequently discover that the baseline queries saturate compute quotas before the detection logic runs.
+
+> **Practitioner's Warning — UDM Baseline Compute:** Performing per-entity baselining on raw UDM event streams in Google SecOps (Chronicle) without leveraging pre-aggregated **Summary Tables** or **Entity Pages** will produce query timeouts at enterprise scale and generate egress/compute costs that are orders of magnitude above budget estimates. Raw UDM queries that join across billions of events to compute a 90-day rolling percentile per entity are not a viable production pattern — Chronicle's billing model charges per byte scanned, and a naïve per-entity baseline query across a 90-day window for 50,000 entities will scan petabytes per execution cycle. Architects must use Chronicle's `summarize` operator with pre-aggregated daily rollups, or use Entity Pages' pre-computed behavioral statistics as the baseline input. The same constraint applies to Microsoft Sentinel: per-entity baseline logic belongs in scheduled analytics rules operating on pre-aggregated workspace tables, not in ad-hoc KQL that scans raw `CommonSecurityLog` or `SecurityEvent` directly. Build your data aggregation pipeline before you build your baseline logic.
 
 **Program failure modes — the ones that actually kill anomaly detection deployments:**
 
@@ -490,17 +495,27 @@ The failure mode for anomaly detection programs is alert fatigue. An anomaly det
 
 Without this context in the alert, analysts cannot triage efficiently and will disable or suppress the detection.
 
-**The adversarial ML frontier — model blind spots.**
+**The adversarial ML frontier — surrogate model attacks and feature-space evasion.**
 
-When defenders use ML to detect anomalies, sophisticated attackers use ML to find the model's blind spots. This is not a hypothetical — it follows directly from the same capability that enables AI-assisted offense. An adversary with access to representative samples of an organization's traffic (via initial reconnaissance, open-source intelligence, or industry baseline data) can train a surrogate model of the defender's detection system and probe it for regions of the feature space that produce no alert.
+Defenders who use ML for anomaly detection face a structural asymmetry: the algorithms are public, the feature sets are inferable from telemetry, and the retraining cadence is bounded by operational schedules. Attackers who gain initial access can probe the detection system continuously.
 
-The practical consequences:
+**The Surrogate Model Attack** proceeds as follows: An adversary who has achieved initial low-privilege access captures a representative subset of the organization's UDM or endpoint telemetry — the same data the defender's Isolation Forest trains on. The adversary trains a local surrogate Isolation Forest using this telemetry. The surrogate is an approximation of the defender's model: same algorithm, similar feature distribution, close enough to model the decision boundary.
 
-- A behavioral baseline that was trained on clean data and never updated becomes a fixed target. An attacker who knows the model type, training window, and feature set can craft behavior that lies in low-anomaly regions of that model.
-- Isolation Forest, LSTM autoencoders, and percentile baselines are all published, well-understood algorithms. The defender's selection of method is not secret. What remains secret is the specific baseline state — which changes as legitimate behavior evolves.
-- The asymmetry: defenders retrain on a schedule (weekly, monthly); attackers can probe continuously. A model that is stale by two months has a known attack surface.
+With the surrogate in hand, the adversary applies one of two optimization approaches to find the minimum *feature delta* required to exfiltrate data while producing an anomaly score below the defender's alerting threshold:
 
-Mitigations are operational, not algorithmic: randomize threshold presentation (do not expose alert triggers in any interface that attackers could observe), rotate detection logic rather than maintaining static rulesets, and maintain detection controls that are not ML-based in parallel — because a rule that matches a specific process name or API sequence cannot be evaded by operating in the wrong region of a feature space.
+- **Gradient-based optimization:** Where the surrogate model's decision function is differentiable (or approximately so via finite differences), gradient descent in feature space identifies the direction of decreasing anomaly score. The adversary adjusts transfer volume, timing intervals, and destination diversity incrementally — each step reducing the anomaly score until it falls below the 95th percentile boundary. This approach converges in tens to hundreds of iterations.
+
+- **Genetic algorithms / evolutionary search:** Where gradient information is unavailable or the feature space is discrete, evolutionary search generates candidate behavioral profiles (transfer volume, session timing, destination count combinations), scores them against the surrogate, selects low-anomaly profiles, and breeds them toward a population that consistently evades detection. This is model-agnostic and does not require the surrogate's internals — only a query interface.
+
+The adversary does not need perfect model replication. A surrogate that approximates the decision boundary within ±10% of anomaly score is sufficient to find a behavioral profile that evades detection while accomplishing the operational objective.
+
+Practical implications:
+
+- A static Isolation Forest with a fixed training window and known feature set is a solvable optimization problem for a patient adversary with telemetry access.
+- Defenders must treat their baseline model state as a secret, not their algorithm choice. Rotate training windows unpredictably, vary the feature set across model versions, and maintain ensemble detection (multiple independent models with different feature subsets) to prevent a single surrogate from approximating all models simultaneously.
+- Defenders retrain on a schedule; attackers probe continuously. A model stale by two months is a fixed target with a known attack surface. Automated retraining triggered by behavioral drift metrics — not a calendar schedule — reduces this window.
+
+Mitigations are operational: rotate detection logic unpredictably, maintain non-ML signature controls in parallel (a behavioral rule that matches a specific API call sequence cannot be defeated by gradient optimization), and avoid exposing anomaly scores in any analyst-facing interface that an attacker could observe via a compromised account.
 
 ---
 
