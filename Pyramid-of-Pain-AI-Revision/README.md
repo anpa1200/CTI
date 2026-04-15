@@ -91,15 +91,15 @@ MITRE's December 2024 update to *Summiting the Pyramid* acknowledged this direct
 
 ### The Revised Cost Structure
 
-| Layer | Pre-AI attacker cost | Post-AI attacker cost | Change |
+| Layer | Pre-AI attacker cost to evade | Post-AI attacker cost to evade | Defender detection durability |
 |---|---|---|---|
-| Hash values | Near-zero | Near-zero | None |
+| Hash values | Near-zero | Near-zero | None — was always trivial |
 | IP addresses | Low | Low | None |
 | Domain names | Low | Low | None |
 | Network/host artifacts | Low-medium | Low (LLM-assisted variant generation) | Reduced |
 | Tools | Medium-high | Low for single-use tools; still high for complex frameworks | Partially reduced |
-| TTPs (human-directed) | High | High | Unchanged |
-| TTPs (AI-agent-directed) | High | Medium (adaptive selection reduces pattern stability) | Reduced for agents |
+| TTPs (human-directed) | High | High | Unchanged — technique change still requires operational rework |
+| TTPs (AI-agent-directed) | High | **Low** — agent selects from repertoire when blocked, no rework required | Substantially reduced: detection becomes a coverage problem (all variants) not a pattern problem |
 
 ---
 
@@ -109,7 +109,7 @@ If TTP-based detection is under pressure from adaptive AI agents, the question i
 
 **Strategic intent.** An actor's objective — steal credentials, exfiltrate intellectual property, disrupt operations, commit financial fraud — does not change because they switched to AI-assisted tooling. Intent is stable across all variants of the attack. It is also, unfortunately, very difficult to detect directly. You infer it from the pattern of what is accessed, moved, or destroyed — which requires behavioral analysis.
 
-**Operational tempo.** AI-assisted and autonomous attacks operate at machine speed. A human attacker has natural temporal patterns — working hours, decision latency, the time it takes to read output and issue the next command. An autonomous agent does not. CrowdStrike's 2024 Global Threat Report documented a record adversary breakout time of 2 minutes 7 seconds — a speed achievable only with significant automation, not a human operator reading command output. Tempo deviation from human behavioral norms is detectable.
+**Operational tempo.** AI-assisted and autonomous attacks can operate at machine speed — but this is not a fixed property. C2 frameworks have offered configurable jitter and sleep timers for many years: an automated agent can be set to pause for a randomized interval of 8–20 minutes between commands, producing inter-event timing indistinguishable from a distracted human analyst. The tempo advantage of AI is scale and availability (24/7, parallel operations across many targets), not necessarily speed. CrowdStrike's 2024 Global Threat Report documented a record adversary breakout time of 2 minutes 7 seconds — a figure that requires significant automation — but an AI-directed campaign optimized for stealth will deliberately operate slowly. Tempo remains a detectable signal when an actor chooses speed over stealth; it fails as a detection control against one that does not.
 
 **Resource acquisition patterns.** Before an attack begins, an actor provisions infrastructure: cloud accounts, VPS instances, domains, API keys. AI does not change how resources are acquired — only what is done with them. Patterns in infrastructure provisioning, cloud account behavior before first use, and API key issuance timing are stable detection surfaces.
 
@@ -128,17 +128,18 @@ The Pyramid of Pain remains a useful framework for understanding *why* different
 A practical revision for the AI age looks like this:
 
 ```
-[BEHAVIORAL BASELINE DEVIATION]   ← Most durable; survives tool/TTP changes, not invariant
-[Strategic Intent / Mission]       ← Stable but indirect; inferred from behavior
-[Operational Tempo]               ← Machine vs. human speed is detectable
-────────────────────────────────── ← AI compression boundary
-[TTPs]                             ← Still valuable for human-directed actors;
-                                       under pressure from autonomous AI agents
-[Tools]                            ← Partially collapsed for single-use tooling
-[Network/Host Artifacts]           ← Eroding: LLM variant generation lowers cost
+══════════════════════════════════ ANALYTICAL CONTEXT (not direct detection signals)
+[Strategic Intent / Mission]       ← Inferred from behavioral pattern; not observable directly
+[Operational Tempo]               ← Distinguishes human vs. automated actors when not jittered
+══════════════════════════════════ BEHAVIORAL DETECTION (direct, durable)
+[BEHAVIORAL BASELINE DEVIATION]   ← Most durable direct signal; defeats tool and TTP variation
+══════════════════════════════════ AI compression boundary
+[TTPs]                             ← Durable for human-directed; low attacker cost for AI agents
+[Tools]                            ← Substantially reduced for single-use tooling
+[Network/Host Artifacts]           ← Eroding: LLM variant generation lowers attacker cost
 [Domain Names]                     ← Unchanged
 [IP Addresses]                     ← Unchanged
-[Hash Values]                      ← Unchanged
+[Hash Values]                      ← Unchanged (was always fragile)
 ```
 
 The critical insight: the AI compression boundary sits between the tools layer and the TTP layer. Everything below it is now cheaper for attackers than it was in 2013. Everything above the boundary retains its original cost structure for human-directed attacks — and behavioral baseline deviation sits above all of it because it detects *the gap between what was normal and what is happening now*, regardless of which tool or technique produced that gap.
@@ -250,6 +251,15 @@ Legitimate use of `powershell.exe` with `-EncodedCommand` and `-ExecutionPolicy 
 **Execution from Anomalous Paths**
 
 Executable files running from user-writable paths (`Downloads`, `AppData\Roaming`, `Temp`) are anomalous in environments where software is deployed from managed paths. This detection is noisy without a baseline — many legitimate installers unpack to temp — but filtered to non-installer processes it has high fidelity.
+
+**Cloud and Container Process Anomalies**
+
+Container and Kubernetes environments introduce process anomaly categories that do not map to Windows endpoint detection:
+
+- **DaemonSet abuse:** A DaemonSet scheduled outside of known namespaces or with a container image not in the approved registry is a persistence and lateral movement primitive. DaemonSets run on every node; a malicious one provides access to all cluster hosts simultaneously. Baseline: what DaemonSets exist, in which namespaces, with which images — any new entry warrants immediate review.
+- **Sidecar injection into running pods:** Injecting a container into an existing pod at runtime bypasses image admission controls. The behavioral anomaly is a running pod that has more containers than its original spec defined, or a container whose image was not present at pod creation time.
+- **Unexpected `kubectl exec` into production pods:** Interactive shell sessions into production pods are rare in disciplined environments. Any `kubectl exec` into a non-debug pod, particularly in production namespaces, from a user account that does not normally perform this action, is a significant anomaly. Most SIEMs do not parse Kubernetes audit logs by default — this detection requires explicit pipeline configuration.
+- **Pod security context escalation:** A pod created with `privileged: true`, `hostPID: true`, or `hostNetwork: true` that is not in the pre-approved privileged workload list. These flags provide near-complete access to the underlying node and are not required for normal application workloads.
 
 ---
 
@@ -415,6 +425,16 @@ This is not sophisticated statistics, but it produces per-entity thresholds that
 
 Add ML methods for specific high-value detection categories (C2 beaconing, user session sequence modeling) after the percentile baseline system is operational. Building ML models before you have reliable feature pipelines and baseline data is the most common anomaly detection failure mode.
 
+**Feature engineering requirements for ML-based anomaly detection:**
+
+Raw log data from enterprise telemetry pipelines (UDM/Chronicle, Sentinel, Splunk) is not usable as direct Isolation Forest input. Three categories of preparation are mandatory before any model produces trustworthy output:
+
+- **Feature scaling:** Isolation Forest is sensitive to scale differences between features. Connection interval variance (milliseconds) and distinct destination count (integer 1–500) are incomparable without standardization. Apply StandardScaler or RobustScaler (preferred for skewed security metrics) before training. Unscaled features produce trees that partition almost exclusively on the highest-magnitude dimension, reducing the model to a near-univariate detector.
+
+- **Noise and irrelevant feature removal:** Enterprise UDM log records contain dozens of fields; most are irrelevant or redundant for a specific detection problem. Feeding raw multi-field records into an Isolation Forest without dimensionality reduction produces models dominated by noise dimensions. For C2 beaconing detection, feature set should be engineered to roughly: `[interval_cv, bytes_per_conn_cv, unique_ext_dest_count, session_duration, query_type_entropy]`. Fields like `principal.hostname` or `target.process.file.path` are not features — they are identifiers.
+
+- **Contamination rate calibration:** Isolation Forest's `contamination` parameter assumes a fraction of training data is anomalous. In a pre-compromise baseline, contamination is near-zero; in an enterprise log stream sampled broadly, it may be non-negligible. Setting `contamination=auto` without inspecting the assumed anomaly fraction produces unreliable threshold placement. Validate against a labeled holdout set before production deployment.
+
 ---
 
 ## 7. Building an Anomaly Detection Program
@@ -439,7 +459,7 @@ The following order reflects a practical deployment sequence based on data avail
 
 7. **AI-specific anomalies** — requires instrumentation of LLM application endpoints. Immature field; start with rule-based prompt injection detection before attempting behavioral baseline on AI agent tool calls.
 
-**The baseline requirement is non-negotiable.**
+**The baseline requirement is non-negotiable — and not free.**
 
 Anomaly detection without a baseline is just threshold-based alerting with extra steps. Every anomaly detection program requires:
 
@@ -447,6 +467,8 @@ Anomaly detection without a baseline is just threshold-based alerting with extra
 - Per-entity baselines, not global thresholds
 - Regular baseline refresh (see concept drift below)
 - Explicit exclusion of known-bad data from baseline training (if a host was compromised during the baseline period, its anomalous activity becomes the baseline)
+
+The infrastructure implications are often underestimated. A 90-day per-entity behavioral baseline across an enterprise with 50,000 users, 100,000 endpoints, and dozens of SaaS applications generates hundreds of terabytes of normalized telemetry. Platforms like Google SecOps (Chronicle) or Microsoft Sentinel with UEBA modules handle this at the data-plane level — but the query compute cost of recalculating baselines on a rolling window, running entity-resolution to deduplicate identities across systems, and joining behavioral features at query time for correlation alerts is substantial. Organizations that attempt to build per-entity baselines on general-purpose SIEM infrastructure without dedicated analytics infrastructure frequently discover that the baseline queries saturate compute quotas before the detection logic runs. Understand the storage and compute commitment before committing to per-entity baselines at scale.
 
 **Program failure modes — the ones that actually kill anomaly detection deployments:**
 
@@ -467,6 +489,18 @@ The failure mode for anomaly detection programs is alert fatigue. An anomaly det
 - Alerts link to historical context: what was this entity doing 30 days ago, and how does that compare?
 
 Without this context in the alert, analysts cannot triage efficiently and will disable or suppress the detection.
+
+**The adversarial ML frontier — model blind spots.**
+
+When defenders use ML to detect anomalies, sophisticated attackers use ML to find the model's blind spots. This is not a hypothetical — it follows directly from the same capability that enables AI-assisted offense. An adversary with access to representative samples of an organization's traffic (via initial reconnaissance, open-source intelligence, or industry baseline data) can train a surrogate model of the defender's detection system and probe it for regions of the feature space that produce no alert.
+
+The practical consequences:
+
+- A behavioral baseline that was trained on clean data and never updated becomes a fixed target. An attacker who knows the model type, training window, and feature set can craft behavior that lies in low-anomaly regions of that model.
+- Isolation Forest, LSTM autoencoders, and percentile baselines are all published, well-understood algorithms. The defender's selection of method is not secret. What remains secret is the specific baseline state — which changes as legitimate behavior evolves.
+- The asymmetry: defenders retrain on a schedule (weekly, monthly); attackers can probe continuously. A model that is stale by two months has a known attack surface.
+
+Mitigations are operational, not algorithmic: randomize threshold presentation (do not expose alert triggers in any interface that attackers could observe), rotate detection logic rather than maintaining static rulesets, and maintain detection controls that are not ML-based in parallel — because a rule that matches a specific process name or API sequence cannot be evaded by operating in the wrong region of a feature space.
 
 ---
 
