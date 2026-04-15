@@ -73,9 +73,9 @@ This is the most significant structural change. Bianco's original argument was t
 
 LLMs do not eliminate this cost entirely, but they substantially compress it for a specific class of tool: purpose-built, single-campaign utilities. A custom credential harvester, a lateral movement script, a data-staging utility — these can now be generated from natural language prompts, used once, and discarded. The hash will never appear in any threat feed. The code will not match any existing signature.
 
-CrowdStrike's 2025 data offers a useful proxy signal: 79% of initial access attacks are now malware-free. This is partly credential-based intrusion, partly living-off-the-land — but it also reflects actors bypassing the tools layer entirely when legitimate access is available. The tools layer is not dead, but it is less of a forcing function than it was.
+CrowdStrike's 2025 data offers a useful proxy signal: 79% of initial access attacks are now malware-free. This predominantly reflects credential-based intrusion and living-off-the-land techniques — trends that predate LLMs and are not primarily AI-driven. The relevance to tool-layer compression is indirect: actors who achieve initial access via stolen credentials or legitimate remote tools bypass the tools layer entirely, further reducing its detection value regardless of AI assistance. The tools layer is not dead, but it is less of a forcing function than it was.
 
-Google's Threat Intelligence Group identified PROMPTFLUX in 2025: a dropper that uses a live LLM API to dynamically generate obfuscated payload variants at runtime. This represents the logical endpoint of tool-layer compression — the "tool" is no longer a static artifact at all. It is a generative process that produces a unique output on each execution.
+Academic red team research and vendor reporting from 2024–2025 document the logical endpoint of tool-layer compression: malware that calls an external LLM API at runtime to generate obfuscated payload variants on each execution, producing artifacts that share no static signature with prior runs. No established signature or hash-based control covers a payload that did not exist before it was deployed. This threat model is documented in published offensive security research; confirmed production use by a named, attributed threat actor has not been independently verified in public reporting as of early 2026.
 
 ### TTPs — The Critical Case
 
@@ -109,13 +109,15 @@ If TTP-based detection is under pressure from adaptive AI agents, the question i
 
 **Strategic intent.** An actor's objective — steal credentials, exfiltrate intellectual property, disrupt operations, commit financial fraud — does not change because they switched to AI-assisted tooling. Intent is stable across all variants of the attack. It is also, unfortunately, very difficult to detect directly. You infer it from the pattern of what is accessed, moved, or destroyed — which requires behavioral analysis.
 
-**Operational tempo.** AI-assisted and autonomous attacks operate at machine speed. A human attacker has natural temporal patterns — working hours, decision latency, the time it takes to read output and issue the next command. An autonomous agent does not. Breakout times collapsing to 27 seconds (documented in CrowdStrike 2025 data) are only achievable with automation. Tempo deviation from human baseline is detectable.
+**Operational tempo.** AI-assisted and autonomous attacks operate at machine speed. A human attacker has natural temporal patterns — working hours, decision latency, the time it takes to read output and issue the next command. An autonomous agent does not. CrowdStrike's 2024 Global Threat Report documented a record adversary breakout time of 2 minutes 7 seconds — a speed achievable only with significant automation, not a human operator reading command output. Tempo deviation from human behavioral norms is detectable.
 
 **Resource acquisition patterns.** Before an attack begins, an actor provisions infrastructure: cloud accounts, VPS instances, domains, API keys. AI does not change how resources are acquired — only what is done with them. Patterns in infrastructure provisioning, cloud account behavior before first use, and API key issuance timing are stable detection surfaces.
 
-**Behavioral baseline deviation.** This is the most actionable entry. Regardless of what technique an actor uses, which tool they deploy, or whether they are human or AI-directed, they are doing something that the compromised entity — a user account, a host, an application, a network segment — has not done before, or is doing at an unusual time, volume, or destination. The anomaly is the invariant.
+**Behavioral baseline deviation.** This is the most actionable entry. Regardless of what technique an actor uses, which tool they deploy, or whether they are human or AI-directed, they are doing something that the compromised entity — a user account, a host, an application, a network segment — has not done before, or is doing at an unusual time, volume, or destination. The anomaly is more durable than lower-pyramid controls — but it is not invincible.
 
-This is why anomaly detection has moved from the top of a wish list to the center of a realistic detection program.
+The limit of this durability must be stated explicitly: an AI agent that observes its own behavioral footprint and adapts to remain within the target's established baseline can defeat threshold-based anomaly detection. Slow exfiltration at the 90th percentile of historical outbound volume, lateral movement that mimics peer-group authentication patterns, and working-hours-only operation are not exotic concepts — they are documented in advanced red team tooling and academic research on adversarial UEBA evasion. Against a sophisticated AI agent explicitly designed to profile and operate within normal behavioral envelopes, anomaly detection is a higher bar than signature detection, not an insurmountable one.
+
+This is why anomaly detection has moved from the top of a wish list to the center of a realistic detection program — and why its limits matter as much as its strengths.
 
 ---
 
@@ -126,7 +128,7 @@ The Pyramid of Pain remains a useful framework for understanding *why* different
 A practical revision for the AI age looks like this:
 
 ```
-[BEHAVIORAL BASELINE DEVIATION]   ← Most stable: invariant to AI tool changes
+[BEHAVIORAL BASELINE DEVIATION]   ← Most durable; survives tool/TTP changes, not invariant
 [Strategic Intent / Mission]       ← Stable but indirect; inferred from behavior
 [Operational Tempo]               ← Machine vs. human speed is detectable
 ────────────────────────────────── ← AI compression boundary
@@ -139,7 +141,9 @@ A practical revision for the AI age looks like this:
 [Hash Values]                      ← Unchanged
 ```
 
-The critical insight: the AI compression boundary sits between the tools layer and the TTP layer. Everything below it is now cheaper for attackers than it was in 2013. Everything above the boundary retains its original cost structure for human-directed attacks — and behavioral baseline deviation sits above all of it, immune to tool changes, technique changes, and even most TTP changes, because it detects *the gap between what was normal and what is happening now*.
+The critical insight: the AI compression boundary sits between the tools layer and the TTP layer. Everything below it is now cheaper for attackers than it was in 2013. Everything above the boundary retains its original cost structure for human-directed attacks — and behavioral baseline deviation sits above all of it because it detects *the gap between what was normal and what is happening now*, regardless of which tool or technique produced that gap.
+
+This durability is real and material, with a caveat that belongs in any honest treatment: it holds against actors who are not explicitly modeling and adapting to the defender's behavioral baseline. Against a sophisticated AI agent designed to operate within normal behavioral envelopes — the adversarial UEBA evasion problem — behavioral detection becomes a cat-and-mouse problem rather than an architectural anchor. This scenario is documented in red team research and not yet prevalent in confirmed production intrusions as of early 2026; it is the direction the threat is moving, not where it has fully arrived.
 
 This does not mean signature-based and TTP-based detection should be abandoned. They catch the majority of less sophisticated actors who are not using AI assistance. But the detection investment that survives the widest range of threat actors — including AI-assisted ones — is behavioral anomaly detection.
 
@@ -162,9 +166,9 @@ Command-and-control beaconing is among the most reliable network anomalies. Malw
 - **Periodicity:** Fixed-interval connections (e.g., every 60 seconds ± 2 seconds) with low jitter. Legitimate user-driven traffic is not periodic.
 - **Byte volume consistency:** C2 heartbeats transmit small, consistent payloads. High consistency of outbound byte count per connection is anomalous.
 - **Destination consistency:** Repeated connections to a single external IP or domain that has no prior relationship with the host.
-- **JA3/JA3S fingerprinting:** TLS handshake characteristics that persist across tool variants even when the payload changes.
+- **JA3/JA3S fingerprinting:** TLS handshake characteristics that can identify a C2 framework family even when payload content changes. *Caveat: JA3 fingerprint manipulation has been trivially achievable since at least 2020 via Cobalt Strike malleable C2 profiles and open-source randomization libraries; it is a reliable signal for commodity malware, not a durable control against a technically capable actor. JARM (server-side TLS fingerprint) is a complementary and somewhat more robust signal for identifying C2 infrastructure.*
 
-Detection approach: Isolation Forest on (connection interval variance, byte volume variance, unique destination count) per source host over a rolling 24-hour window. Flag hosts where connection interval coefficient of variation drops below 0.05 for any external destination — human-generated traffic does not achieve this regularity.
+Detection approach: Isolation Forest on (connection interval variance, byte volume variance, unique destination count) per source host over a rolling 24-hour window. The alerting threshold for connection interval regularity must be derived empirically from your environment — characterize the coefficient of variation distribution of legitimate periodic processes (NTP polling, certificate validation, update clients, heartbeat APIs) before setting any threshold. A single value does not transfer across environments; an uncalibrated threshold will drown analysts in false positives from legitimate automation within days of deployment.
 
 **DNS Anomalies**
 
@@ -200,7 +204,7 @@ UEBA establishes per-entity behavioral baselines and alerts on deviation. The en
 
 **Authentication Anomalies**
 
-- **Impossible travel:** Successful authentication from Location A, followed within two hours by authentication from Location B where the physical travel time between A and B exceeds two hours. A simple geolocation check on sequential successful logins catches credential compromise that bypasses MFA.
+- **Impossible travel:** Successful authentication from Location A, followed within two hours by authentication from Location B where the physical travel time between A and B exceeds two hours. A geolocation check on sequential successful logins can catch credential compromise even when MFA has been bypassed. *Bypass: residential proxy services and VPN exit nodes in the target's city defeat this control by placing the attacker's apparent location locally. Impossible travel is a high-confidence signal when triggered; its absence does not indicate no compromise.*
 - **New device or new location:** First-time successful authentication from a device fingerprint or geographic location not seen in the prior 30-day baseline. Low confidence alone; high confidence when combined with privileged access or sensitive data access.
 - **Off-hours authentication:** Authentication occurring in an hour-bucket that has zero or near-zero historical frequency for this account. Service accounts authenticating at 03:00 when their baseline shows activity only between 08:00–18:00 is a classic post-compromise signal.
 - **Authentication velocity:** Successful authentications across multiple systems within a short window — an account authenticating to 15 different internal systems within 10 minutes is consistent with lateral movement, not normal user behavior.
@@ -288,7 +292,7 @@ The most well-documented insider threat behavioral pattern: an employee who inte
 - **USB or personal cloud upload:** First-time or higher-than-baseline upload to a personal cloud service or removable media, particularly of files from sensitive repositories.
 - **Bulk download from internal systems:** Downloading a significantly higher volume of files from SharePoint, Confluence, or internal file shares than the user's 90-day baseline.
 - **After-hours activity spike:** An employee who normally works 09:00–17:00 accessing internal systems late at night in the weeks before their departure date.
-- **HR signal correlation:** When HR data indicates resignation, performance review, or disciplinary action, prior-week data access anomalies should be re-evaluated. 21% of organizations with mature insider threat programs integrate HR signals into detection scoring.
+- **HR signal correlation:** When HR data indicates resignation, performance review, or disciplinary action, prior-week data access anomalies should be re-evaluated. Mature insider threat programs correlate HR system events with DLP and access log data as a risk multiplier for existing anomaly signals — not as standalone triggers.
 
 **Privileged Insider — System Administrator**
 
@@ -338,7 +342,7 @@ AI systems in production environments introduce a new detection surface. As orga
 
 **Prompt Injection Patterns**
 
-Prompt injection — the manipulation of an LLM's behavior through crafted inputs — is the dominant AI application vulnerability as of 2025. OWASP's 2025 LLM Security report identifies prompt injection as the top risk, with 73% of production LLM deployments showing some exposure.
+Prompt injection — the manipulation of an LLM's behavior through crafted inputs — is the dominant AI application vulnerability as of 2025. OWASP's LLM Top 10 (2025 edition) ranks prompt injection as the top risk. This is a categorical risk prioritization based on expert consensus about attack surface exposure, not an empirical production deployment survey; OWASP does not conduct the kind of sampling that would produce a deployment prevalence percentage.
 
 Detection approach:
 - **Instruction override patterns:** Input strings containing phrases like "ignore previous instructions," "disregard your system prompt," "you are now," or jailbreak template patterns. A rule engine flagging these in user inputs to LLM endpoints is the baseline.
@@ -368,6 +372,19 @@ For organizations that provide LLM API access:
 - **Token consumption spikes:** Bulk token consumption inconsistent with normal usage pattern — an account that normally uses 10,000 tokens/day consuming 500,000 is anomalous.
 - **System prompt extraction attempts:** Repeated queries crafted to elicit the system prompt or model configuration — detectable by pattern and by the behavioral clustering of queries that circle the same topic from multiple angles.
 
+**Adversarial UEBA Evasion — The Honest Limit**
+
+Any practitioner deploying behavioral detection should understand the evasion model they are defending against, not just the detection model. A sophisticated AI agent can defeat behavioral anomaly detection through the following approaches, which are documented in red team research and not exotic:
+
+- **Slow exfiltration at sub-threshold rates:** Operating at or below the 90th or 95th percentile of a user's historical outbound volume, distributing exfiltration across multiple sessions over days or weeks. No single session triggers a volumetric threshold.
+- **Peer-group mimicry:** An AI agent that can read documentation about the target's organizational structure, normal working hours, and peer-group access patterns can calibrate its behavior to fall within normal ranges for the compromised account's role.
+- **Working-hours operation:** Restricting all activity to hours with historical precedent for the compromised account eliminates off-hours signals entirely.
+- **Gradual baseline manipulation:** Slowly increasing access volume over weeks, allowing the rolling baseline to incorporate the elevated activity as new normal before the exfiltration threshold is crossed — the adversarial equivalent of the boiling frog.
+
+These evasion techniques require either significant operational sophistication or AI-assisted profiling of the target environment. They are not the dominant attack pattern today. They represent where the threat is moving. Detection engineering that does not account for this trajectory will be caught unprepared when the techniques proliferate.
+
+The practical response is multi-signal detection: volumetric anomaly, timing anomaly, destination novelty, and peer-group deviation measured simultaneously. An actor who defeats one dimension of detection is more likely to fail a correlated multi-signal alert. No single behavioral signal is robust in isolation against an adversary who knows it exists and is adapting against it.
+
 ---
 
 ## 6. Statistical and ML Methods for Anomaly Detection
@@ -378,7 +395,7 @@ Different anomaly types require different statistical approaches. Choosing the w
 |---|---|---|
 | **Z-score** | Normally distributed metrics (login count, file access count) | Fails on skewed data; outlier-sensitive baseline |
 | **Modified Z-score (MAD)** | Skewed distributions with outliers (byte volumes, transaction amounts) | Requires median calculation; less intuitive to tune |
-| **Isolation Forest** | Multidimensional anomaly detection (C2 beaconing: periodicity + volume + destination) | Black-box; requires careful feature engineering |
+| **Isolation Forest** | Multidimensional anomaly detection (C2 beaconing: periodicity + volume + destination) | Black-box; naïve implementations with minimal feature sets produce false-positive rates that make the system operationally unusable within days of deployment — feature engineering, tuning against environment-specific traffic, and periodic retraining are mandatory, not optional |
 | **LSTM / Autoencoder** | Sequential and time-series data (user session sequences, process API call sequences) | Requires significant training data; expensive to maintain |
 | **Statistical process control** | Continuous monitoring with control limits (packet rate, authentication rate) | Assumes stable baseline; sensitive to concept drift |
 | **Peer group analysis** | Comparing an entity to its behavioral peer group (similar job roles, same subnet) | Requires meaningful peer group definition |
@@ -428,8 +445,18 @@ Anomaly detection without a baseline is just threshold-based alerting with extra
 
 - Minimum 30 days of historical data before alerting (90 days for high-variance entities)
 - Per-entity baselines, not global thresholds
-- Regular baseline refresh (concept drift — legitimate behavioral change — will cause false positives if baselines are not updated)
+- Regular baseline refresh (see concept drift below)
 - Explicit exclusion of known-bad data from baseline training (if a host was compromised during the baseline period, its anomalous activity becomes the baseline)
+
+**Program failure modes — the ones that actually kill anomaly detection deployments:**
+
+*Concept drift.* Legitimate behavior changes over time: a developer who takes on an architect role changes their access patterns; a seasonal business sees volume spikes that look like exfiltration. A baseline computed from January data will fire false positives on normal March behavior if not refreshed. Drift is cumulative — a static baseline degrades continuously. The practical requirement is a rolling baseline window (typically 30–90 days) that advances with time, not a snapshot trained once at deployment. Without automated retraining, the false-positive rate increases monotonically and analysts will begin suppressing detections.
+
+*Baseline poisoning during compromise.* An actor who operates slowly and within normal behavioral ranges during the baseline period trains the system to treat their malicious activity as normal. This is not a theoretical concern — advanced persistent access campaigns that prioritize stealth over speed can achieve exactly this. Mitigations include: establishing baselines before access is granted (for new entities), baselining against peer groups rather than only historical self, and treating the baseline period as itself requiring monitoring rather than assuming it is clean.
+
+*The cold-start problem.* New users, new hosts, new services, and new cloud accounts have no baseline. The common failure is applying global thresholds to new entities — which either misses everything (global threshold too high for a new low-volume account) or fires constantly (global threshold too low for a new high-volume entity). Solutions: peer-group bootstrapping (assign a new account to a behavioral peer group and inherit that group's baseline), mandatory observation periods before sensitive access is permitted, and separate detection rules for new entities that focus on categorical rather than volumetric signals.
+
+*Alert fatigue as a systemic failure.* A detection program that generates more alerts than analysts can triage is not a detection program — it is a suppression factory. Every suppressed rule is a permanent blind spot. The organizational failure mode is measuring success by detection coverage (number of rules deployed) rather than detection quality (percentage of alerts that represent real findings). Per-rule precision tracking and automatic suppression flagging (rules where >90% of alerts are closed as false positive within 7 days) are operational requirements, not enhancements.
 
 **Alert quality over alert volume.**
 
@@ -459,7 +486,7 @@ Without this context in the alert, analysts cannot triage efficiently and will d
 
 **Anomaly Detection Methods**
 - OWASP, *LLM AI Security & Governance Checklist 2025* — [genai.owasp.org](https://genai.owasp.org)
-- Springer, *C2 Beaconing Detection via Time-Series Analysis*, 2024
+- Academic surveys on C2 beaconing detection via periodicity and statistical analysis are published across IEEE S&P, USENIX Security, and NDSS proceedings; no single canonical reference is cited here — practitioners should search for current empirical results before selecting and calibrating detection methods.
 - NIST, *Guide to Intrusion Detection and Prevention Systems (IDPS)*, SP 800-94
 
 **UEBA and Behavioral Analytics**
