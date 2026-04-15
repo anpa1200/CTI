@@ -1,0 +1,475 @@
+# Beyond the Pyramid: Why AI Makes Anomaly Detection the New Foundation of Cybersecurity Monitoring
+
+**How large language models collapsed three layers of the classic framework — and why behavioral baselines are now the only detection that consistently survives.**
+
+By [Andrey Pautov](https://medium.com/@1200km) — April 2026
+
+---
+
+## Table of Contents
+
+1. [The Pyramid of Pain: What It Got Right](#1-the-pyramid-of-pain-what-it-got-right)
+2. [What AI Changed — Layer by Layer](#2-what-ai-changed-layer-by-layer)
+3. [What Sits Above TTPs Now](#3-what-sits-above-ttps-now)
+4. [The Revised Model](#4-the-revised-model)
+5. [Anomaly Detection: A Practitioner's Taxonomy](#5-anomaly-detection-a-practitioners-taxonomy)
+   - 5.1 [Network Behavior Anomalies](#51-network-behavior-anomalies)
+   - 5.2 [User and Entity Behavior Anomalies (UEBA)](#52-user-and-entity-behavior-anomalies-ueba)
+   - 5.3 [Process and Application Anomalies](#53-process-and-application-anomalies)
+   - 5.4 [Persistence Anomalies](#54-persistence-anomalies)
+   - 5.5 [Insider Threat Behavioral Indicators](#55-insider-threat-behavioral-indicators)
+   - 5.6 [Fraud and Financial Anomalies](#56-fraud-and-financial-anomalies)
+   - 5.7 [AI-Specific Anomalies](#57-ai-specific-anomalies)
+6. [Statistical and ML Methods for Anomaly Detection](#6-statistical-and-ml-methods-for-anomaly-detection)
+7. [Building an Anomaly Detection Program](#7-building-an-anomaly-detection-program)
+8. [Key Sources](#8-key-sources)
+
+---
+
+## 1. The Pyramid of Pain: What It Got Right
+
+David Bianco's Pyramid of Pain (2013) solved a specific problem: it gave detection engineers a rational argument for where to spend their time. Before it, most organizations treated all indicators equally — an IP address on a blocklist received the same operational weight as a documented adversary technique. The pyramid made the cost asymmetry explicit.
+
+The logic was clean: block an attacker's hash, they recompile. Block their IP, they rotate infrastructure. Force them to change their fundamental technique — how they dump credentials, how they establish persistence, how they move laterally — and you've imposed a cost that requires actual operational work to overcome.
+
+```
+[TTPs]                ← Most painful to change
+[Tools]
+[Network/Host Artifacts]
+[Domain Names]
+[IP Addresses]
+[Hash Values]         ← Least painful to change
+```
+
+For a decade, this held. Detection engineering investment gradually shifted upward. The security industry built MITRE ATT&CK, Sigma, and detection-as-code pipelines explicitly to operationalize TTP-level detection at scale. The framework was correct for the threat landscape it described.
+
+That landscape has changed materially.
+
+---
+
+## 2. What AI Changed — Layer by Layer
+
+The pyramid's validity depends on one core assumption: that the cost of changing indicators increases as you move up the stack. AI has restructured that cost curve. Not uniformly — and not completely — but enough that three of the six layers now need to be reassessed.
+
+### Hash Values — Worse Than Before
+
+Nothing has changed structurally here. Hashes were always trivial to rotate, and they remain so. If anything, LLM-assisted code generation makes unique-per-target compiled artifacts more accessible, not less. The bottom layer is as fragile as it always was.
+
+### IP Addresses and Domain Names — Roughly the Same
+
+Infrastructure rotation remains low-cost but not zero-cost. Cloud VPS provisioning, bulletproof hosting, residential proxy networks — none of these were invented by AI. Automated infrastructure-as-code for threat actors predates LLMs. These layers remain weak detection surfaces, and that has not materially changed.
+
+### Network and Host Artifacts — Eroding
+
+This is where the first significant shift appears. Network and host artifacts — specific User-Agent strings, registry key names, file paths, mutex names — have historically been low-cost for defenders to detect and moderate-cost for attackers to change. Changing them required modifying the tool, which required a developer.
+
+LLM-assisted code generation removes that friction. An actor who previously needed to spend hours modifying a C2 framework to evade a specific artifact-based detection can now describe the change in natural language and receive working code. Red team research documents functional offensive tool generation in minutes, not hours.
+
+Microsoft's threat intelligence (2024) identified state-sponsored actors across at least 20 countries experimentally using LLMs for specific offensive tasks, including reconnaissance, social engineering content, and code assistance. The capability is in active use, not theoretical.
+
+### Tools Layer — Partially Collapsed
+
+This is the most significant structural change. Bianco's original argument was that forcing an actor to replace their tools was expensive: custom tooling represents development investment, operational familiarity, and institutional knowledge. An actor who loses their preferred tool loses the investment in it.
+
+LLMs do not eliminate this cost entirely, but they substantially compress it for a specific class of tool: purpose-built, single-campaign utilities. A custom credential harvester, a lateral movement script, a data-staging utility — these can now be generated from natural language prompts, used once, and discarded. The hash will never appear in any threat feed. The code will not match any existing signature.
+
+CrowdStrike's 2025 data offers a useful proxy signal: 79% of initial access attacks are now malware-free. This is partly credential-based intrusion, partly living-off-the-land — but it also reflects actors bypassing the tools layer entirely when legitimate access is available. The tools layer is not dead, but it is less of a forcing function than it was.
+
+Google's Threat Intelligence Group identified PROMPTFLUX in 2025: a dropper that uses a live LLM API to dynamically generate obfuscated payload variants at runtime. This represents the logical endpoint of tool-layer compression — the "tool" is no longer a static artifact at all. It is a generative process that produces a unique output on each execution.
+
+### TTPs — The Critical Case
+
+Here the picture is genuinely complicated, and honest assessment requires separating two distinct threat models.
+
+**AI-assisted human operators:** An actor who uses LLMs as a productivity tool for specific tasks (drafting phishing content, generating code variants, researching targets) still operates with human-defined TTPs. Their fundamental approach — how they gain initial access, how they move laterally, how they establish persistence — reflects deliberate strategic choice. TTP-based detection remains valuable here. The actor's behavior is still patterned; the AI is accelerating execution, not changing the operational method.
+
+**Autonomous AI agents:** An AI agent that selects techniques based on environmental feedback, adapts its approach in response to detection signals, and varies its method across targets is a qualitatively different problem. If the agent can use different privilege escalation techniques for each target — choosing whichever is available given the observed environment — then TTP-level detection for privilege escalation becomes a coverage problem: you need to detect all variants, not a characteristic pattern.
+
+Research into autonomous attack agents (PentestGPT, ReAct-based frameworks) demonstrates that adaptive technique selection is technically feasible. Documented production use by sophisticated threat actors as of early 2026 is credible but not yet extensively documented with public evidence. This is an emerging threat model, not a fully realized one.
+
+MITRE's December 2024 update to *Summiting the Pyramid* acknowledged this directly, introducing Detection Decomposition Diagrams to map observables to behaviors and quantify evasion resistance — an explicit response to the concern that AI-driven behavioral variation was undermining TTP detection reliability.
+
+### The Revised Cost Structure
+
+| Layer | Pre-AI attacker cost | Post-AI attacker cost | Change |
+|---|---|---|---|
+| Hash values | Near-zero | Near-zero | None |
+| IP addresses | Low | Low | None |
+| Domain names | Low | Low | None |
+| Network/host artifacts | Low-medium | Low (LLM-assisted variant generation) | Reduced |
+| Tools | Medium-high | Low for single-use tools; still high for complex frameworks | Partially reduced |
+| TTPs (human-directed) | High | High | Unchanged |
+| TTPs (AI-agent-directed) | High | Medium (adaptive selection reduces pattern stability) | Reduced for agents |
+
+---
+
+## 3. What Sits Above TTPs Now
+
+If TTP-based detection is under pressure from adaptive AI agents, the question is: what is stable? What can an adversary not easily change, even with AI assistance?
+
+**Strategic intent.** An actor's objective — steal credentials, exfiltrate intellectual property, disrupt operations, commit financial fraud — does not change because they switched to AI-assisted tooling. Intent is stable across all variants of the attack. It is also, unfortunately, very difficult to detect directly. You infer it from the pattern of what is accessed, moved, or destroyed — which requires behavioral analysis.
+
+**Operational tempo.** AI-assisted and autonomous attacks operate at machine speed. A human attacker has natural temporal patterns — working hours, decision latency, the time it takes to read output and issue the next command. An autonomous agent does not. Breakout times collapsing to 27 seconds (documented in CrowdStrike 2025 data) are only achievable with automation. Tempo deviation from human baseline is detectable.
+
+**Resource acquisition patterns.** Before an attack begins, an actor provisions infrastructure: cloud accounts, VPS instances, domains, API keys. AI does not change how resources are acquired — only what is done with them. Patterns in infrastructure provisioning, cloud account behavior before first use, and API key issuance timing are stable detection surfaces.
+
+**Behavioral baseline deviation.** This is the most actionable entry. Regardless of what technique an actor uses, which tool they deploy, or whether they are human or AI-directed, they are doing something that the compromised entity — a user account, a host, an application, a network segment — has not done before, or is doing at an unusual time, volume, or destination. The anomaly is the invariant.
+
+This is why anomaly detection has moved from the top of a wish list to the center of a realistic detection program.
+
+---
+
+## 4. The Revised Model
+
+The Pyramid of Pain remains a useful framework for understanding *why* different detection investments have different durability. It does not need to be discarded — it needs to be extended.
+
+A practical revision for the AI age looks like this:
+
+```
+[BEHAVIORAL BASELINE DEVIATION]   ← Most stable: invariant to AI tool changes
+[Strategic Intent / Mission]       ← Stable but indirect; inferred from behavior
+[Operational Tempo]               ← Machine vs. human speed is detectable
+────────────────────────────────── ← AI compression boundary
+[TTPs]                             ← Still valuable for human-directed actors;
+                                       under pressure from autonomous AI agents
+[Tools]                            ← Partially collapsed for single-use tooling
+[Network/Host Artifacts]           ← Eroding: LLM variant generation lowers cost
+[Domain Names]                     ← Unchanged
+[IP Addresses]                     ← Unchanged
+[Hash Values]                      ← Unchanged
+```
+
+The critical insight: the AI compression boundary sits between the tools layer and the TTP layer. Everything below it is now cheaper for attackers than it was in 2013. Everything above the boundary retains its original cost structure for human-directed attacks — and behavioral baseline deviation sits above all of it, immune to tool changes, technique changes, and even most TTP changes, because it detects *the gap between what was normal and what is happening now*.
+
+This does not mean signature-based and TTP-based detection should be abandoned. They catch the majority of less sophisticated actors who are not using AI assistance. But the detection investment that survives the widest range of threat actors — including AI-assisted ones — is behavioral anomaly detection.
+
+---
+
+## 5. Anomaly Detection: A Practitioner's Taxonomy
+
+Anomaly detection is not a single technique — it is a category of detection that spans multiple domains, data sources, and statistical approaches. The following taxonomy covers the full operational range, from network traffic to insider threat to fraud to AI-specific behavioral signals.
+
+---
+
+### 5.1 Network Behavior Anomalies
+
+Network anomalies detect deviation from established traffic patterns. They are particularly valuable because they operate below the application layer — even encrypted traffic has behavioral characteristics that do not require decryption to analyze.
+
+**C2 Beaconing**
+
+Command-and-control beaconing is among the most reliable network anomalies. Malware that phones home on a schedule produces statistical regularity in connection intervals that legitimate traffic does not. Key signals:
+
+- **Periodicity:** Fixed-interval connections (e.g., every 60 seconds ± 2 seconds) with low jitter. Legitimate user-driven traffic is not periodic.
+- **Byte volume consistency:** C2 heartbeats transmit small, consistent payloads. High consistency of outbound byte count per connection is anomalous.
+- **Destination consistency:** Repeated connections to a single external IP or domain that has no prior relationship with the host.
+- **JA3/JA3S fingerprinting:** TLS handshake characteristics that persist across tool variants even when the payload changes.
+
+Detection approach: Isolation Forest on (connection interval variance, byte volume variance, unique destination count) per source host over a rolling 24-hour window. Flag hosts where connection interval coefficient of variation drops below 0.05 for any external destination — human-generated traffic does not achieve this regularity.
+
+**DNS Anomalies**
+
+DNS is both a rich telemetry source and a frequent abuse vector.
+
+- **DNS tunneling:** Unusually long query strings, high query volume to a single domain, high entropy in subdomain labels (encoded data looks random), queries for uncommon record types (TXT, NULL) to the same domain.
+- **DGA (Domain Generation Algorithm) domains:** High-entropy domain names, short TTLs, no prior history, NXDOMAIN responses in bulk — an infected host resolving dozens of failed domains per minute is a DGA beacon.
+- **Newly registered domains:** First-seen domain in egress traffic, registered within 30 days, with no established reputation. Not malicious alone, but a risk multiplier when combined with other signals.
+- **Internal DNS deviation:** A host that suddenly begins resolving internal hostnames it has never queried before may be conducting reconnaissance.
+
+**Lateral Movement**
+
+Lateral movement leaves network traces that deviate from normal host-to-host communication patterns.
+
+- **New peer connections:** Host A connecting to Host B for the first time, particularly if both are workstations (workstations rarely initiate connections to each other in healthy environments).
+- **Authentication port scanning pattern:** Sequential connection attempts to SMB (445), RPC (135), WinRM (5985/5986), or RDP (3389) across multiple internal hosts from a single source within a short window.
+- **East-west traffic volume spike:** An internal host that suddenly begins generating significantly more internal traffic than its 30-day baseline warrants investigation regardless of what ports are involved.
+
+**Data Exfiltration**
+
+Volume-based exfiltration anomalies are among the most reliable signals available.
+
+- **Outbound byte volume spike:** Total outbound bytes from a host or user in a session exceeding the 99th percentile of their historical baseline.
+- **Destination diversity compression:** A host that normally sends data to many destinations (web browsing) suddenly sending large volumes to a single destination is anomalous.
+- **Off-hours large transfer:** High-volume outbound transfer occurring between 22:00–05:00 from a host whose baseline shows no such activity.
+- **Cloud storage destinations:** First-time upload to a personal cloud storage service (Dropbox, Mega, Google Drive personal) from a corporate endpoint.
+
+---
+
+### 5.2 User and Entity Behavior Anomalies (UEBA)
+
+UEBA establishes per-entity behavioral baselines and alerts on deviation. The entity can be a user account, a service account, a host, or an application. The baseline must be per-entity — a global threshold misses the signal when a normally high-volume user increases further, and fires false positives on normally low-volume accounts doing anything at all.
+
+**Authentication Anomalies**
+
+- **Impossible travel:** Successful authentication from Location A, followed within two hours by authentication from Location B where the physical travel time between A and B exceeds two hours. A simple geolocation check on sequential successful logins catches credential compromise that bypasses MFA.
+- **New device or new location:** First-time successful authentication from a device fingerprint or geographic location not seen in the prior 30-day baseline. Low confidence alone; high confidence when combined with privileged access or sensitive data access.
+- **Off-hours authentication:** Authentication occurring in an hour-bucket that has zero or near-zero historical frequency for this account. Service accounts authenticating at 03:00 when their baseline shows activity only between 08:00–18:00 is a classic post-compromise signal.
+- **Authentication velocity:** Successful authentications across multiple systems within a short window — an account authenticating to 15 different internal systems within 10 minutes is consistent with lateral movement, not normal user behavior.
+- **MFA bypass patterns:** Authentication succeeding with single factor when MFA is normally required, or anomalous MFA fatigue patterns (many push notifications in rapid succession followed by approval).
+
+**Privileged Account Behavior**
+
+Privileged accounts (domain admins, service accounts, cloud IAM roles) have tighter behavioral baselines than regular users and therefore produce higher-confidence anomaly signals.
+
+- **First-time privileged action:** A user account performing a privileged action (group modification, GPO change, shadow copy deletion) that has never appeared in their history.
+- **Privilege escalation without change ticket correlation:** Privilege escalation events that do not correspond to an open change management ticket are anomalous in environments that enforce this workflow.
+- **Service account interactive logon:** A service account (svc_*, *-sa, *$) authenticating interactively rather than as a service is a significant anomaly — service accounts do not have humans logging in with them.
+
+**Data Access Anomalies**
+
+- **Unusual resource access:** A user accessing a file share, database, or SharePoint site they have never accessed in the prior 90 days, particularly if the content is categorized as sensitive.
+- **Bulk access:** A user accessing an unusually high number of distinct files or records within a session — consistent with data staging or exfiltration preparation. Baseline the per-user daily distinct-object-access count and alert on 99th percentile exceedance.
+- **Access outside role:** A marketing user accessing engineering source code repositories, or an HR user accessing financial system data, may indicate a compromised account being used for reconnaissance.
+
+---
+
+### 5.3 Process and Application Anomalies
+
+Process-level anomalies detect deviation in how software behaves on endpoints. They are particularly valuable for detecting living-off-the-land techniques, where the tool is a legitimate OS binary.
+
+**Parent-Child Relationship Deviation**
+
+Every process has an expected parent process in a healthy environment. Deviations are high-confidence signals:
+
+- Web server process (`w3wp.exe`, `nginx`, `tomcat`) spawning a command interpreter (`cmd.exe`, `powershell.exe`, `bash`) — web shell execution.
+- Office application spawning a network-capable process (`powershell.exe`, `mshta.exe`, `wscript.exe`) — macro or exploit execution.
+- System process (`svchost.exe`, `lsass.exe`) spawning an unexpected child — process injection or hollowing.
+- Any process spawning from an unusual path (`C:\Users\`, `C:\ProgramData\`, `C:\Windows\Temp\`) — staging or dropper execution.
+
+**API Call Sequence Anomalies**
+
+At the EDR telemetry level, the sequence of system API calls made by a process is a behavioral signature that survives binary changes. Credential dumping tools — regardless of their name, hash, or vendor — must call specific combinations of Windows APIs: `OpenProcess` with memory-read rights on `lsass.exe`, followed by `ReadProcessMemory`. No legitimate administrative tool has this sequence as its normal operation.
+
+**Command-Line Argument Anomalies**
+
+Legitimate use of `powershell.exe` with `-EncodedCommand` and `-ExecutionPolicy Bypass` and `-NonInteractive` simultaneously is rare for normal administration and common for post-exploitation. Building a baseline of normal command-line argument combinations per parent process allows detection of deviation without relying on specific strings.
+
+**Execution from Anomalous Paths**
+
+Executable files running from user-writable paths (`Downloads`, `AppData\Roaming`, `Temp`) are anomalous in environments where software is deployed from managed paths. This detection is noisy without a baseline — many legitimate installers unpack to temp — but filtered to non-installer processes it has high fidelity.
+
+---
+
+### 5.4 Persistence Anomalies
+
+Persistence mechanisms are a particularly high-value detection category because an actor cannot leave without establishing persistence, and persistence almost always leaves a detectable artifact. The anomaly angle: not whether a persistence mechanism exists, but when it was created, by what process, and whether the creating process has done this before.
+
+**Scheduled Task and Service Anomalies**
+
+- **Creation outside maintenance windows:** Scheduled tasks or services created at 03:00 by a non-administrative process have no legitimate explanation in most environments.
+- **Creation by anomalous parent:** A scheduled task created by `powershell.exe` spawned from `winword.exe` is not a backup job.
+- **First-time creator:** A user account or host that has never created a scheduled task creating one for the first time — particularly if combined with an off-hours signal.
+- **Task pointing to temp path:** Any scheduled task whose executable path is in a user-writable directory is anomalous.
+
+**Registry Run Key Anomalies**
+
+- **New Run key entry:** A new entry in `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` or the equivalent HKLM key is a persistence signal. Not all Run key entries are malicious — legitimate software uses them — but a first-time entry created by an unexpected process at an anomalous time warrants investigation.
+- **Run key pointing to encoded command:** A Run key value containing `powershell -enc` or a path to a temp file is high-confidence malicious persistence.
+
+**C2 Beacon Timing as Persistence Indicator**
+
+An established C2 beacon is a form of active persistence. The network anomaly (§5.1) and the persistence category overlap here: a host that begins periodic outbound connections to a new external destination at a fixed interval, and continues this pattern across multiple days, is maintaining an active C2 channel. The multi-day continuity is the persistence signal.
+
+**Startup Folder and Boot Sector**
+
+- New files in Windows startup folders (`%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup`) created by non-administrative processes.
+- Boot sector or MBR modification events — rare in legitimate operation, high-confidence when they occur.
+
+---
+
+### 5.5 Insider Threat Behavioral Indicators
+
+Insider threats are among the hardest problems in behavioral detection because the actor has legitimate access and their baseline is by definition the insider's normal behavior. Detection requires multi-dimensional signals that individually are ambiguous but collectively are consistent with preparation for malicious action.
+
+**Pre-Departure Data Staging**
+
+The most well-documented insider threat behavioral pattern: an employee who intends to leave (voluntarily or after receiving notice) and is taking intellectual property with them.
+
+- **Unusual archive creation:** Rapid creation of ZIP, RAR, or 7z archives from document repositories.
+- **USB or personal cloud upload:** First-time or higher-than-baseline upload to a personal cloud service or removable media, particularly of files from sensitive repositories.
+- **Bulk download from internal systems:** Downloading a significantly higher volume of files from SharePoint, Confluence, or internal file shares than the user's 90-day baseline.
+- **After-hours activity spike:** An employee who normally works 09:00–17:00 accessing internal systems late at night in the weeks before their departure date.
+- **HR signal correlation:** When HR data indicates resignation, performance review, or disciplinary action, prior-week data access anomalies should be re-evaluated. 21% of organizations with mature insider threat programs integrate HR signals into detection scoring.
+
+**Privileged Insider — System Administrator**
+
+The most dangerous insider is one with legitimate administrative access. Their "normal" behavior includes many privileged actions, making baseline deviation harder to detect.
+
+- **Accessing accounts outside their scope:** A Windows system administrator accessing cloud IAM consoles, financial systems, or HR databases outside their normal operational area.
+- **Disabling audit logging:** A sysadmin disabling event log forwarding or modifying SIEM collection configurations without a change ticket is a serious signal.
+- **Creating accounts or backdoors:** New user account creation, particularly for accounts with administrative privileges, outside normal provisioning workflows.
+- **Accessing terminated employee accounts:** Any authentication or use of a disabled or terminated account's credentials.
+
+**Behavioral Drift**
+
+Long-term behavioral drift is subtler than acute indicators. An employee whose data access pattern gradually expands to include more sensitive repositories over weeks may be conducting slow reconnaissance. Statistical drift detection — measuring how much an entity's behavior has shifted from its 90-day baseline over rolling 30-day windows — catches this where threshold-based rules cannot.
+
+---
+
+### 5.6 Fraud and Financial Anomalies
+
+Financial and fraud anomalies apply to both external attackers who have compromised accounts and insider actors who abuse financial system access. The detection surface is different from endpoint detection: the data is transaction records, API logs, and access patterns from financial systems rather than endpoint telemetry.
+
+**Account Takeover Indicators**
+
+- **Credential use from new device and location:** Successful authentication from an unrecognized device fingerprint combined with a geographic location not seen in the prior 60-day history. On its own, this is a flag. Combined with a subsequent financial transaction, it approaches high confidence.
+- **Password reset followed immediately by transaction:** The sequence reset → login → high-value transaction within minutes is a classic account takeover pattern. Legitimate users who reset passwords typically have a re-familiarization period.
+- **Session characteristics mismatch:** A user whose historical sessions use a specific browser and OS suddenly authenticating from a different platform (particularly a headless browser or automation fingerprint) suggests credential use by a different actor.
+
+**Transaction Anomalies**
+
+- **New payee or destination account:** First-time transaction to a bank account or wallet address not seen in the prior 90 days, particularly for high-value amounts. New payee + new geography + off-hours = high confidence.
+- **Amount pattern break:** A user whose transactions are normally below $5,000 suddenly initiating a $50,000 transfer. Per-user transaction amount distribution deviation, not a global threshold.
+- **Velocity increase:** Transactions per hour significantly above the user's historical baseline — consistent with automated fraud tools cycling through compromised accounts.
+- **Withdrawal timing:** Financial API withdrawal calls at hours with near-zero historical frequency for this account, at volume exceeding the 95th percentile.
+
+**Business Email Compromise (BEC) Behavioral Signals**
+
+BEC attacks manipulate financial processes through social engineering. The technical detection surface is in email and financial system behavior:
+
+- **Email rule creation:** A new inbox rule that forwards emails matching financial keywords to an external address.
+- **Finance workflow deviation:** A payment request processed outside normal approval workflow, or approval by an account that does not normally authorize payments.
+- **Urgency-plus-new-payee pattern:** A payment request that is both time-pressured and involves a new payee should trigger additional verification workflow, and the absence of that verification is a process anomaly.
+
+---
+
+### 5.7 AI-Specific Anomalies
+
+AI systems in production environments introduce a new detection surface. As organizations deploy LLM-based applications, AI agents, and copilot tools, these systems become both targets and potential vectors. Anomaly detection for AI-specific threats is an emerging field — methodologies are less mature than the categories above, but the threat surface is real and growing.
+
+**Prompt Injection Patterns**
+
+Prompt injection — the manipulation of an LLM's behavior through crafted inputs — is the dominant AI application vulnerability as of 2025. OWASP's 2025 LLM Security report identifies prompt injection as the top risk, with 73% of production LLM deployments showing some exposure.
+
+Detection approach:
+- **Instruction override patterns:** Input strings containing phrases like "ignore previous instructions," "disregard your system prompt," "you are now," or jailbreak template patterns. A rule engine flagging these in user inputs to LLM endpoints is the baseline.
+- **Anomalous output length or structure:** If an LLM's normal outputs are 100–500 tokens and a session produces 5,000-token outputs, something unusual triggered the model. Volume anomaly on response length is a coarse but useful signal.
+- **Cross-session instruction leakage:** An LLM agent that begins referencing information from another user's session has been successfully confused by injection.
+
+**Indirect Prompt Injection via Data**
+
+More sophisticated than direct injection: malicious instructions embedded in documents, web pages, or data that an AI agent retrieves and processes. The agent follows instructions embedded in the external content, not the user's original prompt.
+
+Detection approach:
+- Monitor AI agent tool call sequences. An agent that reads a document and then immediately calls an unusual tool (sends email, makes API call, accesses external URL) when that sequence is not part of the normal workflow for this document type warrants review.
+- Behavioral baseline on what tools an AI agent calls per task type. Deviation from the expected tool sequence is an anomaly signal.
+
+**Automated Attack Tempo**
+
+AI-assisted attacks operate at speeds that human attackers cannot sustain. This is detectable:
+
+- **Sub-second decision cycles:** A sequence of authentication → discovery → lateral movement → data access compressed into seconds rather than minutes. Human attackers read output. Automated agents do not.
+- **Consistent inter-action timing:** Human operators have variable latency between commands. Automated agents have near-constant latency. The coefficient of variation on inter-event timing in an active session can distinguish human from automated operation.
+- **24/7 activity without temporal pattern:** Human threat actors have working hours (even state-sponsored actors show diurnal patterns in documented campaigns). An intrusion session that runs continuously for 72 hours without any temporal pattern is consistent with automated operation.
+
+**LLM API Abuse**
+
+For organizations that provide LLM API access:
+- **Anomalous query rate:** API usage significantly above a tenant's historical baseline, particularly for queries that extract structured data (consistent with automated scraping or reconnaissance).
+- **Token consumption spikes:** Bulk token consumption inconsistent with normal usage pattern — an account that normally uses 10,000 tokens/day consuming 500,000 is anomalous.
+- **System prompt extraction attempts:** Repeated queries crafted to elicit the system prompt or model configuration — detectable by pattern and by the behavioral clustering of queries that circle the same topic from multiple angles.
+
+---
+
+## 6. Statistical and ML Methods for Anomaly Detection
+
+Different anomaly types require different statistical approaches. Choosing the wrong method produces either excessive noise (too many false positives) or missed signals (too many false negatives).
+
+| Method | Best for | Limitation |
+|---|---|---|
+| **Z-score** | Normally distributed metrics (login count, file access count) | Fails on skewed data; outlier-sensitive baseline |
+| **Modified Z-score (MAD)** | Skewed distributions with outliers (byte volumes, transaction amounts) | Requires median calculation; less intuitive to tune |
+| **Isolation Forest** | Multidimensional anomaly detection (C2 beaconing: periodicity + volume + destination) | Black-box; requires careful feature engineering |
+| **LSTM / Autoencoder** | Sequential and time-series data (user session sequences, process API call sequences) | Requires significant training data; expensive to maintain |
+| **Statistical process control** | Continuous monitoring with control limits (packet rate, authentication rate) | Assumes stable baseline; sensitive to concept drift |
+| **Peer group analysis** | Comparing an entity to its behavioral peer group (similar job roles, same subnet) | Requires meaningful peer group definition |
+
+**Practical guidance:**
+
+For most detection engineering teams, the right starting point is not ML — it is per-entity percentile baselines with rolling lookback windows. The pattern:
+
+```
+1. For entity E, compute metric M over baseline window (30–90 days)
+2. Compute the 95th percentile of M per entity
+3. Alert when current M for entity E exceeds their own 95th percentile by factor F
+4. Tune F based on observed false-positive rate
+```
+
+This is not sophisticated statistics, but it produces per-entity thresholds that adapt to different behavioral scales, which is the most important property of an anomaly detection system. A global threshold treats the analyst who legitimately downloads 10,000 files per day the same as the employee whose normal download count is 50.
+
+Add ML methods for specific high-value detection categories (C2 beaconing, user session sequence modeling) after the percentile baseline system is operational. Building ML models before you have reliable feature pipelines and baseline data is the most common anomaly detection failure mode.
+
+---
+
+## 7. Building an Anomaly Detection Program
+
+The taxonomy above describes what to detect. The harder operational question is in what order, with what infrastructure, and against what data sources.
+
+**Start with the highest signal-to-noise categories first.**
+
+The following order reflects a practical deployment sequence based on data availability, detection fidelity, and operational impact:
+
+1. **Authentication anomalies** — most organizations already have authentication logs, the data model is well-understood, and impossible travel / off-hours / new-device signals have low false-positive rates once per-entity baselines are established.
+
+2. **Network beaconing** — DNS and NetFlow/firewall logs are widely available. Periodicity detection on connection intervals has high fidelity for C2 identification. This catches commodity malware and more sophisticated actors alike.
+
+3. **Data volume anomalies** — per-user and per-host outbound byte volume against a rolling baseline. This is the most reliable exfiltration signal and catches both external and insider threats.
+
+4. **Privileged account behavior** — service accounts and admin accounts have tight behavioral baselines, so anomalies are high-confidence. Deploy after authentication anomaly detection because the data is often the same pipeline.
+
+5. **Process and parent-child anomalies** — requires EDR telemetry with sufficient coverage. High fidelity when deployed, but requires endpoint agent deployment at scale.
+
+6. **Financial and fraud anomalies** — requires integration with financial system APIs or transaction logs. Narrow detection surface but very high value per alert.
+
+7. **AI-specific anomalies** — requires instrumentation of LLM application endpoints. Immature field; start with rule-based prompt injection detection before attempting behavioral baseline on AI agent tool calls.
+
+**The baseline requirement is non-negotiable.**
+
+Anomaly detection without a baseline is just threshold-based alerting with extra steps. Every anomaly detection program requires:
+
+- Minimum 30 days of historical data before alerting (90 days for high-variance entities)
+- Per-entity baselines, not global thresholds
+- Regular baseline refresh (concept drift — legitimate behavioral change — will cause false positives if baselines are not updated)
+- Explicit exclusion of known-bad data from baseline training (if a host was compromised during the baseline period, its anomalous activity becomes the baseline)
+
+**Alert quality over alert volume.**
+
+The failure mode for anomaly detection programs is alert fatigue. An anomaly detection system that generates 500 alerts per day is not useful regardless of how many true positives it contains. Target:
+
+- Per-rule false positive rate below 10% within 60 days of deployment
+- Each alert tells the analyst what the normal baseline was, what the current observation is, and by how much it deviated
+- Alerts link to historical context: what was this entity doing 30 days ago, and how does that compare?
+
+Without this context in the alert, analysts cannot triage efficiently and will disable or suppress the detection.
+
+---
+
+## 8. Key Sources
+
+**AI Threat Behavior**
+- Microsoft Security, *Staying Ahead of Threat Actors in the Age of AI*, February 2024
+- Google Threat Intelligence Group, *AI Threat Actor Tracking*, 2024–2025
+- CrowdStrike, *Global Threat Report 2025*
+- CISA/NSA/NCSC/ASD, *Joint Guidance: Cybersecurity of AI Systems*, 2024
+- OpenAI, *Disrupting malicious uses of AI by state-affiliated threat actors*, February 2024
+
+**Detection Framework**
+- David Bianco, *The Pyramid of Pain*, 2013 — [detect-respond.blogspot.com](https://detect-respond.blogspot.com/2013/03/the-pyramid-of-pain.html)
+- MITRE CTID, *Summiting the Pyramid v3.0*, December 2024 — [ctid.mitre.org](https://ctid.mitre.org/blog/2024/12/16/summiting-the-pyramid-bring-the-pain/)
+- MITRE ATT&CK, *Enterprise Matrix v15+* — [attack.mitre.org](https://attack.mitre.org)
+
+**Anomaly Detection Methods**
+- OWASP, *LLM AI Security & Governance Checklist 2025* — [genai.owasp.org](https://genai.owasp.org)
+- Springer, *C2 Beaconing Detection via Time-Series Analysis*, 2024
+- NIST, *Guide to Intrusion Detection and Prevention Systems (IDPS)*, SP 800-94
+
+**UEBA and Behavioral Analytics**
+- Exabeam, *UEBA Explainer and Primer* — [exabeam.com](https://www.exabeam.com)
+- Gartner, *Market Guide for User and Entity Behavior Analytics*, 2024
+
+---
+
+*Evidence base: public threat intelligence and vendor reporting through April 2026. Detection approaches described are illustrative; all thresholds and baseline parameters require calibration for your specific environment before production deployment.*
+
+*Classification: Open source / Unclassified.*
+
+*For corrections or technical questions: [Medium @1200km](https://medium.com/@1200km)*
