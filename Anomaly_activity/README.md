@@ -14,6 +14,7 @@ By [Andrey Pautov](https://medium.com/@1200km) — April 2026
 2. [Taxonomy of Anomaly Types](#2-taxonomy-of-anomaly-types)
 3. [Mapping Anomalies to the ATT&CK Lifecycle](#3-mapping-anomalies-to-the-attck-lifecycle)
 4. [Evidence Register: Real APT Campaigns and Documented Anomaly Patterns](#4-evidence-register-real-apt-campaigns-and-documented-anomaly-patterns)
+   - [4.11 CISA AA22-277A — Impacket Lateral Movement in Defense Industrial Base Compromise (2022)](#411-cisa-aa22-277a--impacket-lateral-movement-in-defense-industrial-base-compromise-2022)
 5. [Detection by Log Source and Security Device](#5-detection-by-log-source-and-security-device)
 6. [Credential-Based Attacks: Detection Engineering Deep Dive](#6-credential-based-attacks-detection-engineering-deep-dive)
 7. [How Attackers Suppress Anomaly Visibility](#7-how-attackers-suppress-anomaly-visibility)
@@ -38,7 +39,7 @@ The hypothesis is **substantially true, but bounded**. It holds for specific att
 
 **Contextual anomaly.** An instance that is anomalous only in a specific context [2]. Example: `ntdsutil` executed by an administrator account is routine on a domain controller used for backup and anomalous on a developer workstation.
 
-**Collective anomaly.** A collection of related instances that is anomalous together, even if each individual instance is not [2]. Example: no single DNS query to `avsvmcloud[.]com` subdomains in the SUNBURST campaign was inherently suspicious — the pattern of encoded victim-specific subdomains with a 12–14 day dormancy period followed by periodic callback constituted a collective anomaly [3].
+**Collective anomaly.** A collection of related instances that is anomalous together, even if each individual instance is not [2]. Example: in the SUNBURST campaign, no single DNS query to `avsvmcloud[.]com` subdomains was inherently suspicious. The collective anomaly emerged in two distinct phases: first, a 12–14 day dormancy window during which the implant performed only local environment checks and generated no C2 traffic; second, once dormancy ended, periodic callback queries to actor-controlled DNS infrastructure encoding victim-specific data in subdomain labels. The dormancy phase itself produces no observable signal; the anomaly only becomes detectable once callback activity begins. [3]
 
 **Malicious-behaviour correlation.** The analytical step that links an observed anomaly to an attacker goal, technique, or intrusion stage. An anomaly is not a verdict — it is evidence. A detection becomes operationally useful when that evidence is correlated with asset context, identity state, companion telemetry, or known adversary tradecraft.
 
@@ -111,7 +112,7 @@ Evidence labels:
 SUNBURST used a domain generation algorithm (DGA) to encode victim-specific data in subdomain labels of `avsvmcloud[.]com`. The subdomain string was Base32-encoded using a custom alphabet, containing the victim's internal Active Directory domain name and a victim-specific identifier derived from local host data. Mandiant explicitly documented this encoding in the technical details report. [Documented]
 
 Resulting anomaly signals:
-- **Subdomain Shannon entropy** substantially above normal. Human-readable subdomains (`mail`, `api`, `login`) typically have entropy below 3.5. SUNBURST-encoded subdomains produced entropy consistently above 4.0. [Inferred from documented encoding scheme]
+- **Subdomain Shannon entropy** on the encoded label was moderate — typically in the 3.7–4.3 range across public samples — higher than human-readable service hostnames but not extreme. Mandiant and independent researchers noted that SUNBURST's encoding was specifically designed to avoid the high-entropy patterns typical of conventional DNS tunneling, limiting the value of pure entropy analytics against this implant. Entropy alone is insufficient to surface this implant; subdomain label length (> 30 characters) and domain-rarity signals are higher-value discriminators. [Inferred — derived from public sample analysis; consistent with Mandiant design observations]
 - **Subdomain label length** exceeded 30 characters in encoded queries — far longer than typical service hostnames. [Inferred]
 - **Dormancy then periodic callback**: after a 12–14 day dormancy window (no DNS activity, only local environment checks), queries appeared with variable but machine-generated timing. Mandiant documented the dormancy period explicitly. [Documented]
 - **No prior resolution history**: `avsvmcloud[.]com` and its subdomains had no prior resolution history in enterprise DNS caches — a domain-rarity signal. [Inferred]
@@ -130,7 +131,7 @@ Residual detection surface: Sysmon Event 7 (ImageLoad) showing an unsigned or an
 
 ### 4.2 HAFNIUM / Exchange ProxyLogon (2021)
 
-**Primary source:** Microsoft MSTIC — "HAFNIUM Targeting Exchange Servers with 0-Day Exploits," March 2021 [5]; Mandiant — "Responding to Microsoft Exchange Server Zero-Day Vulnerabilities," March 2021 [7]; NSA — "Mitigating Web Shell Malware," June 2020.
+**Primary source:** Microsoft MSTIC — "HAFNIUM Targeting Exchange Servers with 0-Day Exploits," March 2021 [5]; Mandiant — "Responding to Microsoft Exchange Server Zero-Day Vulnerabilities," March 2021 [7]; NSA and Australian Signals Directorate — "Detect and Prevent Web Shell Malware," April 2020 [25].
 
 **Attack summary:** HAFNIUM (attributed to a Chinese state-sponsored actor) exploited four Exchange Server zero-days (CVE-2021-26855, -26857, -26858, -27065) to achieve pre-authentication server-side request forgery and remote code execution, then deployed webshells.
 
@@ -138,7 +139,7 @@ Residual detection surface: Sysmon Event 7 (ImageLoad) showing an unsigned or an
 
 CVE-2021-26855 exploitation generated anomalous HTTP requests from Exchange frontend to backend using cookie-based authentication bypass. IIS logs showed unusual POST requests to `/ecp/` and `/owa/` endpoints from source IPs with no prior access history in that tenant's logs. [Inferred from documented exploitation mechanics]
 
-NSA's web-shell guidance explicitly recommends alerting on URIs that are accessed by fewer than five unique source IPs in a 30-day window and that return HTTP 200 to POST requests — a "rare URI" pattern applicable here. [Documented — NSA guidance]
+The NSA/ASD web-shell guidance explicitly recommends alerting on URIs that are accessed by fewer than five unique source IPs in a 30-day window and that return HTTP 200 to POST requests — a "rare URI" pattern applicable here. [Documented — NSA/ASD [25]]
 
 **Webshell installation anomaly (endpoint):**
 
@@ -194,8 +195,8 @@ Detection signals:
 
 Detection signals:
 - Sysmon Event 13 (Registry value set) on Defender configuration keys; absence of subsequent Defender events from a host is a negative anomaly detectable via SIEM heartbeat or log-source volume monitoring. [Inferred]
-- Windows Security Event 4688 with command-line logging, or Sysmon Event 1: `vssadmin.exe` with `delete shadows` arguments. On workstations this is effectively never legitimate. [Documented approach — DFIR Report cites this as detectable]
-- Windows Security Event 1102 (Security log cleared) — alert immediately. [Documented — Event fires when Security log is cleared]
+- Windows Security Event 4688 with command-line logging, or Sysmon Event 1: `vssadmin.exe` with `delete shadows` arguments. On workstations this is effectively never legitimate. [Inferred — the DFIR Report documents the attacker action; the detection recommendation is the author's derived response]
+- Windows Security Event 1102 fires whenever the Security audit log is cleared. The detection response — treat any 1102 outside a change-management window as high priority — is a standard recommendation. [Inferred — Event 1102 is documented; the "alert immediately" response is operational guidance, not a statement from the cited source]
 
 ---
 
@@ -258,7 +259,7 @@ Event 4720 (`"Health Check Service"` created by a web application process) is a 
 
 **Password spray evasion:**
 
-Microsoft explicitly documented that Midnight Blizzard used low-volume attempts from residential proxy infrastructure to distribute authentication failures across thousands of IP addresses, ensuring no single tenant or IP exceeded standard alert thresholds. [Documented]
+Microsoft explicitly documented that Midnight Blizzard used low-volume attempts from residential proxy infrastructure to distribute authentication failures across thousands of IP addresses. [Documented] The interpretation that this strategy was designed specifically to remain below standard alert thresholds is the author's inference from the documented distribution pattern. [Inferred]
 
 Detection implications:
 - Microsoft Entra Identity Protection's "Password spray" named detection type fires based on cross-tenant telemetry — provider-level view that tenant-local monitoring cannot replicate. [Documented — Microsoft Entra ID Protection documentation]
@@ -308,7 +309,7 @@ Microsoft documented that Storm-0558 used a forged MSA (Microsoft account) consu
 
 Microsoft's post-incident analysis identified that `MailItemsAccessed` records in the Microsoft 365 Unified Audit Log (requires Purview Audit Premium — E5 or add-on licensing) provided the evidence needed to scope the incident. [Documented]
 
-The "Token issuer anomaly" detection type in Microsoft Entra Identity Protection is architecturally inapplicable to Storm-0558. Microsoft defines Token issuer anomaly around a potentially compromised **SAML token issuer** — a federated identity provider deviation. Storm-0558 did not involve a SAML issuer: the attack used a forged **MSA consumer signing key** to mint authentication tokens outside the enterprise identity plane entirely. No SAML issuer deviation occurred. The detection category addresses a different threat model. Whether any Entra Identity Protection detection type would have fired is not stated in Microsoft's published reporting. [Inferred — architectural inapplicability derived from comparing Microsoft's Token issuer anomaly definition against the documented Storm-0558 attack mechanism]
+The "Token issuer anomaly" detection type in Microsoft Entra Identity Protection appears inapplicable to Storm-0558 based on Microsoft's public documentation of the detection category, though Microsoft has not publicly confirmed this. Microsoft documents Token issuer anomaly as targeting a potentially compromised **SAML token issuer** — a federated identity provider deviation. Storm-0558 did not involve a SAML issuer: the attack used a forged **MSA consumer signing key** to mint authentication tokens outside the enterprise identity plane entirely. Based on those published definitions, the detection category appears to address a different threat model. Whether any Entra Identity Protection detection type would have fired for Storm-0558 is not stated in Microsoft's published post-incident reporting. [Inferred — derived from comparing Microsoft's published Token issuer anomaly definition against the documented Storm-0558 attack mechanism; Microsoft has not published a definitive statement on this specific mapping]
 
 **Storm-1283 — OAuth app + cloud compute:**
 
@@ -361,9 +362,11 @@ Detection: SQLULDR2 execution is a rare-process anomaly on most systems. Outboun
 
 ---
 
-### 4.11 APT28 — Impacket Lateral Movement (2022)
+### 4.11 CISA AA22-277A — Impacket Lateral Movement in Defense Industrial Base Compromise (2022)
 
 **Primary source:** CISA Advisory AA22-277A — "Impacket and Exfiltration Tool Used to Steal Sensitive Information from Defense Industrial Base Organization," October 2022 [20].
+
+**Attribution note:** CISA Advisory AA22-277A does not name a specific threat actor or group. This section describes the advisory's documented findings; attribution to any named actor is not stated in the primary source and is not claimed here.
 
 **Attack summary:** CISA advisory AA22-277A documented actors using Impacket's `wmiexec.py` for remote execution and `secretsdump.py` for credential extraction (DCSync) in a defense industrial base network. [Documented]
 
@@ -384,7 +387,7 @@ Detection: SQLULDR2 execution is a rare-process anomaly on most systems. Outboun
 
 **Primary sources:** CrowdStrike — "CrowdStrike Falcon Detects 3CXDesktopApp Supply Chain Attack," March 2023; Mandiant — "3CX Software Supply Chain Compromise Initiated by a Prior Software Supply Chain Compromise," April 2023.
 
-**Attack summary:** Lazarus Group compromised the 3CX Desktop App update distribution pipeline, distributing a trojanised, digitally signed installer to approximately 600,000 organisations. The payload performed staged download of additional malware after a dormancy period.
+**Attack summary:** Lazarus Group compromised the 3CX Desktop App update distribution pipeline, distributing a trojanised, digitally signed installer via 3CX's update infrastructure. 3CX reported a customer base of approximately 600,000 organisations; the number that actually received and executed the malicious build is smaller and has not been precisely disclosed. The payload performed staged download of additional malware after a dormancy period.
 
 CrowdStrike and SentinelOne published behavioural detections within hours of the campaign becoming public, catching the trojanised application based on its runtime behaviour rather than its signature — specifically because EDR IOA/behavioural logic flagged a signed softphone application performing process injection and downloading executable content from GitHub repositories. [Documented — CrowdStrike blog]
 
@@ -447,10 +450,12 @@ Sysmon (System Monitor, part of Sysinternals) provides endpoint telemetry beyond
 **Operational notes:**
 - Sysmon Event 10 against `lsass.exe` generates substantial volume in default configurations. Filter to specific `GrantedAccess` masks to make it actionable (see Section 6.4).
 - Sysmon Event 8 (CreateRemoteThread) generates noise from legitimate inter-process communication. Filter to `StartModule = "Unknown"` to target shellcode injection from unregistered memory regions.
-- Cobalt Strike default named-pipe names (`\MSSE-*-server`, `\status_*`, `\postex_*`) are documented IOCs detectable deterministically via Event 17/18.
+- Cobalt Strike default named-pipe names (`\MSSE-*-server`, `\status_*`, `\postex_*`) are documented IOC patterns detectable via Sysmon Event 17/18. These patterns detect default, uncustomized Cobalt Strike deployments. Operators running Malleable C2 profiles with customized pipe names will not match. The detection is high-confidence in presence — if the named pipe appears, it is a strong indicator — but absence does not indicate absence of Cobalt Strike. Treat as a high-signal heuristic requiring allowlisting, not a universal signature — consistent with the classification in Section 9.2.
 - Recommended baseline configurations: SwiftOnSecurity sysmon-config or Olaf Hartong's modular sysmon-config — both are publicly available and community-maintained.
 
 ### 5.3 EDR Platforms
+
+> **Vendor capability notice:** Product capabilities described in this section are drawn from public vendor documentation and vendor-authored blog posts. Independent benchmarking of specific detection coverage and false-positive rates is limited. Treat every capability listed as a hypothesis for validation in your own environment, not as an established property. Named detection categories are subject to change as vendors revise product lines.
 
 **CrowdStrike Falcon**
 
@@ -477,6 +482,8 @@ These are Microsoft product documentation claims; detection coverage and false p
 
 ### 5.4 Network Detection and Response
 
+> **Vendor capability notice:** Product capabilities described in this section are drawn from public vendor documentation and vendor-authored blog posts. Independent benchmarking of specific detection coverage and false-positive rates is limited. Treat every capability listed as a hypothesis for validation in your own environment, not as an established property. Named detection categories are subject to change as vendors revise product lines.
+
 **Zeek / Corelight**
 
 Zeek generates structured log files from packet captures. Key log files for anomaly detection:
@@ -501,7 +508,9 @@ Vectra AI's Cognito platform applies ML models (the vendor documents 150+ detect
 
 **Microsoft Entra Identity Protection — Risk Detection Types**
 
-Microsoft Entra ID Protection provides named risk detections, each representing a documented anomaly model. The following list reflects Microsoft's published documentation as of early 2026; Microsoft may update detection names, availability, or licensing requirements without notice [4].
+> Microsoft revises Entra ID Protection detection names, tiers, and availability frequently. The tables below reflect Microsoft's published documentation as of April 2026. For the current canonical list, consult Microsoft Learn: https://learn.microsoft.com/entra/id-protection/concept-identity-protection-risks
+
+Microsoft Entra ID Protection provides named risk detections, each representing a documented anomaly model. The following list reflects Microsoft's published documentation as of April 2026; Microsoft may update detection names, availability, or licensing requirements without notice [4].
 
 **Sign-in risk detections (requires Entra ID P2 for Premium types):**
 
@@ -509,8 +518,8 @@ Microsoft Entra ID Protection provides named risk detections, each representing 
 |---|---|---|---|
 | Unfamiliar sign-in properties | Premium | Real-time | Deviation from historical IP, ASN, location, device, browser, tenant subnet |
 | Anonymous IP address | Non-premium | Real-time | Sign-in from Tor exit node or known anonymiser |
-| Atypical travel | Premium | Offline | Two sign-ins from geographically distant locations within an infeasible travel window |
-| Impossible travel | Premium | Offline | Cross-service correlation via Defender for Cloud Apps |
+| Atypical travel | Premium (Entra ID P2) | Offline | Two sign-ins from geographically distant locations within an infeasible travel window — native Entra ID Protection detection; no additional licensing beyond Entra ID P2 |
+| Impossible travel | Requires Microsoft Defender for Cloud Apps (MDA) | Offline | Cross-service correlation of sign-in locations via MDA; **distinct from Atypical travel** — requires MDA licensing (Microsoft 365 E5 Security or standalone MDA) in addition to Entra ID P2 |
 | Malicious IP address | Premium | Offline | Sign-in from IP associated with confirmed attack activity |
 | Password spray | Premium | Real-time or offline | Spray pattern detected across the tenant via provider-level telemetry |
 | Verified threat actor IP | Premium | Real-time | Sign-in from infrastructure associated with known threat actor groups |
@@ -726,6 +735,8 @@ The combination of fields below is associated with Pass-the-Hash (PTH) in detect
 | `KeyLength` | `0` | Associated with PTH; also present in some session types |
 
 The core correlation: PTH logons typically occur without a preceding interactive (Type 2) or remote-interactive (Type 10) logon for the same `TargetUserName` on the same source host. Binary Defense's analysis [16] documents this correlation as the most reliable discriminator, while explicitly noting it is not foolproof.
+
+> **Fragility caveat:** This heuristic is fragile. In environments with significant residual NTLM usage, legacy application tiers, printer and multi-function device SMB access, backup agents, inter-forest NTLM paths, or network scanners, the Null-SID + NtLmSsP + LogonType 3 combination may produce hundreds of benign matches per day. The analytic is operationally useful only in environments that have substantially deprecated NTLM, OR when combined with a destination-host risk-tier filter (domain controllers, regulated-data file servers). Do not deploy as written without such scoping.
 
 ```spl
 // HEURISTIC ANALYTIC — validate against environment baseline before alerting
@@ -1034,13 +1045,13 @@ No anomaly programme compensates for missing telemetry. Before deploying any ano
 Deploy analytics in order of baseline tightness and signal stability:
 
 1. **Deterministic or near-deterministic rules first** — webshell parent-child lineage (`w3wp.exe` → `cmd.exe` on production internet-facing servers), VSS shadow copy deletion (`vssadmin delete shadows` on workstations — near-zero legitimate prevalence). No baseline needed.
-   **High-signal heuristics (require scope and allowlisting)** — `ADMIN$` write from non-admin workstations (FP sources: admin jump hosts, software deployment tooling, IR tools); Cobalt Strike default named-pipe patterns (FP sources: legitimate security tooling using similar pipe name conventions).
-2. **Domain controllers** — Kerberoasting (Event 4769 RC4, calibrated threshold), DCSync (Event 4662 with SACL, allowlisted), LSASS access (Sysmon Event 10, allowlisted)
-3. **Identity providers** — MFA lifecycle changes for privileged accounts, unfamiliar sign-in properties, app consent with high-risk scopes
-4. **Cloud control planes** — VM creation by unusual principals, IAM role grants, storage policy changes
-5. **SaaS audit** — bulk download count anomaly, inbox forwarding rule creation, OAuth app registration
-6. **Network** — DNS entropy analytics, beaconing detection (RITA or NDR platform)
-7. **Estate-wide UEBA** — only after the above are producing tuned results
+2. **High-signal heuristics (require scope and allowlisting)** — `ADMIN$` write from non-admin workstations (FP sources: admin jump hosts, software deployment tooling, IR tools); Cobalt Strike default named-pipe patterns (FP sources: legitimate security tooling using similar pipe name conventions; absence does not exclude Cobalt Strike when Malleable C2 is in use).
+3. **Domain controllers** — Kerberoasting (Event 4769 RC4, calibrated threshold), DCSync (Event 4662 with SACL, allowlisted), LSASS access (Sysmon Event 10, allowlisted)
+4. **Identity providers** — MFA lifecycle changes for privileged accounts, unfamiliar sign-in properties, app consent with high-risk scopes
+5. **Cloud control planes** — VM creation by unusual principals, IAM role grants, storage policy changes
+6. **SaaS audit** — bulk download count anomaly, inbox forwarding rule creation, OAuth app registration
+7. **Network** — DNS entropy analytics, beaconing detection (RITA or NDR platform)
+8. **Estate-wide UEBA** — only after the above are producing tuned results
 
 ### 9.3 Baseline by Role, Not by Estate
 
@@ -1117,7 +1128,7 @@ The practical priorities for detection engineering:
 
 [5] Microsoft Security Response Center. "HAFNIUM Targeting Exchange Servers with 0-Day Exploits." March 2021. https://www.microsoft.com/en-us/security/blog/2021/03/02/hafnium-targeting-exchange-servers/
 
-[6] Microsoft Threat Intelligence. "Token tactics: How to prevent, detect, and respond to cloud token theft." November 2022. https://www.microsoft.com/en-us/security/blog/2022/11/16/token-tactics-how-to-prevent-detect-and-respond-to-cloud-token-theft/
+[6] [VERIFICATION NEEDED] The in-text citation [6] supports the Storm-1283 OAuth application + Azure VM cryptomining narrative in Section 4.8. A specific Microsoft Security Blog post covering Storm-1283 by that designation has not been independently verified by the author; search the Microsoft Threat Intelligence Blog for "Storm-1283" for the current authoritative source. As a nearest generic substitute: Microsoft Threat Intelligence. "Token tactics: How to prevent, detect, and respond to cloud token theft." November 2022. https://www.microsoft.com/en-us/security/blog/2022/11/16/token-tactics-how-to-prevent-detect-and-respond-to-cloud-token-theft/ — *Note: this source covers OAuth token abuse generally and does not specifically report Storm-1283.*
 
 [7] Mandiant. "Responding to Microsoft Exchange Server Zero-Day Vulnerabilities." March 2021. https://cloud.google.com/blog/topics/threat-intelligence/responding-to-exchange-server-zero-days
 
@@ -1154,3 +1165,5 @@ The practical priorities for detection engineering:
 [23] Amazon Web Services. "GuardDuty Finding Types." AWS Documentation, 2024. https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_finding-types-active.html
 
 [24] Microsoft. "Work with Anomaly Detection Analytics Rules in Microsoft Sentinel." Microsoft Learn, 2024. https://learn.microsoft.com/en-us/azure/sentinel/work-with-anomaly-rules
+
+[25] National Security Agency and Australian Signals Directorate. "Detect and Prevent Web Shell Malware." April 2020. https://www.nsa.gov/Press-Room/News-Highlights/Article/Article/2159615/detect-and-prevent-web-shell-malware/
