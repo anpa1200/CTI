@@ -55,23 +55,35 @@ Anomaly detection produces operational value only when the baseline is tight, th
 
 The taxonomy below draws on Chandola et al. [[2]](https://dl.acm.org/doi/10.1145/1541880.1541882), NIST SP 800-94 [[1]](https://csrc.nist.gov/pubs/sp/800/94/final), Microsoft MSTIC publications [[4]](https://www.microsoft.com/en-us/security/blog/2024/01/25/midnight-blizzard-guidance-for-responders-on-nation-state-attack/)[[5]](https://www.microsoft.com/en-us/security/blog/2021/03/02/hafnium-targeting-exchange-servers/)[[6]](https://www.microsoft.com/en-us/security/blog/2022/11/16/token-tactics-how-to-prevent-detect-and-respond-to-cloud-token-theft/), Mandiant reporting [[7]](https://cloud.google.com/blog/topics/threat-intelligence/responding-to-exchange-server-zero-days)[[8]](https://cloud.google.com/blog/topics/threat-intelligence/unc3944-targets-saas-applications)[[9]](https://cloud.google.com/blog/topics/threat-intelligence/m-trends-2025), CISA/NSA joint advisories [[10]](https://www.cisa.gov/news-events/cybersecurity-advisories/aa24-038a)[[11]](https://www.cisa.gov/resources-tools/resources/guide-securing-microsoft-windows-10-and-windows-11-audit-and-monitoring-events), and the Australian Cyber Security Centre (ACSC) [[12]](https://www.cyber.gov.au/resources-business-and-government/maintaining-devices-and-systems/system-hardening-and-administration/system-administration/detecting-and-mitigating-active-directory-compromises).
 
-| Anomaly Type | Definition | Primary Telemetry | Detection Approach | Signal Stability | FP Risk |
-|---|---|---|---|---|---|
-| **Volumetric** | Unusual absolute volume of data or events vs. entity baseline | NetFlow, firewall egress, DNS, file/object access, cloud audit | Rolling threshold + percentile baseline (Z-score, IQR, moving average) | High for exfiltration/impact stages; lower on shared infrastructure | Medium |
-| **Frequency / Rate** | Unusual rate of repeated events within a time window | Auth logs, API logs, process start logs, DNS | Count-by-entity over rolling window; Poisson model | High when concentrated in one source; weak when distributed | Medium |
-| **Temporal** | Activity at unusual times relative to entity, business cycle, or service baseline | Auth logs, SaaS audit, admin actions, EDR | Working-hours baseline; time-series decomposition; seasonality models | Medium; highly context-dependent | Medium–High |
-| **Peer-Group** | Entity deviates materially from its peer cohort (same role, department, host class) | Identity logs, HR data, endpoint inventory, SaaS access | Clustering (K-Means, TF-IDF), peer distribution percentiles | Medium–High when peer groups are cleanly defined | Medium |
-| **Sequence** | Events occur in an unusual order relative to normal operational paths | Process trees, auth chains, API sequences, session logs | Finite-state models, Markov chains, LSTM, provenance graphs | High for stable server roles; lower for developer environments | Medium |
-| **Graph / Relationship** | Unexpected edges, bridges, or paths in identity, network, or resource graphs | Active Directory, IAM, SaaS permissions, NetFlow | Graph analytics, community detection, link-prediction scoring | High for privilege-path changes; moderate for network paths | Medium |
-| **Geographic / ASN** | Access from new, implausible, or inconsistent locations or network providers | IdP logs, VPN, SaaS, cloud console | Geo-baseline + impossible-travel logic + ASN peer history | Medium alone; stronger with enrichment | High if used alone |
-| **Identity / Access** | Unusual auth properties, factor changes, app consents, or token behaviour | IdP, MFA, Entra/Okta, cloud audit, OAuth logs | Risk detections, peer-baseline comparison, rare-event scoring | High with complete IdP telemetry | Medium |
-| **Rare Process / Service** | Execution of a binary or service with low prevalence on that host or host class | EDR, Sysmon Event ID 1, Linux auditd, software inventory | Prevalence scoring, allowlist comparison, digital signature analysis | High on stable server roles; lower on developer workstations | Low–Medium |
-| **Parent-Child Execution** | A parent process spawning children it rarely or never should | EDR, Sysmon Event ID 1, auditd | Process lineage rules + rarity modelling by parent | High on tightly managed servers | Low–Medium |
-| **Data Movement** | Unusual read/write/copy/export/sync behaviour vs. entity or data-class baseline | DLP, file access logs, object storage audit, SaaS export logs | Volume + destination + object-type + peer baseline | High when export paths are fully instrumented | Medium |
-| **Protocol / Application Usage** | Non-standard use of ports, protocols, or application features | Proxy logs, DNS, NetFlow, SaaS/IdP API logs | Rare-protocol analytics, entropy analysis, user-agent baseline | Medium–High | Medium |
-| **Negative Anomaly (Absence)** | Expected telemetry stops appearing — logs cleared, agent silenced, process absent | SIEM heartbeat monitoring, log volume baselines, EDR health | Volume baseline on log source; absence detection | Medium — requires baseline of expected "presence" | Medium |
-| **State-Change** | Rarely occurring control-plane changes that materially alter trust or exposure | Cloud audit, AD audit, IdP audit, SaaS admin logs | Alert on first-occurrence or infrequent-occurrence for a scoped object class | High for tightly scoped privileged objects | Low when scope is narrow |
-| **Multi-Event Correlation** | Several individually weak signals combining into an anomalous chain against one entity | SIEM / XDR across all sources | Correlation rules, graph/session stitching, entity risk scoring | High when carefully tuned | Low–Medium |
+**Volumetric** — Unusual absolute volume of data or events vs. entity baseline. Telemetry: NetFlow, firewall egress, DNS, file/object access, cloud audit. Approach: rolling threshold + percentile baseline (Z-score, IQR, moving average). Stability: high for exfiltration/impact stages; lower on shared infrastructure. FP risk: Medium.
+
+**Frequency / Rate** — Unusual rate of repeated events within a time window. Telemetry: auth logs, API logs, process start logs, DNS. Approach: count-by-entity over rolling window; Poisson model. Stability: high when concentrated in one source; weak when distributed. FP risk: Medium.
+
+**Temporal** — Activity at unusual times relative to entity, business cycle, or service baseline. Telemetry: auth logs, SaaS audit, admin actions, EDR. Approach: working-hours baseline; time-series decomposition; seasonality models. Stability: medium; highly context-dependent. FP risk: Medium–High.
+
+**Peer-Group** — Entity deviates materially from its peer cohort (same role, department, host class). Telemetry: identity logs, HR data, endpoint inventory, SaaS access. Approach: clustering (K-Means, TF-IDF), peer distribution percentiles. Stability: medium–high when peer groups are cleanly defined. FP risk: Medium.
+
+**Sequence** — Events occur in an unusual order relative to normal operational paths. Telemetry: process trees, auth chains, API sequences, session logs. Approach: finite-state models, Markov chains, LSTM, provenance graphs. Stability: high for stable server roles; lower for developer environments. FP risk: Medium.
+
+**Graph / Relationship** — Unexpected edges, bridges, or paths in identity, network, or resource graphs. Telemetry: Active Directory, IAM, SaaS permissions, NetFlow. Approach: graph analytics, community detection, link-prediction scoring. Stability: high for privilege-path changes; moderate for network paths. FP risk: Medium.
+
+**Geographic / ASN** — Access from new, implausible, or inconsistent locations or network providers. Telemetry: IdP logs, VPN, SaaS, cloud console. Approach: geo-baseline + impossible-travel logic + ASN peer history. Stability: medium alone; stronger with enrichment. FP risk: High if used alone.
+
+**Identity / Access** — Unusual auth properties, factor changes, app consents, or token behaviour. Telemetry: IdP, MFA, Entra/Okta, cloud audit, OAuth logs. Approach: risk detections, peer-baseline comparison, rare-event scoring. Stability: high with complete IdP telemetry. FP risk: Medium.
+
+**Rare Process / Service** — Execution of a binary or service with low prevalence on that host or host class. Telemetry: EDR, Sysmon Event ID 1, Linux auditd, software inventory. Approach: prevalence scoring, allowlist comparison, digital signature analysis. Stability: high on stable server roles; lower on developer workstations. FP risk: Low–Medium.
+
+**Parent-Child Execution** — A parent process spawning children it rarely or never should. Telemetry: EDR, Sysmon Event ID 1, auditd. Approach: process lineage rules + rarity modelling by parent. Stability: high on tightly managed servers. FP risk: Low–Medium.
+
+**Data Movement** — Unusual read/write/copy/export/sync behaviour vs. entity or data-class baseline. Telemetry: DLP, file access logs, object storage audit, SaaS export logs. Approach: volume + destination + object-type + peer baseline. Stability: high when export paths are fully instrumented. FP risk: Medium.
+
+**Protocol / Application Usage** — Non-standard use of ports, protocols, or application features. Telemetry: proxy logs, DNS, NetFlow, SaaS/IdP API logs. Approach: rare-protocol analytics, entropy analysis, user-agent baseline. Stability: medium–high. FP risk: Medium.
+
+**Negative Anomaly (Absence)** — Expected telemetry stops appearing — logs cleared, agent silenced, process absent. Telemetry: SIEM heartbeat monitoring, log volume baselines, EDR health. Approach: volume baseline on log source; absence detection. Stability: medium — requires baseline of expected "presence". FP risk: Medium.
+
+**State-Change** — Rarely occurring control-plane changes that materially alter trust or exposure. Telemetry: cloud audit, AD audit, IdP audit, SaaS admin logs. Approach: alert on first-occurrence or infrequent-occurrence for a scoped object class. Stability: high for tightly scoped privileged objects. FP risk: Low when scope is narrow.
+
+**Multi-Event Correlation** — Several individually weak signals combining into an anomalous chain against one entity. Telemetry: SIEM / XDR across all sources. Approach: correlation rules, graph/session stitching, entity risk scoring. Stability: high when carefully tuned. FP risk: Low–Medium.
 
 ---
 
@@ -79,19 +91,17 @@ The taxonomy below draws on Chandola et al. [[2]](https://dl.acm.org/doi/10.1145
 
 Anomaly detection is most useful when an attacker must create measurable change in an environment. It is least useful when the attacker operates within accepted identity, protocol, and administrative boundaries.
 
-| ATT&CK Stage | Anomaly Utility | Primary Anomaly Types | Key Evidence | Key Limitation |
-|---|---|---|---|---|
-| Initial Access | Poor–Moderate | Geographic, ASN, rate | Midnight Blizzard residential-proxy spray [[4]](https://www.microsoft.com/en-us/security/blog/2024/01/25/midnight-blizzard-guidance-for-responders-on-nation-state-attack/) | Valid credentials, residential proxies, distributed timing |
-| Execution | Moderate | Parent-child, rare process, sequence | HAFNIUM `w3wp.exe` → `cmd.exe` [[5]](https://www.microsoft.com/en-us/security/blog/2021/03/02/hafnium-targeting-exchange-servers/); Conti ADFind execution [[13]](https://thedfirreport.com/2021/08/01/bazarcall-to-conti-ransomware-via-trickbot-and-cobalt-strike/) | LOTL tools, fileless execution, in-process abuse |
-| Persistence | Moderate | State-change, identity/access, rare event | Storm-1283 OAuth app + VM creation [[6]](https://www.microsoft.com/en-us/security/blog/2022/11/16/token-tactics-how-to-prevent-detect-and-respond-to-cloud-token-theft/); UNC3944 MFA reset [[8]](https://cloud.google.com/blog/topics/threat-intelligence/unc3944-targets-saas-applications) | Noisy from legitimate admin; requires enrichment |
-| Privilege Escalation | Moderate | Rare process, sequence, identity | Kerberoasting RC4 TGS in modern environments [[14]](https://adsecurity.org/?p=3458) | Legitimate RC4 compatibility needs; privilege changes are common |
-| Defense Evasion | Weak | Negative anomaly (absence), rare event | Conti disabling Defender; `wevtutil cl` log clearing | Evasion is specifically designed to reduce anomaly surface |
-| Credential Access | Moderate–High (concentrated) | Frequency/rate, rare process, sequence | Password spray Event 4625 clustering; Kerberoasting; DCSync via Impacket [[20]](https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-277a) | Distributed spray defeats per-tenant thresholds |
-| Discovery | Moderate | Rare process, peer-group, sequence | ADFind/BloodHound execution [[13]](https://thedfirreport.com/2021/08/01/bazarcall-to-conti-ransomware-via-trickbot-and-cobalt-strike/); LDAP query volume spikes | Heavy overlap with legitimate admin tooling |
-| Lateral Movement | Moderate | Graph/relationship, peer-group, sequence | Conti PsExec + ADMIN$ [[13]](https://thedfirreport.com/2021/08/01/bazarcall-to-conti-ransomware-via-trickbot-and-cobalt-strike/); NTLM network logon anomalies [[16]](https://blog.binarydefense.com/reliably-detecting-pass-the-hash-through-event-log-analysis) | Legitimate admin RDP/SMB traffic |
-| Command and Control | Moderate–High | Temporal, protocol, DNS entropy, volumetric | SUNBURST DGA DNS [[3]](https://www.mandiant.com/resources/sunburst-additional-technical-details); APT34 DNSpionage TXT records [[17]](https://unit42.paloaltonetworks.com/unit42-oilrig-targets-middle-eastern-telecommunications-organization/) | Jitter, dormancy, protocol masquerading |
-| Collection / Exfiltration | High | Volumetric, data movement, state-change | APT41 SQLULDR2 + PINEGROVE exfiltration [[9]](https://cloud.google.com/blog/topics/threat-intelligence/m-trends-2025); Rclone campaigns [[13]](https://thedfirreport.com/2021/08/01/bazarcall-to-conti-ransomware-via-trickbot-and-cobalt-strike/) | SaaS-native exfil generates no signals in perimeter telemetry |
-| Impact | High | Volumetric, rare process, sequence | VSS deletion; mass file encryption pattern | Often detected only after damage has commenced |
+- **Initial Access** (Utility: Poor–Moderate) — Anomaly types: geographic, ASN, rate. Evidence: Midnight Blizzard residential-proxy spray [[4]](https://www.microsoft.com/en-us/security/blog/2024/01/25/midnight-blizzard-guidance-for-responders-on-nation-state-attack/). Limitation: valid credentials, residential proxies, distributed timing.
+- **Execution** (Utility: Moderate) — Anomaly types: parent-child, rare process, sequence. Evidence: HAFNIUM `w3wp.exe` → `cmd.exe` [[5]](https://www.microsoft.com/en-us/security/blog/2021/03/02/hafnium-targeting-exchange-servers/); Conti ADFind execution [[13]](https://thedfirreport.com/2021/08/01/bazarcall-to-conti-ransomware-via-trickbot-and-cobalt-strike/). Limitation: LOTL tools, fileless execution, in-process abuse.
+- **Persistence** (Utility: Moderate) — Anomaly types: state-change, identity/access, rare event. Evidence: Storm-1283 OAuth app + VM creation [[6]](https://www.microsoft.com/en-us/security/blog/2022/11/16/token-tactics-how-to-prevent-detect-and-respond-to-cloud-token-theft/); UNC3944 MFA reset [[8]](https://cloud.google.com/blog/topics/threat-intelligence/unc3944-targets-saas-applications). Limitation: noisy from legitimate admin; requires enrichment.
+- **Privilege Escalation** (Utility: Moderate) — Anomaly types: rare process, sequence, identity. Evidence: Kerberoasting RC4 TGS in modern environments [[14]](https://adsecurity.org/?p=3458). Limitation: legitimate RC4 compatibility needs; privilege changes are common.
+- **Defense Evasion** (Utility: Weak) — Anomaly types: negative anomaly (absence), rare event. Evidence: Conti disabling Defender; `wevtutil cl` log clearing. Limitation: evasion is specifically designed to reduce anomaly surface.
+- **Credential Access** (Utility: Moderate–High, concentrated) — Anomaly types: frequency/rate, rare process, sequence. Evidence: password spray Event 4625 clustering; Kerberoasting; DCSync via Impacket [[20]](https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-277a). Limitation: distributed spray defeats per-tenant thresholds.
+- **Discovery** (Utility: Moderate) — Anomaly types: rare process, peer-group, sequence. Evidence: ADFind/BloodHound execution [[13]](https://thedfirreport.com/2021/08/01/bazarcall-to-conti-ransomware-via-trickbot-and-cobalt-strike/); LDAP query volume spikes. Limitation: heavy overlap with legitimate admin tooling.
+- **Lateral Movement** (Utility: Moderate) — Anomaly types: graph/relationship, peer-group, sequence. Evidence: Conti PsExec + ADMIN$ [[13]](https://thedfirreport.com/2021/08/01/bazarcall-to-conti-ransomware-via-trickbot-and-cobalt-strike/); NTLM network logon anomalies [[16]](https://blog.binarydefense.com/reliably-detecting-pass-the-hash-through-event-log-analysis). Limitation: legitimate admin RDP/SMB traffic.
+- **Command and Control** (Utility: Moderate–High) — Anomaly types: temporal, protocol, DNS entropy, volumetric. Evidence: SUNBURST DGA DNS [[3]](https://www.mandiant.com/resources/sunburst-additional-technical-details); APT34 DNSpionage TXT records [[17]](https://unit42.paloaltonetworks.com/unit42-oilrig-targets-middle-eastern-telecommunications-organization/). Limitation: jitter, dormancy, protocol masquerading.
+- **Collection / Exfiltration** (Utility: High) — Anomaly types: volumetric, data movement, state-change. Evidence: APT41 SQLULDR2 + PINEGROVE exfiltration [[9]](https://cloud.google.com/blog/topics/threat-intelligence/m-trends-2025); Rclone campaigns [[13]](https://thedfirreport.com/2021/08/01/bazarcall-to-conti-ransomware-via-trickbot-and-cobalt-strike/). Limitation: SaaS-native exfil generates no signals in perimeter telemetry.
+- **Impact** (Utility: High) — Anomaly types: volumetric, rare process, sequence. Evidence: VSS deletion; mass file encryption pattern. Limitation: often detected only after damage has commenced.
 
 ---
 
@@ -212,13 +222,11 @@ Cisco Talos and Palo Alto Unit 42 explicitly documented that APT34 implants quer
 
 Observable anomaly signals:
 
-| Signal | Threshold / Pattern | Log Source | Notes |
-|---|---|---|---|
-| Subdomain label length | > 30 characters | DNS debug log; Zeek `dns.log` | Human-readable labels are rarely this long |
-| Subdomain Shannon entropy | > 4.0 on subdomain portion | DNS debug log; Zeek `dns.log` | Illustrative starting point; CDN subdomains and some legitimate services also exceed this — environment calibration required |
-| TXT record query volume | High frequency for a single domain | DNS resolver logs | TXT queries are rare in most enterprise DNS; high volume is anomalous |
-| DNS query cadence | Coefficient of variation (CV) < 0.20 over 6+ queries to same domain | DNS logs + NetFlow | Low CV indicates machine-generated regularity — an illustrative threshold, not a universal rule |
-| TXT : A query ratio to same domain | > 1.0 | DNS resolver logs | Abnormal for any legitimate service |
+- **Subdomain label length > 30 characters** — Log source: DNS debug log; Zeek `dns.log`. Human-readable labels are rarely this long.
+- **Subdomain Shannon entropy > 4.0** (on subdomain portion) — Log source: DNS debug log; Zeek `dns.log`. Illustrative starting point; CDN subdomains and some legitimate services also exceed this — environment calibration required.
+- **TXT record query volume** (high frequency for a single domain) — Log source: DNS resolver logs. TXT queries are rare in most enterprise DNS; high volume is anomalous.
+- **DNS query cadence** (coefficient of variation CV < 0.20 over 6+ queries to same domain) — Log source: DNS logs + NetFlow. Low CV indicates machine-generated regularity — an illustrative threshold, not a universal rule.
+- **TXT : A query ratio > 1.0** to same domain — Log source: DNS resolver logs. Abnormal for any legitimate service.
 
 **Key limitation:** DNS tunneling is undetectable without full QNAME capture in DNS resolver logs. Many organisations either do not log DNS queries at all, or forward only partial data. Without the full subdomain string, entropy analysis is not possible.
 
@@ -239,13 +247,11 @@ CISA advisory AA23-158A documented the following explicitly: [Documented]
 - Created a local Windows user account named `"Health Check Service"` [Documented]
 - Enumerated files and retrieved the MOVEit configuration file containing database credentials [Documented]
 
-| Phase | Anomaly Type | Specific Signal | Log Source |
-|---|---|---|---|
-| SQL injection | Protocol | Anomalous POST body to MOVEit endpoints | IIS logs (`cs-uri-stem`, POST body if captured) |
-| Webshell write | Parent-child / file creation | `w3wp.exe` writing ASPX to MOVEit web root | Sysmon Event 11; Windows Security 4663 (object access with SACL) |
-| Webshell access | Rare URI | POST to `human2.aspx` returning HTTP 200 | IIS access logs |
-| Account creation | State-change | Event 4720: new account `"Health Check Service"` created | Windows Security Event 4720 |
-| Data exfiltration | Volumetric | Large outbound transfer from MOVEit server | NetFlow; firewall egress logs |
+- **SQL injection** (Protocol anomaly) — Anomalous POST body to MOVEit endpoints. Log source: IIS logs (`cs-uri-stem`, POST body if captured).
+- **Webshell write** (Parent-child / file creation) — `w3wp.exe` writing ASPX to MOVEit web root. Log source: Sysmon Event 11; Windows Security 4663 (object access with SACL).
+- **Webshell access** (Rare URI) — POST to `human2.aspx` returning HTTP 200. Log source: IIS access logs.
+- **Account creation** (State-change) — Event 4720: new account `"Health Check Service"` created. Log source: Windows Security Event 4720.
+- **Data exfiltration** (Volumetric) — Large outbound transfer from MOVEit server. Log source: NetFlow; firewall egress logs.
 
 Event 4720 (`"Health Check Service"` created by a web application process) is a state-change detection requiring no baseline — any account created under these circumstances warrants investigation. The combination of webshell + account creation is documented as a detection opportunity in CISA AA23-158A. [Documented]
 
@@ -329,13 +335,11 @@ CISA's advisory explicitly warns that many of the behavioural findings associate
 
 **Documented TTPs and detection opportunities:**
 
-| TTP | Specific Command / Action | Anomaly Signal | Log Source | Limitation per CISA |
-|---|---|---|---|---|
-| Credential extraction | `ntdsutil "ac i ntds" ifm "create full C:\Temp\ntds" q q` | `ntdsutil` with IFM arguments on a non-DC host — contextual anomaly | Event 4688 (with command-line); Sysmon Event 1 | Legitimate DC backup operations use identical commands |
-| Network tunneling | `netsh portproxy add v4tov4 listenport=X connectport=Z connectaddress=W` | `netsh portproxy` configuration on workstation — contextual anomaly | Event 4688; Sysmon Event 1 | Legitimate VPN or WSL2 configurations may also create portproxy rules |
-| Log clearing | `wevtutil cl System` / `wevtutil cl Security` | Event 1102 (Security log cleared); negative anomaly: gap in expected event stream | Windows Security Event 1102 | Legitimate maintenance may clear logs |
-| Lateral movement | RDP, WMI with valid credentials | Graph anomaly: new host-to-host pair with no prior auth history | Event 4624 (Logon Type 3/10); NetFlow | Significant legitimate admin overlap — CISA explicitly warns |
-| SOHO proxy sign-ins | Sign-ins from residential ISP or SOHO router IP ranges | Geographic/ASN anomaly: unfamiliar ISP for the account | IdP sign-in logs | Consumer ISP churn generates false positives |
+- **Credential extraction** — Command: `ntdsutil "ac i ntds" ifm "create full C:\Temp\ntds" q q`. Signal: `ntdsutil` with IFM arguments on a non-DC host — contextual anomaly. Log source: Event 4688 (with command-line); Sysmon Event 1. CISA limitation: legitimate DC backup operations use identical commands.
+- **Network tunneling** — Command: `netsh portproxy add v4tov4 listenport=X connectport=Z connectaddress=W`. Signal: `netsh portproxy` configuration on workstation — contextual anomaly. Log source: Event 4688; Sysmon Event 1. CISA limitation: legitimate VPN or WSL2 configurations may also create portproxy rules.
+- **Log clearing** — Commands: `wevtutil cl System` / `wevtutil cl Security`. Signal: Event 1102 (Security log cleared); negative anomaly: gap in expected event stream. Log source: Windows Security Event 1102. CISA limitation: legitimate maintenance may clear logs.
+- **Lateral movement** — Action: RDP, WMI with valid credentials. Signal: graph anomaly — new host-to-host pair with no prior auth history. Log source: Event 4624 (Logon Type 3/10); NetFlow. CISA limitation: significant legitimate admin overlap — CISA explicitly warns.
+- **SOHO proxy sign-ins** — Action: sign-ins from residential ISP or SOHO router IP ranges. Signal: geographic/ASN anomaly — unfamiliar ISP for the account. Log source: IdP sign-in logs. CISA limitation: consumer ISP churn generates false positives.
 
 Windows Security Event 1102 fires whenever the Security audit log is cleared, regardless of audit policy configuration. NSA recommends treating any 1102 event without a corresponding change management ticket as high priority. [Documented — NSA guidance]
 
@@ -403,23 +407,35 @@ Effective anomaly detection on Windows requires enabling Advanced Audit Policy s
 
 **Critical Event IDs and required audit policy subcategories:**
 
-| Event ID | Log | Description | Audit Policy Subcategory | Category | Default State | Anomaly Use |
-|---|---|---|---|---|---|---|
-| 4624 | Security | Successful logon | Logon | Logon/Logoff | Enabled (basic) | PTH heuristics; lateral movement graph; baseline |
-| 4625 | Security | Failed logon | Logon | Logon/Logoff | Enabled (basic) | Password spray rate and spread |
-| 4648 | Security | Logon with explicit credentials (RunAs or alternative credentials) | Logon | Logon/Logoff | Not enabled by default | Lateral movement indicator |
-| 4662 | Security | Operation performed on AD directory object | Directory Service Access | DS Access | Not enabled; requires SACL on domain NC root | DCSync detection via replication GUIDs |
-| 4672 | Security | Special privileges assigned to new logon session | Special Logon | Logon/Logoff | Enabled | Privilege escalation — new session with SeDebugPrivilege, SeTcbPrivilege |
-| 4688 | Security | Process created | Process Creation | Detailed Tracking | Enabled (basic); command-line capture requires explicit GPO | LOTL detection; credential tool execution; post-exploitation |
-| 4697 | Security | Service installed in the system | Security System Extension | System | Not enabled by default | Malicious service installation |
-| 4698 | Security | Scheduled task created | Other Object Access Events | Object Access | Not enabled by default | Persistence via scheduled tasks |
-| 4720 | Security | User account created | User Account Management | Account Management | Enabled | New account creation (LEMURLOOT; attacker backdoor accounts) |
-| 4728 / 4732 / 4756 | Security | Member added to security/local/universal group | Security Group Management | Account Management | Enabled | Persistence via privileged group membership |
-| 4769 | Security | Kerberos service ticket (TGS) requested | Kerberos Service Ticket Operations | Account Logon | Enabled on DCs | Kerberoasting heuristic (RC4 encryption type) |
-| 4776 | Security | NTLM credential validation at DC | Credential Validation | Account Logon | Enabled on DCs | NTLM spray baseline; NTLM usage anomaly |
-| 5140 | Security | Network share accessed | File Share | Object Access | Not enabled by default | ADMIN$ access from non-admin workstations |
-| 7045 | System | New service installed | (System log — always on for service installs) | System | Always on | PsExec service deployment; malicious service |
-| 1102 | Security | Security audit log cleared | Other Events | System | Always generated when Security log is cleared | Log clearing for defense evasion — high-priority |
+**Logon / Logoff category (enabled by default):**
+
+- **Event 4624** — Successful logon. Subcategory: Logon. Default: enabled (basic). Use: PTH heuristics; lateral movement graph; baseline.
+- **Event 4625** — Failed logon. Subcategory: Logon. Default: enabled (basic). Use: password spray rate and spread.
+- **Event 4648** — Logon with explicit credentials (RunAs or alternative credentials). Subcategory: Logon. Default: not enabled. Use: lateral movement indicator.
+- **Event 4672** — Special privileges assigned to new logon session. Subcategory: Special Logon. Default: enabled. Use: privilege escalation — new session with SeDebugPrivilege, SeTcbPrivilege.
+
+**Detailed Tracking / DS Access (require explicit audit policy configuration):**
+
+- **Event 4688** — Process created. Subcategory: Process Creation. Default: enabled (basic); command-line capture requires explicit GPO. Use: LOTL detection; credential tool execution; post-exploitation.
+- **Event 4662** — Operation performed on AD directory object. Subcategory: Directory Service Access. Default: not enabled; requires SACL on domain NC root. Use: DCSync detection via replication GUIDs.
+
+**Account Management (enabled by default):**
+
+- **Event 4720** — User account created. Subcategory: User Account Management. Use: new account creation (LEMURLOOT; attacker backdoor accounts).
+- **Events 4728 / 4732 / 4756** — Member added to security/local/universal group. Subcategory: Security Group Management. Use: persistence via privileged group membership.
+
+**Account Logon — enabled on DCs:**
+
+- **Event 4769** — Kerberos service ticket (TGS) requested. Subcategory: Kerberos Service Ticket Operations. Use: Kerberoasting heuristic (RC4 encryption type).
+- **Event 4776** — NTLM credential validation at DC. Subcategory: Credential Validation. Use: NTLM spray baseline; NTLM usage anomaly.
+
+**Object Access / System (require explicit configuration):**
+
+- **Event 4697** — Service installed in the system. Subcategory: Security System Extension. Default: not enabled. Use: malicious service installation.
+- **Event 4698** — Scheduled task created. Subcategory: Other Object Access Events. Default: not enabled. Use: persistence via scheduled tasks.
+- **Event 5140** — Network share accessed. Subcategory: File Share. Default: not enabled. Use: ADMIN$ access from non-admin workstations.
+- **Event 7045** (System log) — New service installed. Default: always on. Use: PsExec service deployment; malicious service.
+- **Event 1102** — Security audit log cleared. Subcategory: Other Events. Default: always generated when Security log is cleared. Use: log clearing for defense evasion — high-priority.
 
 **Non-default audit settings required:**
 - Event 4688 with full command-line: requires Group Policy → `Computer Configuration → Windows Settings → Security Settings → Advanced Audit Policy → Detailed Tracking → Process Creation` (Success) **and** Group Policy → `Computer Configuration → Administrative Templates → System → Audit Process Creation → Include command line in process creation events`
@@ -433,19 +449,17 @@ Sysmon (System Monitor, part of Sysinternals) provides endpoint telemetry beyond
 
 **High-value Sysmon Event IDs:**
 
-| Event ID | Description | Key Fields | Anomaly Use Case |
-|---|---|---|---|
-| 1 | Process Create | `Image`, `CommandLine`, `ParentImage`, `ParentCommandLine`, `User`, `Hashes`, `IntegrityLevel` | Parent-child anomalies; rare process; LOTL command-line |
-| 3 | Network Connection | `Image`, `DestinationIp`, `DestinationPort`, `Protocol`, `Initiated` | Process-network pairing — process making unusual outbound connection |
-| 6 | Driver Load | `ImageLoaded`, `Hashes`, `Signed`, `SignatureStatus` | BYOVD (Bring Your Own Vulnerable Driver); unsigned driver load |
-| 7 | Image Load | `Image`, `ImageLoaded`, `Signed`, `SignatureStatus` | Unsigned DLL loaded into signed process; in-memory loader detection |
-| 8 | CreateRemoteThread | `SourceImage`, `TargetImage`, `StartAddress`, `StartModule` | Cross-process thread injection — `StartModule = "Unknown"` indicates shellcode |
-| 10 | ProcessAccess | `SourceImage`, `TargetImage`, `GrantedAccess`, `CallTrace` | LSASS access for credential dumping (see Section 6.4) |
-| 11 | FileCreate | `Image`, `TargetFilename` | Webshell writes (ASPX from `w3wp.exe`); dropper writing payload to disk |
-| 12 / 13 | Registry Add / Set | `EventType`, `TargetObject`, `Details` | Run-key persistence; security-tool configuration modification |
-| 17 / 18 | Pipe Created / Connected | `PipeName`, `Image` | Named-pipe lateral movement; Cobalt Strike default pipe names (`\MSSE-*-server`, `\postex_*`) |
-| 22 | DNS Query | `Image`, `QueryName`, `QueryStatus`, `QueryResults` | Process-level DNS resolution from a process that should not be resolving external names |
-| 25 | ProcessTampering | `Image`, `Type` | Process hollowing; herpaderping; transacted file-based evasion |
+- **Event 1 — Process Create** — Key fields: `Image`, `CommandLine`, `ParentImage`, `ParentCommandLine`, `User`, `Hashes`, `IntegrityLevel`. Use: parent-child anomalies; rare process; LOTL command-line.
+- **Event 3 — Network Connection** — Key fields: `Image`, `DestinationIp`, `DestinationPort`, `Protocol`, `Initiated`. Use: process-network pairing — process making unusual outbound connection.
+- **Event 6 — Driver Load** — Key fields: `ImageLoaded`, `Hashes`, `Signed`, `SignatureStatus`. Use: BYOVD (Bring Your Own Vulnerable Driver); unsigned driver load.
+- **Event 7 — Image Load** — Key fields: `Image`, `ImageLoaded`, `Signed`, `SignatureStatus`. Use: unsigned DLL loaded into signed process; in-memory loader detection.
+- **Event 8 — CreateRemoteThread** — Key fields: `SourceImage`, `TargetImage`, `StartAddress`, `StartModule`. Use: cross-process thread injection — `StartModule = "Unknown"` indicates shellcode.
+- **Event 10 — ProcessAccess** — Key fields: `SourceImage`, `TargetImage`, `GrantedAccess`, `CallTrace`. Use: LSASS access for credential dumping (see Section 6.4).
+- **Event 11 — FileCreate** — Key fields: `Image`, `TargetFilename`. Use: webshell writes (ASPX from `w3wp.exe`); dropper writing payload to disk.
+- **Events 12 / 13 — Registry Add / Set** — Key fields: `EventType`, `TargetObject`, `Details`. Use: run-key persistence; security-tool configuration modification.
+- **Events 17 / 18 — Pipe Created / Connected** — Key fields: `PipeName`, `Image`. Use: named-pipe lateral movement; Cobalt Strike default pipe names (`\MSSE-*-server`, `\postex_*`).
+- **Event 22 — DNS Query** — Key fields: `Image`, `QueryName`, `QueryStatus`, `QueryResults`. Use: process-level DNS resolution from a process that should not be resolving external names.
+- **Event 25 — ProcessTampering** — Key fields: `Image`, `Type`. Use: process hollowing; herpaderping; transacted file-based evasion.
 
 **Operational notes:**
 - Sysmon Event 10 against `lsass.exe` generates substantial volume in default configurations. Filter to specific `GrantedAccess` masks to make it actionable (see Section 6.4).
@@ -488,15 +502,13 @@ These are Microsoft product documentation claims; detection coverage and false p
 
 Zeek generates structured log files from packet captures. Key log files for anomaly detection:
 
-| Log File | Key Fields | Anomaly Use Case |
-|---|---|---|
-| `dns.log` | `query`, `qtype_name`, `rcode_name`, `answers`, `TTL` | DNS tunneling (entropy, query length, TXT query ratio); DGA; C2 domain rarity |
-| `conn.log` | `id.orig_h`, `id.resp_h`, `id.resp_p`, `proto`, `duration`, `orig_bytes`, `resp_bytes` | Beaconing (connection interval analysis); volumetric exfiltration; port scan |
-| `http.log` | `host`, `uri`, `user_agent`, `method`, `status_code`, `request_body_len` | Rare URI; anomalous User-Agent; C2 over HTTP |
-| `ssl.log` | `server_name`, `issuer`, `subject`, `validation_status`, `ja3`, `ja3s` | JA3/JA3S fingerprinting for C2 tooling; invalid certificate chains |
-| `files.log` | `mime_type`, `filename`, `md5`, `sha256`, `source`, `tx_hosts`, `rx_hosts` | Unexpected file transfer types; malware download |
-| `kerberos.log` | `request_type`, `client`, `service`, `error_msg`, `cipher` | Kerberoasting (`cipher = RC4` in modern environment); pass-the-ticket |
-| `smb_files.log` | `action`, `path`, `name`, `size` | ADMIN$ write; ransomware file modification pattern |
+- **`dns.log`** — Key fields: `query`, `qtype_name`, `rcode_name`, `answers`, `TTL`. Use: DNS tunneling (entropy, query length, TXT query ratio); DGA; C2 domain rarity.
+- **`conn.log`** — Key fields: `id.orig_h`, `id.resp_h`, `id.resp_p`, `proto`, `duration`, `orig_bytes`, `resp_bytes`. Use: beaconing (connection interval analysis); volumetric exfiltration; port scan.
+- **`http.log`** — Key fields: `host`, `uri`, `user_agent`, `method`, `status_code`, `request_body_len`. Use: rare URI; anomalous User-Agent; C2 over HTTP.
+- **`ssl.log`** — Key fields: `server_name`, `issuer`, `subject`, `validation_status`, `ja3`, `ja3s`. Use: JA3/JA3S fingerprinting for C2 tooling; invalid certificate chains.
+- **`files.log`** — Key fields: `mime_type`, `filename`, `md5`, `sha256`, `source`, `tx_hosts`, `rx_hosts`. Use: unexpected file transfer types; malware download.
+- **`kerberos.log`** — Key fields: `request_type`, `client`, `service`, `error_msg`, `cipher`. Use: Kerberoasting (`cipher = RC4` in modern environment); pass-the-ticket.
+- **`smb_files.log`** — Key fields: `action`, `path`, `name`, `size`. Use: ADMIN$ write; ransomware file modification pattern.
 
 **RITA (Real Intelligence Threat Analytics)** — open-source framework built on Zeek output, with documented detection modules for beaconing (skew/MADM algorithm on connection intervals), DNS tunneling (subdomain entropy and unique subdomain count per registered domain), and long connections.
 
@@ -514,46 +526,45 @@ Microsoft Entra ID Protection provides named risk detections, each representing 
 
 **Sign-in risk detections (requires Entra ID P2 for Premium types):**
 
-| Detection Name | Tier | Timing | What It Detects |
-|---|---|---|---|
-| Unfamiliar sign-in properties | Premium | Real-time | Deviation from historical IP, ASN, location, device, browser, tenant subnet |
-| Anonymous IP address | Non-premium | Real-time | Sign-in from Tor exit node or known anonymiser |
-| Atypical travel | Premium (Entra ID P2) | Offline | Two sign-ins from geographically distant locations within an infeasible travel window — native Entra ID Protection detection; no additional licensing beyond Entra ID P2 |
-| Impossible travel | Requires Microsoft Defender for Cloud Apps (MDA) | Offline | Cross-service correlation of sign-in locations via MDA; **distinct from Atypical travel** — requires MDA licensing (Microsoft 365 E5 Security or standalone MDA) in addition to Entra ID P2 |
-| Malicious IP address | Premium | Offline | Sign-in from IP associated with confirmed attack activity |
-| Password spray | Premium | Real-time or offline | Spray pattern detected across the tenant via provider-level telemetry |
-| Verified threat actor IP | Premium | Real-time | Sign-in from infrastructure associated with known threat actor groups |
-| Anomalous Token | Premium | Real-time or offline | Token characteristics inconsistent with expected issuer, lifetime, or properties |
-| Token issuer anomaly | Premium | Real-time or offline | Token issued by an unexpected authority |
-| Suspicious inbox manipulation rules | Premium | Offline | Inbox rules forwarding to external domains or deleting specific categories |
-| Suspicious inbox forwarding | Premium | Offline | New external email forwarding configuration |
-| Mass access to sensitive files | Premium | Offline | File access volume above per-user or per-session baseline |
-| New country | Premium | Offline | First-ever sign-in from a particular country for that account |
-| Suspicious browser | Premium | Offline | Browser and OS combination inconsistent with historical profile |
-| Activity from anonymous IP address | Premium | Offline | Distinguishable from basic anonymous IP by additional context signals |
+*Non-premium (available without Entra ID P2):*
+
+- **Anonymous IP address** (real-time) — Sign-in from Tor exit node or known anonymiser.
+
+*Premium — requires Entra ID P2:*
+
+- **Unfamiliar sign-in properties** (real-time) — Deviation from historical IP, ASN, location, device, browser, tenant subnet.
+- **Atypical travel** (offline) — Two sign-ins from geographically distant locations within an infeasible travel window. Native Entra ID Protection detection; no additional licensing beyond Entra ID P2.
+- **Impossible travel** (offline) — Cross-service correlation of sign-in locations via Microsoft Defender for Cloud Apps (MDA). **Distinct from Atypical travel** — requires MDA licensing (Microsoft 365 E5 Security or standalone MDA) in addition to Entra ID P2.
+- **Malicious IP address** (offline) — Sign-in from IP associated with confirmed attack activity.
+- **Password spray** (real-time or offline) — Spray pattern detected across the tenant via provider-level telemetry.
+- **Verified threat actor IP** (real-time) — Sign-in from infrastructure associated with known threat actor groups.
+- **Anomalous Token** (real-time or offline) — Token characteristics inconsistent with expected issuer, lifetime, or properties.
+- **Token issuer anomaly** (real-time or offline) — Token issued by an unexpected authority.
+- **Suspicious inbox manipulation rules** (offline) — Inbox rules forwarding to external domains or deleting specific categories.
+- **Suspicious inbox forwarding** (offline) — New external email forwarding configuration.
+- **Mass access to sensitive files** (offline) — File access volume above per-user or per-session baseline.
+- **New country** (offline) — First-ever sign-in from a particular country for that account.
+- **Suspicious browser** (offline) — Browser and OS combination inconsistent with historical profile.
+- **Activity from anonymous IP address** (offline) — Distinguishable from basic anonymous IP by additional context signals.
 
 **User risk detections:**
 
-| Detection Name | What It Detects |
-|---|---|
-| Leaked credentials | Credential found in breach dumps, paste sites, or dark web forums |
-| Attacker in the Middle (AiTM) | Reverse-proxy phishing stealing session tokens (requires M365 E5 or Defender for Cloud Apps) |
-| Suspicious API traffic | Anomalous Microsoft Graph API or directory enumeration activity |
-| Possible PRT access | Attempt to access the Primary Refresh Token (requires MDE integration) |
-| Anomalous user activity | Composite deviation across multiple behavioural dimensions |
-| User reported suspicious activity | User denied an MFA push notification |
+- **Leaked credentials** — Credential found in breach dumps, paste sites, or dark web forums.
+- **Attacker in the Middle (AiTM)** — Reverse-proxy phishing stealing session tokens (requires M365 E5 or Defender for Cloud Apps).
+- **Suspicious API traffic** — Anomalous Microsoft Graph API or directory enumeration activity.
+- **Possible PRT access** — Attempt to access the Primary Refresh Token (requires MDE integration).
+- **Anomalous user activity** — Composite deviation across multiple behavioural dimensions.
+- **User reported suspicious activity** — User denied an MFA push notification.
 
 **Okta System Log — High-Value Events:**
 
-| Okta Event Type | Anomaly Relevance |
-|---|---|
-| `user.mfa.factor.update` | MFA factor change — alert for privileged accounts outside change windows |
-| `user.mfa.factor.deactivate` | MFA factor removal — high-sensitivity alert |
-| `user.session.impersonation.initiate` | Administrator impersonating another user |
-| `user.account.privilege.grant` | Privilege assignment |
-| `security.threat.detected` | Okta ThreatInsight IP-based threat intelligence correlation |
-| `application.user_membership.add` | User added to application — alert for sensitive apps |
-| `user.authentication.auth_via_mfa` (outcome: FAILURE) | MFA denial — rate anomaly for MFA fatigue detection |
+- **`user.mfa.factor.update`** — MFA factor change — alert for privileged accounts outside change windows.
+- **`user.mfa.factor.deactivate`** — MFA factor removal — high-sensitivity alert.
+- **`user.session.impersonation.initiate`** — Administrator impersonating another user.
+- **`user.account.privilege.grant`** — Privilege assignment.
+- **`security.threat.detected`** — Okta ThreatInsight IP-based threat intelligence correlation.
+- **`application.user_membership.add`** — User added to application — alert for sensitive apps.
+- **`user.authentication.auth_via_mfa`** (outcome: FAILURE) — MFA denial — rate anomaly for MFA fatigue detection.
 
 ### 5.6 Cloud Security Services
 
@@ -561,12 +572,10 @@ Microsoft Entra ID Protection provides named risk detections, each representing 
 
 GuardDuty evaluates API calls against per-user baselines tracking who made the request, from what location/IP, and to which API. Key finding type categories by ATT&CK stage [[23]](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_finding-types-active.html):
 
-| Stage | Finding Type Example | Description |
-|---|---|---|
-| Discovery | `Discovery:IAMUser/AnomalousBehavior` | Unusual IAM discovery calls: `GetRolePolicy`, `ListAccessKeys`, `DescribeInstances` from atypical source |
-| Credential Access | `CredentialAccess:IAMUser/AnomalousBehavior` | `GetSecretValue`, `GenerateDbAuthToken` from unusual principal or location |
-| Defense Evasion | `DefenseEvasion:IAMUser/AnomalousBehavior` | `DeleteFlowLogs`, `StopLogging`, `DisableAlarmActions` |
-| Exfiltration | `Exfiltration:IAMUser/AnomalousBehavior` | `PutBucketReplication`, `CreateSnapshot`, `RestoreDBInstanceFromDBSnapshot` |
+- **Discovery** — `Discovery:IAMUser/AnomalousBehavior`: unusual IAM discovery calls (`GetRolePolicy`, `ListAccessKeys`, `DescribeInstances`) from atypical source.
+- **Credential Access** — `CredentialAccess:IAMUser/AnomalousBehavior`: `GetSecretValue`, `GenerateDbAuthToken` from unusual principal or location.
+- **Defense Evasion** — `DefenseEvasion:IAMUser/AnomalousBehavior`: `DeleteFlowLogs`, `StopLogging`, `DisableAlarmActions`.
+- **Exfiltration** — `Exfiltration:IAMUser/AnomalousBehavior`: `PutBucketReplication`, `CreateSnapshot`, `RestoreDBInstanceFromDBSnapshot`.
 
 **Microsoft Sentinel — Anomaly Analytics**
 
@@ -582,13 +591,11 @@ For current available anomaly analytics templates, consult the Sentinel Content 
 
 DNS telemetry is necessary for C2 and tunneling detection. Key log sources:
 
-| Tool / Source | Detection Capability | Notes |
-|---|---|---|
-| Windows DNS Debug Log | Full QNAME capture; requires explicit enablement on Windows DNS servers | Must be enabled; not collected by default |
-| Zeek `dns.log` | Structured DNS telemetry from network capture | Requires network tap or span port access |
-| RITA | Automated DNS tunneling detection using subdomain entropy, bytes in/out, unique subdomain count | Open source; runs on Zeek output |
-| Infoblox Threat Defense | Managed DNS with per-query anomaly scoring, DGA detection, NXDOMAIN flood | Vendor product claim |
-| Cisco Umbrella | Cloud DNS resolver with global threat intelligence and anomalous query alerting | Vendor product claim |
+- **Windows DNS Debug Log** — Full QNAME capture. Must be explicitly enabled on Windows DNS servers; not collected by default.
+- **Zeek `dns.log`** — Structured DNS telemetry from network capture. Requires network tap or span port access.
+- **RITA** — Automated DNS tunneling detection using subdomain entropy, bytes in/out, unique subdomain count. Open source; runs on Zeek output.
+- **Infoblox Threat Defense** — Managed DNS with per-query anomaly scoring, DGA detection, NXDOMAIN flood. (Vendor product claim.)
+- **Cisco Umbrella** — Cloud DNS resolver with global threat intelligence and anomalous query alerting. (Vendor product claim.)
 
 **Shannon Entropy for DNS Anomaly Detection:**
 
@@ -602,16 +609,25 @@ SaaS audit logs are the primary — and in many intrusion scenarios the only —
 
 **Microsoft 365 Unified Audit Log — Key Operations:**
 
-| Operation | Category | Notes |
-|---|---|---|
-| `MailItemsAccessed` | Exchange | Requires Purview Audit Premium (E5 or add-on) |
-| `New-InboxRule` | Exchange | Alert on any rule forwarding to external domain |
-| `Add-MailboxPermission` | Exchange | Mailbox delegation — alert for executive accounts |
-| `FileDownloaded` | SharePoint/OneDrive | Baseline per-user; alert on count spikes |
-| `FileSyncDownloadedFull` | SharePoint/OneDrive | Full sync download — alert when sync target is unfamiliar |
-| `Add application` | Entra ID | New OAuth registration — scope-based alerting |
-| `Consent to application` | Entra ID | OAuth consent — alert for `Mail.ReadWrite`, `Files.ReadWrite.All` |
-| `Set-AdminAuditLogConfig` | Exchange | Alert on any audit log disablement |
+*Exchange:*
+
+- **`MailItemsAccessed`** — Requires Purview Audit Premium (E5 or add-on).
+- **`New-InboxRule`** — Alert on any rule forwarding to external domain.
+- **`Add-MailboxPermission`** — Mailbox delegation — alert for executive accounts.
+
+*SharePoint / OneDrive:*
+
+- **`FileDownloaded`** — Baseline per-user; alert on count spikes.
+- **`FileSyncDownloadedFull`** — Full sync download — alert when sync target is unfamiliar.
+
+*Entra ID:*
+
+- **`Add application`** — New OAuth registration — scope-based alerting.
+- **`Consent to application`** — OAuth consent — alert for `Mail.ReadWrite`, `Files.ReadWrite.All`.
+
+*Exchange admin:*
+
+- **`Set-AdminAuditLogConfig`** — Alert on any audit log disablement.
 
 `OfficeActivity` in Sentinel (sourced from the M365 Unified Audit Log) does **not** contain a reliable byte-count field. `OfficeObjectId` is a document URL or path identifier, not a volume measure. Volume-based anomaly detection in M365 must use event count as the proxy metric. See Section 8.2 for a corrected query.
 
@@ -621,24 +637,30 @@ SaaS audit logs are the primary — and in many intrusion scenarios the only —
 
 Ratings reflect the effort required for a competent team starting from zero deployment and the detection fidelity achievable against documented adversary TTPs once fully operational. Implementation Effort covers licensing, configuration, tuning, and baseline establishment. Detection Fidelity reflects signal-to-noise ratio on targeted threat categories under realistic conditions — not theoretical maximum coverage.
 
-| Log Source | Implementation Effort | Detection Fidelity | Primary Threat Coverage | Key Prerequisite |
-|---|---|---|---|---|
-| Windows Security Event Log (basic audit) | Low | Low–Medium | Account logon, privilege use, group changes | Default on domain-joined systems; limited without command-line capture |
-| Windows Security Event Log (advanced audit + command-line GPO) | Medium | Medium–High | Process execution, lateral movement, DCSync, log clearing | Command-line GPO + SACL configuration for 4662 |
-| Sysmon (with maintained config) | Medium | High | LSASS access, process injection, webshell writes, DNS by process, pipe creation | Deployment + maintained config file (SwiftOnSecurity or Hartong baseline) |
-| Microsoft Defender for Endpoint | Low (if licensed) | High | Endpoint behavioral chains, EDR IOA/IOC, file and process telemetry | MDE P2 license; Intune or GPO onboarding |
-| Microsoft Entra Sign-in Logs (P2) | Low–Medium | Medium–High | Password spray, impossible travel, MFA lifecycle anomalies, sign-in risk | Entra ID P2 license; Sentinel connector for full field set |
-| M365 Unified Audit Log | Low–Medium | Medium | SaaS exfiltration (count-based), inbox rule creation, OAuth app consent | Purview Audit (Standard or Premium); MailItemsAccessed requires Premium |
-| Okta System Log | Low | Medium | MFA factor changes, session anomalies, admin privilege grants | Okta integration via SIEM connector |
-| AWS CloudTrail | Low | Medium–High | IAM changes, API abuse, VM/storage creation by unusual principals | CloudTrail enabled per region + SIEM ingestion |
-| Azure Activity Log | Low | Medium | Control-plane changes, VM creation, role assignments | Diagnostic settings → Log Analytics workspace |
-| IIS / Web Server Logs | Low | Medium | Rare URI access, webshell POST patterns, exploitation attempt signatures | Full field logging enabled (cs-uri-stem, cs-bytes, sc-status) |
-| DNS Resolver Logs (full QNAME) | Medium | Medium | DNS tunneling, DGA C2, domain rarity | Full QNAME capture — many resolvers log partial data by default |
-| Zeek / Corelight (network) | High | High | Beaconing, JA3/JA3S C2 fingerprinting, protocol anomalies, lateral movement NetFlow | Span port or tap access to relevant network segments |
-| NetFlow — perimeter only | Medium | Low–Medium | Volumetric exfiltration, rare external destinations | Flow export from perimeter devices; east-west traffic not covered |
-| NetFlow — east-west (internal) | High | Medium | Lateral movement scanning, SMB spread, internal C2 relay | Internal sensor placement or full span; significant infrastructure cost |
-| Linux auditd (syscall-level rules) | High | High | Privilege escalation, capability abuse, kernel exploitation, process injection on Linux | Custom ruleset; high log volume requires aggressive filtering |
-| SaaS-native Audit Logs (Salesforce, Workday, Box, etc.) | Medium | Medium | Insider/compromised account data access, bulk export, permission escalation | Per-platform enablement; ingestion into SIEM not always native |
+**Low effort — deploy first:**
+
+- **Windows Security Event Log (basic audit)** — Fidelity: Low–Medium. Coverage: account logon, privilege use, group changes. Prerequisite: default on domain-joined systems; limited without command-line capture.
+- **Microsoft Defender for Endpoint** — Fidelity: High. Coverage: endpoint behavioral chains, EDR IOA/IOC, file and process telemetry. Prerequisite: MDE P2 license; Intune or GPO onboarding.
+- **Microsoft Entra Sign-in Logs (P2)** — Fidelity: Medium–High. Coverage: password spray, impossible travel, MFA lifecycle anomalies, sign-in risk. Prerequisite: Entra ID P2 license; Sentinel connector for full field set.
+- **M365 Unified Audit Log** — Fidelity: Medium. Coverage: SaaS exfiltration (count-based), inbox rule creation, OAuth app consent. Prerequisite: Purview Audit (Standard or Premium); MailItemsAccessed requires Premium.
+- **Okta System Log** — Fidelity: Medium. Coverage: MFA factor changes, session anomalies, admin privilege grants. Prerequisite: Okta integration via SIEM connector.
+- **AWS CloudTrail** — Fidelity: Medium–High. Coverage: IAM changes, API abuse, VM/storage creation by unusual principals. Prerequisite: CloudTrail enabled per region + SIEM ingestion.
+- **Azure Activity Log** — Fidelity: Medium. Coverage: control-plane changes, VM creation, role assignments. Prerequisite: diagnostic settings → Log Analytics workspace.
+- **IIS / Web Server Logs** — Fidelity: Medium. Coverage: rare URI access, webshell POST patterns, exploitation attempt signatures. Prerequisite: full field logging enabled (cs-uri-stem, cs-bytes, sc-status).
+
+**Medium effort:**
+
+- **Windows Security Event Log (advanced audit + command-line GPO)** — Fidelity: Medium–High. Coverage: process execution, lateral movement, DCSync, log clearing. Prerequisite: command-line GPO + SACL configuration for 4662.
+- **Sysmon (with maintained config)** — Fidelity: High. Coverage: LSASS access, process injection, webshell writes, DNS by process, pipe creation. Prerequisite: deployment + maintained config file (SwiftOnSecurity or Hartong baseline).
+- **DNS Resolver Logs (full QNAME)** — Fidelity: Medium. Coverage: DNS tunneling, DGA C2, domain rarity. Prerequisite: full QNAME capture — many resolvers log partial data by default.
+- **NetFlow — perimeter only** — Fidelity: Low–Medium. Coverage: volumetric exfiltration, rare external destinations. Prerequisite: flow export from perimeter devices; east-west traffic not covered.
+- **SaaS-native Audit Logs (Salesforce, Workday, Box, etc.)** — Fidelity: Medium. Coverage: insider/compromised account data access, bulk export, permission escalation. Prerequisite: per-platform enablement; ingestion into SIEM not always native.
+
+**High effort — mature infrastructure required:**
+
+- **Zeek / Corelight (network)** — Fidelity: High. Coverage: beaconing, JA3/JA3S C2 fingerprinting, protocol anomalies, lateral movement NetFlow. Prerequisite: span port or tap access to relevant network segments.
+- **NetFlow — east-west (internal)** — Fidelity: Medium. Coverage: lateral movement scanning, SMB spread, internal C2 relay. Prerequisite: internal sensor placement or full span; significant infrastructure cost.
+- **Linux auditd (syscall-level rules)** — Fidelity: High. Coverage: privilege escalation, capability abuse, kernel exploitation, process injection on Linux. Prerequisite: custom ruleset; high log volume requires aggressive filtering.
 
 **Reading the matrix:** Sources with Low effort and Medium–High fidelity (MDE, Entra P2, CloudTrail) should be the first deployment targets. Sources with High effort and High fidelity (Zeek, east-west NetFlow, Linux auditd) deliver disproportionate value against sophisticated adversaries but require mature infrastructure. Low-effort, Low-fidelity sources (basic Windows audit) provide necessary context but should not anchor detection programs.
 
@@ -652,12 +674,10 @@ Ratings reflect the effort required for a competent team starting from zero depl
 
 **Windows Security Event 4769 — key fields:**
 
-| Field | Modern Environment Baseline | Kerberoasting Pattern | Notes |
-|---|---|---|---|
-| `Ticket Encryption Type` | `0x12` (AES-256) or `0x11` (AES-128) | `0x17` (RC4-HMAC) | Modern Windows DCs default to AES; RC4 is backward-compatible and still legitimately used by some legacy applications |
-| `Service Name` | Machine accounts (`*$`) or well-known service names | SPN-bearing service accounts — not machine accounts | Filter `ServiceName` not ending in `$` |
-| `Account Name` | Service accounts, machines | A regular user account requesting TGS for a service account | The requesting account is a regular user |
-| `Ticket Options` | Various | `0x40800010` is common in Kerberoasting tooling | Not definitive on its own |
+- **`Ticket Encryption Type`** — Baseline: `0x12` (AES-256) or `0x11` (AES-128). Pattern: `0x17` (RC4-HMAC). Note: modern Windows DCs default to AES; RC4 is backward-compatible and still legitimately used by some legacy applications.
+- **`Service Name`** — Baseline: machine accounts (`*$`) or well-known service names. Pattern: SPN-bearing service accounts — not machine accounts. Filter `ServiceName` not ending in `$`.
+- **`Account Name`** — Baseline: service accounts, machines. Pattern: a regular user account requesting TGS for a service account.
+- **`Ticket Options`** — Pattern: `0x40800010` is common in Kerberoasting tooling. Not definitive on its own.
 
 **Prerequisite:** "Audit Kerberos Service Ticket Operations" (Success) must be enabled in Advanced Audit Policy → Account Logon on domain controllers.
 
@@ -691,12 +711,10 @@ index=wineventlog EventCode=4769
 
 Event 4662 requires both: (1) "Directory Service Access" audit policy enabled (DS Access → Directory Service Access, Success) **and** (2) a SACL explicitly configured on the domain naming context (NC) root object granting `SYSTEM` principal audit rights for the relevant GUIDs. Neither is configured by default.
 
-| Field | Legitimate DC Replication | DCSync Pattern | Notes |
-|---|---|---|---|
-| `SubjectUserName` | Domain controller machine account (`DC01$`) or `NT AUTHORITY\SYSTEM` | A regular user or admin account — not a machine account | This is the primary discriminator |
-| `ObjectType` | `%{19195a5b-6da0-11d0-afd3-00c04fd930c9}` (domainDNS object) | Same | Object being accessed |
-| `Properties` (GUIDs) | Replication GUIDs from DC machine accounts | `{1131f6aa-9c07-11d1-f79f-00c04fc2dcd2}` (DS-Replication-Get-Changes) and `{1131f6ad-9c07-11d1-f79f-00c04fc2dcd2}` (DS-Replication-Get-Changes-All) from a non-machine account | Third GUID `{89e95b76-444d-4c62-991a-0facbeda640c}` applies to filtered-set replication (RODC) |
-| `AccessMask` | `0x100` for DS-Replication-Get-Changes | Same value, but from a non-DC source | Verifying the access mask narrows the query |
+- **`SubjectUserName`** — Legitimate: domain controller machine account (`DC01$`) or `NT AUTHORITY\SYSTEM`. DCSync pattern: a regular user or admin account — not a machine account. This is the primary discriminator.
+- **`ObjectType`** — Both legitimate and DCSync: `%{19195a5b-6da0-11d0-afd3-00c04fd930c9}` (domainDNS object).
+- **`Properties` (GUIDs)** — Legitimate: replication GUIDs from DC machine accounts. DCSync pattern: `{1131f6aa-9c07-11d1-f79f-00c04fc2dcd2}` (DS-Replication-Get-Changes) and `{1131f6ad-9c07-11d1-f79f-00c04fc2dcd2}` (DS-Replication-Get-Changes-All) from a non-machine account. Third GUID `{89e95b76-444d-4c62-991a-0facbeda640c}` applies to filtered-set replication (RODC).
+- **`AccessMask`** — Legitimate: `0x100` for DS-Replication-Get-Changes. DCSync: same value, but from a non-DC source. Verifying the access mask narrows the query.
 
 **Legitimate false-positive sources that must be allowlisted:**
 - Microsoft Entra Connect (formerly Azure AD Connect) performs DS-Replication-Get-Changes from a dedicated sync account — this is legitimate replication that will fire the detection if the account is not allowlisted
@@ -726,13 +744,11 @@ This query surfaces a high-confidence but not infallible signal. Review all resu
 
 The combination of fields below is associated with Pass-the-Hash (PTH) in detection engineering literature (Binary Defense [[16]](https://blog.binarydefense.com/reliably-detecting-pass-the-hash-through-event-log-analysis), CyberArk research). It is a **heuristic indicator**, not a deterministic signature. Legitimate NTLM network logons from some application configurations, guest access scenarios, and certain service accounts can produce similar field combinations.
 
-| Field | PTH-Associated Value | Context |
-|---|---|---|
-| `LogonType` | `3` (Network) | Also present in legitimate network logons |
-| `LogonProcessName` | `NtLmSsP` | Indicates NTLM path; legitimate domain logons typically show `Kerberos` |
-| `AuthenticationPackageName` | `NTLM` | Confirms NTLM authentication |
-| `SubjectUserSid` | `S-1-0-0` (NULL SID) | Indicates no prior interactive logon session on the source; also appears in some anonymous and service-account configurations |
-| `KeyLength` | `0` | Associated with PTH; also present in some session types |
+- **`LogonType`** = `3` (Network) — Also present in legitimate network logons.
+- **`LogonProcessName`** = `NtLmSsP` — Indicates NTLM path; legitimate domain logons typically show `Kerberos`.
+- **`AuthenticationPackageName`** = `NTLM` — Confirms NTLM authentication.
+- **`SubjectUserSid`** = `S-1-0-0` (NULL SID) — Indicates no prior interactive logon session on the source; also appears in some anonymous and service-account configurations.
+- **`KeyLength`** = `0` — Associated with PTH; also present in some session types.
 
 The core correlation: PTH logons typically occur without a preceding interactive (Type 2) or remote-interactive (Type 10) logon for the same `TargetUserName` on the same source host. Binary Defense's analysis [[16]](https://blog.binarydefense.com/reliably-detecting-pass-the-hash-through-event-log-analysis) documents this correlation as the most reliable discriminator, while explicitly noting it is not foolproof.
 
@@ -761,12 +777,10 @@ Highest-value targets for correlation: PTH against domain controllers (Event 462
 
 **Sysmon Event 10 — ProcessAccess for LSASS:**
 
-| Field | Pattern to Alert On | Notes |
-|---|---|---|
-| `TargetImage` | `lsass.exe` | Scope this rule exclusively to LSASS as target |
-| `GrantedAccess` | `0x1010` (PROCESS_VM_READ + PROCESS_QUERY_INFORMATION — Mimikatz sekurlsa mask); `0x1410` (adds PROCESS_DUP_HANDLE); `0x0820` (injection-style mask) | These masks are associated with credential dumping tools. Other masks (e.g., `0x1fffff` — all access) should also be reviewed |
-| `SourceImage` | Any process not on the environment-specific allowlist | The allowlist is environment-dependent; see below |
-| `CallTrace` | Contains `UNKNOWN` module | Indicates injected code as the caller, not a registered DLL |
+- **`TargetImage`** = `lsass.exe` — Scope this rule exclusively to LSASS as target.
+- **`GrantedAccess`** — Alert on: `0x1010` (PROCESS_VM_READ + PROCESS_QUERY_INFORMATION — Mimikatz sekurlsa mask); `0x1410` (adds PROCESS_DUP_HANDLE); `0x0820` (injection-style mask). Other masks (e.g., `0x1fffff` — all access) should also be reviewed.
+- **`SourceImage`** — Any process not on the environment-specific allowlist. The allowlist is environment-dependent; see allowlist guidance below.
+- **`CallTrace`** — Contains `UNKNOWN` module: indicates injected code as the caller, not a registered DLL.
 
 **Allowlist guidance:** The following process categories legitimately access LSASS and must be excluded, verified per your environment:
 - Windows Defender / MsMpEng.exe
@@ -1068,11 +1082,9 @@ No single anomaly should generate an investigation ticket in most environments. 
 
 Illustrative composite triggers (point values are examples only — calibrate to your environment's signal density):
 
-| Scenario | Signal Chain |
-|---|---|
-| Identity attack | MFA reset for privileged user → unfamiliar sign-in within 1 hour → new OAuth app consent with mail scope → inbox rule creation |
-| Endpoint post-exploitation | ADFind execution → LDAP query spike → ADMIN$ access → new service installation |
-| Cloud persistence | Service principal creating VM → API key creation → outbound data to new cloud storage destination |
+- **Identity attack:** MFA reset for privileged user → unfamiliar sign-in within 1 hour → new OAuth app consent with mail scope → inbox rule creation.
+- **Endpoint post-exploitation:** ADFind execution → LDAP query spike → ADMIN$ access → new service installation.
+- **Cloud persistence:** Service principal creating VM → API key creation → outbound data to new cloud storage destination.
 
 ### 9.5 Validate with Purple-Team Exercises
 
