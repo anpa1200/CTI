@@ -308,7 +308,7 @@ Microsoft documented that Storm-0558 used a forged MSA (Microsoft account) consu
 
 Microsoft's post-incident analysis identified that `MailItemsAccessed` records in the Microsoft 365 Unified Audit Log (requires Purview Audit Premium — E5 or add-on licensing) provided the evidence needed to scope the incident. [Documented]
 
-The "Token issuer anomaly" risk detection type in Microsoft Entra Identity Protection is architecturally relevant to forged-token attacks. Whether this detection type would have fired for Storm-0558 specifically is not stated in Microsoft's published reporting — that connection is the author's inference and should not be treated as documented. [Inferred — label corrected from prior drafts]
+Some token-anomaly detections in Microsoft Entra Identity Protection are conceptually adjacent to forged-token abuse, but Microsoft's published Storm-0558 reporting does not state that any such detection type — including "Token issuer anomaly," which Microsoft defines specifically around a potentially compromised SAML token issuer — would have covered this case. Storm-0558 involved forged tokens derived from a stolen MSA consumer signing key; whether that maps to the Token issuer anomaly definition is not established in published documentation. [Inferred]
 
 **Storm-1283 — OAuth app + cloud compute:**
 
@@ -416,13 +416,13 @@ Effective anomaly detection on Windows requires enabling Advanced Audit Policy s
 | 4776 | Security | NTLM credential validation at DC | Credential Validation | Account Logon | Enabled on DCs | NTLM spray baseline; NTLM usage anomaly |
 | 5140 | Security | Network share accessed | File Share | Object Access | Not enabled by default | ADMIN$ access from non-admin workstations |
 | 7045 | System | New service installed | (System log — always on for service installs) | System | Always on | PsExec service deployment; malicious service |
-| 1102 | Security | Security audit log cleared | Audit Policy Change | Policy Change | Always generated when Security log is cleared | Log clearing for defense evasion — high-priority |
+| 1102 | Security | Security audit log cleared | Other Events | System | Always generated when Security log is cleared | Log clearing for defense evasion — high-priority |
 
 **Non-default audit settings required:**
 - Event 4688 with full command-line: requires Group Policy → `Computer Configuration → Windows Settings → Security Settings → Advanced Audit Policy → Detailed Tracking → Process Creation` (Success) **and** Group Policy → `Computer Configuration → Administrative Templates → System → Audit Process Creation → Include command line in process creation events`
 - Event 4662 (DCSync): requires both "Directory Service Access" audit policy (DS Access → Directory Service Access, Success) **and** explicit SACL on the domain NC root object — a non-trivial configuration step
 - Events 4697, 4698, 5140: not enabled by default; require explicit audit policy changes
-- WMI activity: `Microsoft-Windows-WMI-Activity/Operational` log — Events 5857, 5858, 5860, 5861 — requires enabling the analytic/debug log
+- WMI activity: `Microsoft-Windows-WMI-Activity/Operational` log — Events 5857, 5858, 5860, 5861 — available by default once the Operational channel is enabled. Additional WMI trace/debug logging requires separately enabling analytic and debug logs via Event Viewer; these are distinct from the Operational channel.
 
 ### 5.2 Sysmon
 
@@ -1006,7 +1006,8 @@ No anomaly programme compensates for missing telemetry. Before deploying any ano
 
 Deploy analytics in order of baseline tightness and signal stability:
 
-1. **Deterministic rules first** — webshell parent-child lineage, VSS shadow copy deletion, ADMIN$ write from workstation context, Cobalt Strike named pipe patterns. No baseline needed.
+1. **Deterministic or near-deterministic rules first** — webshell parent-child lineage (`w3wp.exe` → `cmd.exe` on production internet-facing servers), VSS shadow copy deletion (`vssadmin delete shadows` on workstations — near-zero legitimate prevalence). No baseline needed.
+   **High-signal heuristics (require scope and allowlisting)** — `ADMIN$` write from non-admin workstations (FP sources: admin jump hosts, software deployment tooling, IR tools); Cobalt Strike default named-pipe patterns (FP sources: legitimate security tooling using similar pipe name conventions).
 2. **Domain controllers** — Kerberoasting (Event 4769 RC4, calibrated threshold), DCSync (Event 4662 with SACL, allowlisted), LSASS access (Sysmon Event 10, allowlisted)
 3. **Identity providers** — MFA lifecycle changes for privileged accounts, unfamiliar sign-in properties, app consent with high-risk scopes
 4. **Cloud control planes** — VM creation by unusual principals, IAM role grants, storage policy changes
