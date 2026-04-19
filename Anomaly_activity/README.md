@@ -308,7 +308,7 @@ Microsoft documented that Storm-0558 used a forged MSA (Microsoft account) consu
 
 Microsoft's post-incident analysis identified that `MailItemsAccessed` records in the Microsoft 365 Unified Audit Log (requires Purview Audit Premium — E5 or add-on licensing) provided the evidence needed to scope the incident. [Documented]
 
-Some token-anomaly detections in Microsoft Entra Identity Protection are conceptually adjacent to forged-token abuse, but Microsoft's published Storm-0558 reporting does not state that any such detection type — including "Token issuer anomaly," which Microsoft defines specifically around a potentially compromised SAML token issuer — would have covered this case. Storm-0558 involved forged tokens derived from a stolen MSA consumer signing key; whether that maps to the Token issuer anomaly definition is not established in published documentation. [Inferred]
+The "Token issuer anomaly" detection type in Microsoft Entra Identity Protection is architecturally inapplicable to Storm-0558. Microsoft defines Token issuer anomaly around a potentially compromised **SAML token issuer** — a federated identity provider deviation. Storm-0558 did not involve a SAML issuer: the attack used a forged **MSA consumer signing key** to mint authentication tokens outside the enterprise identity plane entirely. No SAML issuer deviation occurred. The detection category addresses a different threat model. Whether any Entra Identity Protection detection type would have fired is not stated in Microsoft's published reporting. [Inferred — architectural inapplicability derived from comparing Microsoft's Token issuer anomaly definition against the documented Storm-0558 attack mechanism]
 
 **Storm-1283 — OAuth app + cloud compute:**
 
@@ -605,6 +605,33 @@ SaaS audit logs are the primary — and in many intrusion scenarios the only —
 | `Set-AdminAuditLogConfig` | Exchange | Alert on any audit log disablement |
 
 `OfficeActivity` in Sentinel (sourced from the M365 Unified Audit Log) does **not** contain a reliable byte-count field. `OfficeObjectId` is a document URL or path identifier, not a volume measure. Volume-based anomaly detection in M365 must use event count as the proxy metric. See Section 8.2 for a corrected query.
+
+---
+
+### 5.9 Detection Source Prioritization Matrix
+
+Ratings reflect the effort required for a competent team starting from zero deployment and the detection fidelity achievable against documented adversary TTPs once fully operational. Implementation Effort covers licensing, configuration, tuning, and baseline establishment. Detection Fidelity reflects signal-to-noise ratio on targeted threat categories under realistic conditions — not theoretical maximum coverage.
+
+| Log Source | Implementation Effort | Detection Fidelity | Primary Threat Coverage | Key Prerequisite |
+|---|---|---|---|---|
+| Windows Security Event Log (basic audit) | Low | Low–Medium | Account logon, privilege use, group changes | Default on domain-joined systems; limited without command-line capture |
+| Windows Security Event Log (advanced audit + command-line GPO) | Medium | Medium–High | Process execution, lateral movement, DCSync, log clearing | Command-line GPO + SACL configuration for 4662 |
+| Sysmon (with maintained config) | Medium | High | LSASS access, process injection, webshell writes, DNS by process, pipe creation | Deployment + maintained config file (SwiftOnSecurity or Hartong baseline) |
+| Microsoft Defender for Endpoint | Low (if licensed) | High | Endpoint behavioral chains, EDR IOA/IOC, file and process telemetry | MDE P2 license; Intune or GPO onboarding |
+| Microsoft Entra Sign-in Logs (P2) | Low–Medium | Medium–High | Password spray, impossible travel, MFA lifecycle anomalies, sign-in risk | Entra ID P2 license; Sentinel connector for full field set |
+| M365 Unified Audit Log | Low–Medium | Medium | SaaS exfiltration (count-based), inbox rule creation, OAuth app consent | Purview Audit (Standard or Premium); MailItemsAccessed requires Premium |
+| Okta System Log | Low | Medium | MFA factor changes, session anomalies, admin privilege grants | Okta integration via SIEM connector |
+| AWS CloudTrail | Low | Medium–High | IAM changes, API abuse, VM/storage creation by unusual principals | CloudTrail enabled per region + SIEM ingestion |
+| Azure Activity Log | Low | Medium | Control-plane changes, VM creation, role assignments | Diagnostic settings → Log Analytics workspace |
+| IIS / Web Server Logs | Low | Medium | Rare URI access, webshell POST patterns, exploitation attempt signatures | Full field logging enabled (cs-uri-stem, cs-bytes, sc-status) |
+| DNS Resolver Logs (full QNAME) | Medium | Medium | DNS tunneling, DGA C2, domain rarity | Full QNAME capture — many resolvers log partial data by default |
+| Zeek / Corelight (network) | High | High | Beaconing, JA3/JA3S C2 fingerprinting, protocol anomalies, lateral movement NetFlow | Span port or tap access to relevant network segments |
+| NetFlow — perimeter only | Medium | Low–Medium | Volumetric exfiltration, rare external destinations | Flow export from perimeter devices; east-west traffic not covered |
+| NetFlow — east-west (internal) | High | Medium | Lateral movement scanning, SMB spread, internal C2 relay | Internal sensor placement or full span; significant infrastructure cost |
+| Linux auditd (syscall-level rules) | High | High | Privilege escalation, capability abuse, kernel exploitation, process injection on Linux | Custom ruleset; high log volume requires aggressive filtering |
+| SaaS-native Audit Logs (Salesforce, Workday, Box, etc.) | Medium | Medium | Insider/compromised account data access, bulk export, permission escalation | Per-platform enablement; ingestion into SIEM not always native |
+
+**Reading the matrix:** Sources with Low effort and Medium–High fidelity (MDE, Entra P2, CloudTrail) should be the first deployment targets. Sources with High effort and High fidelity (Zeek, east-west NetFlow, Linux auditd) deliver disproportionate value against sophisticated adversaries but require mature infrastructure. Low-effort, Low-fidelity sources (basic Windows audit) provide necessary context but should not anchor detection programs.
 
 ---
 
