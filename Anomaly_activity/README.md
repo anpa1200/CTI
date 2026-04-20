@@ -56,34 +56,124 @@ Anomaly detection produces operational value only when the baseline is tight, th
 The taxonomy below draws on Chandola et al. [[2]](https://dl.acm.org/doi/10.1145/1541880.1541882), NIST SP 800-94 [[1]](https://csrc.nist.gov/pubs/sp/800/94/final), Microsoft MSTIC publications [[4]](https://www.microsoft.com/en-us/security/blog/2024/01/25/midnight-blizzard-guidance-for-responders-on-nation-state-attack/)[[5]](https://www.microsoft.com/en-us/security/blog/2021/03/02/hafnium-targeting-exchange-servers/)[[6]](https://www.microsoft.com/en-us/security/blog/2022/11/16/token-tactics-how-to-prevent-detect-and-respond-to-cloud-token-theft/), Mandiant reporting [[7]](https://cloud.google.com/blog/topics/threat-intelligence/responding-to-exchange-server-zero-days)[[8]](https://cloud.google.com/blog/topics/threat-intelligence/unc3944-targets-saas-applications)[[9]](https://cloud.google.com/blog/topics/threat-intelligence/m-trends-2025), CISA/NSA joint advisories [[10]](https://www.cisa.gov/news-events/cybersecurity-advisories/aa24-038a)[[11]](https://www.cisa.gov/resources-tools/resources/guide-securing-microsoft-windows-10-and-windows-11-audit-and-monitoring-events), and the Australian Cyber Security Centre (ACSC) [[12]](https://www.cyber.gov.au/resources-business-and-government/maintaining-devices-and-systems/system-hardening-and-administration/system-administration/detecting-and-mitigating-active-directory-compromises).
 
 **Volumetric** — Unusual absolute volume of data or events vs. entity baseline. Telemetry: NetFlow, firewall egress, DNS, file/object access, cloud audit. Approach: rolling threshold + percentile baseline (Z-score, IQR, moving average). Stability: high for exfiltration/impact stages; lower on shared infrastructure. FP risk: Medium.
+Examples:
+- A finance user who normally uploads 20–50 files per day suddenly downloads 8,000 SharePoint documents in 40 minutes.
+- A database server with stable nightly replication begins sending 12 GB of outbound traffic to an external IP at 03:12, far above its normal egress baseline.
+- A workstation that usually makes fewer than 200 DNS requests per hour suddenly generates 9,000 queries, including many high-entropy subdomains.
+- A cloud service account that typically reads a few dozen objects per day suddenly accesses 30,000 S3 objects in one session.
+- A file server that normally changes 1–2 GB of data daily suddenly shows mass file modifications and deletions consistent with ransomware impact.
 
 **Frequency / Rate** — Unusual rate of repeated events within a time window. Telemetry: auth logs, API logs, process start logs, DNS. Approach: count-by-entity over rolling window; Poisson model. Stability: high when concentrated in one source; weak when distributed. FP risk: Medium.
+Examples:
+- A single user account generates 45 failed VPN logins in 6 minutes, far above its normal authentication rate.
+- One API client that typically makes 2–3 requests per minute suddenly sends 1,200 token validation requests in 10 minutes.
+- A workstation that usually launches a browser a few times per hour suddenly starts 300 PowerShell processes in 15 minutes.
+- A host that normally performs low-volume name resolution suddenly issues hundreds of DNS queries per minute to many rare domains.
+- A service account that usually accesses one mailbox at a time suddenly performs repeated read operations across dozens of mailboxes in a short window.
 
 **Temporal** — Activity at unusual times relative to entity, business cycle, or service baseline. Telemetry: auth logs, SaaS audit, admin actions, EDR. Approach: working-hours baseline; time-series decomposition; seasonality models. Stability: medium; highly context-dependent. FP risk: Medium–High.
+Examples:
+- An HR employee who normally logs in between 08:00–17:00 starts downloading sensitive employee records at 02:43 on a Sunday.
+- A SaaS admin account that is typically active only during local business hours performs privilege changes at 03:10.
+- A developer laptop that usually shows weekday activity suddenly initiates code repository access and cloud console actions during a national holiday.
+- A server management account that normally runs scheduled maintenance at 01:00–02:00 begins executing admin actions at an unusual afternoon hour outside its normal service window.
+- A user with a stable daytime pattern starts authenticating from the same device every night for several consecutive days, outside their historical baseline.
 
 **Peer-Group** — Entity deviates materially from its peer cohort (same role, department, host class). Telemetry: identity logs, HR data, endpoint inventory, SaaS access. Approach: clustering (K-Means, TF-IDF), peer distribution percentiles. Stability: medium–high when peer groups are cleanly defined. FP risk: Medium.
+Examples:
+- One finance employee accesses source code repositories and DevOps dashboards that no one else in the finance peer group normally uses.
+- A single workstation in the same Windows server class begins spawning developer tools and compression utilities, unlike its peer servers.
+- One sales user downloads 15 times more CRM records than others in the same department over the same week.
+- A service account in a group of low-privilege automation accounts suddenly begins calling privileged admin APIs that its peers never invoke.
+- One employee in a peer group of standard Microsoft 365 users starts creating mailbox forwarding rules and performing eDiscovery-like searches, unlike comparable users with the same role.
 
 **Sequence** — Events occur in an unusual order relative to normal operational paths. Telemetry: process trees, auth chains, API sequences, session logs. Approach: finite-state models, Markov chains, LSTM, provenance graphs. Stability: high for stable server roles; lower for developer environments. FP risk: Medium.
+Examples:
+- A user authenticates to a SaaS tenant, creates a new OAuth app, grants high-risk permissions, and then performs bulk data access in a sequence not seen in normal admin workflows.
+- On a server, `powershell.exe` spawns `rundll32.exe`, which then launches a network connection to an external host — an execution chain that deviates from the usual parent-child order.
+- A mailbox access session shows inbox rule creation before any normal interactive user activity, followed immediately by message forwarding and deletion operations.
+- A cloud workflow shows snapshot creation, privilege modification, and object export in an order that does not match standard backup or maintenance procedures.
+- A workstation process tree shows Office opening a script interpreter, then a credential access tool, then an archive utility — an event sequence inconsistent with normal user productivity flows.
 
 **Graph / Relationship** — Unexpected edges, bridges, or paths in identity, network, or resource graphs. Telemetry: Active Directory, IAM, SaaS permissions, NetFlow. Approach: graph analytics, community detection, link-prediction scoring. Stability: high for privilege-path changes; moderate for network paths. FP risk: Medium.
+Examples:
+- A low-privilege user is suddenly added to a group that creates a new privilege path to domain admin through nested Active Directory memberships.
+- An IAM role that normally accesses only one application is granted trust relationships that connect it to multiple high-value cloud resources it never touched before.
+- A workstation begins communicating with a server segment that is normally reachable only by backup or management systems, creating a new network edge outside its usual community.
+- A SaaS account that historically had no relationship to executive mailboxes suddenly gains delegated access to several senior leadership accounts.
+- A service account becomes the bridge between two previously separate environments by authenticating to both the on-prem domain and cloud admin plane, creating an unusual cross-environment path.
 
 **Geographic / ASN** — Access from new, implausible, or inconsistent locations or network providers. Telemetry: IdP logs, VPN, SaaS, cloud console. Approach: geo-baseline + impossible-travel logic + ASN peer history. Stability: medium alone; stronger with enrichment. FP risk: High if used alone.
+Examples:
+- A user who has only ever logged in from Israel suddenly authenticates to Microsoft 365 from Vietnam and then accesses sensitive SharePoint content minutes later.
+- An administrator signs in from a residential ISP in the morning and then appears from a cloud-hosting ASN in another country 25 minutes later, triggering impossible-travel logic.
+- A service account that normally uses one fixed corporate VPN egress suddenly accesses the cloud console from a consumer mobile network ASN.
+- A SaaS account with a stable history of logins from one city begins showing repeated access from multiple distant countries over two days.
+- A privileged user who normally connects only through a known enterprise VPN starts logging in from a newly observed anonymisation provider or VPS-hosting ASN.
 
 **Identity / Access** — Unusual auth properties, factor changes, app consents, or token behaviour. Telemetry: IdP, MFA, Entra/Okta, cloud audit, OAuth logs. Approach: risk detections, peer-baseline comparison, rare-event scoring. Stability: high with complete IdP telemetry. FP risk: Medium.
+Examples:
+- A user who normally authenticates with MFA suddenly registers a new authentication factor and then performs privileged actions within the same session.
+- An employee account that has never approved third-party apps grants OAuth consent to a new application requesting mail read, file access, and offline token permissions.
+- A service principal that usually uses short-lived tokens begins generating repeated refresh tokens or long-duration access patterns outside its historical norm.
+- A privileged admin account that normally signs in with one managed device starts authenticating with a new device and a newly enrolled MFA method on the same day.
+- A user with stable sign-in behaviour suddenly shows unusual token reuse across multiple applications or sessions inconsistent with their normal access pattern.
 
 **Rare Process / Service** — Execution of a binary or service with low prevalence on that host or host class. Telemetry: EDR, Sysmon Event ID 1, Linux auditd, software inventory. Approach: prevalence scoring, allowlist comparison, digital signature analysis. Stability: high on stable server roles; lower on developer workstations. FP risk: Low–Medium.
+Examples:
+- A domain controller suddenly executes `7z.exe`, a binary never before seen on that host class, shortly before large archive creation.
+- A Linux web server launches `socat` for the first time, despite no prior history of that tool in its software baseline.
+- A workstation starts a newly dropped unsigned binary from `%AppData%`, and that file has zero prevalence across the enterprise.
+- A Windows server that normally runs only approved business services suddenly installs and starts a new service with a random-looking name and no trusted signature.
+- A production database host executes `rclone`, a utility not previously observed on similar servers, followed by outbound network activity.
 
 **Parent-Child Execution** — A parent process spawning children it rarely or never should. Telemetry: EDR, Sysmon Event ID 1, auditd. Approach: process lineage rules + rarity modelling by parent. Stability: high on tightly managed servers. FP risk: Low–Medium.
+Examples:
+- `winword.exe` spawns `powershell.exe`, even though Office applications on that workstation normally never launch script interpreters.
+- `w3wp.exe` (IIS worker process) starts `cmd.exe`, an uncommon parent-child relationship that can indicate web shell activity.
+- `excel.exe` launches `rundll32.exe` and then a network connection follows, which is not part of normal spreadsheet usage.
+- `sshd` on a Linux server spawns `curl` or `wget`, even though interactive SSH sessions on that host class rarely download external content.
+- A business application service suddenly spawns `7z.exe` or `rar.exe`, an unusual child process for that parent and host role.
 
 **Data Movement** — Unusual read/write/copy/export/sync behaviour vs. entity or data-class baseline. Telemetry: DLP, file access logs, object storage audit, SaaS export logs. Approach: volume + destination + object-type + peer baseline. Stability: high when export paths are fully instrumented. FP risk: Medium.
+Examples:
+- A user who usually views a few HR documents per week suddenly exports entire employee folders to a ZIP archive and syncs them to a personal cloud storage destination.
+- A service account that normally reads small sets of objects begins copying thousands of customer records from one S3 bucket to an external account.
+- A SaaS user who typically works inside dashboards suddenly performs multiple CSV exports of high-value reports in one session.
+- A workstation that normally accesses Office files locally starts reading large numbers of engineering documents and copying them to a removable device or network share.
+- A cloud admin account that usually performs management actions begins bulk snapshot export or cross-region object replication involving sensitive data classes.
 
 **Protocol / Application Usage** — Non-standard use of ports, protocols, or application features. Telemetry: proxy logs, DNS, NetFlow, SaaS/IdP API logs. Approach: rare-protocol analytics, entropy analysis, user-agent baseline. Stability: medium–high. FP risk: Medium.
+Examples:
+- A workstation starts making large HTTPS uploads over port 8443 to an external host, even though that port and destination are not part of its normal application profile.
+- DNS traffic from a user device suddenly shifts from normal lookup behaviour to long, high-entropy TXT queries consistent with tunneling or covert signalling.
+- A browser session begins using an unusual user-agent string and repeatedly calls rarely used SaaS API endpoints that the user never accessed before.
+- An internal host starts communicating over SSH on a non-standard port to multiple external systems, outside its normal administrative pattern.
+- A cloud application account that usually performs routine API reads begins using bulk export, synchronisation, or token-management features rarely seen in that application context.
 
 **Negative Anomaly (Absence)** — Expected telemetry stops appearing — logs cleared, agent silenced, process absent. Telemetry: SIEM heartbeat monitoring, log volume baselines, EDR health. Approach: volume baseline on log source; absence detection. Stability: medium — requires baseline of expected "presence". FP risk: Medium.
+Examples:
+- An EDR agent on a critical server that normally checks in every few minutes stops reporting immediately before suspicious outbound activity begins.
+- A domain controller that consistently produces Windows security events suddenly goes silent, with no expected authentication logs during business hours.
+- A Linux host that normally sends steady `auditd` records stops emitting process and file-access telemetry after a privileged session starts.
+- A firewall or proxy log source with a stable event stream abruptly drops to near zero, even though the protected segment remains active.
+- A backup service process that is normally always present on a server is no longer running, followed by unexpected file encryption or deletion activity.
 
 **State-Change** — Rarely occurring control-plane changes that materially alter trust or exposure. Telemetry: cloud audit, AD audit, IdP audit, SaaS admin logs. Approach: alert on first-occurrence or infrequent-occurrence for a scoped object class. Stability: high for tightly scoped privileged objects. FP risk: Low when scope is narrow.
+Examples:
+- A new trust policy is added to an IAM role, allowing a previously unrelated principal to assume it for the first time.
+- An Active Directory group policy or group membership change creates a new path to privileged access for a sensitive server tier.
+- A SaaS administrator changes a tenant setting to allow external sharing on a repository that was previously restricted to internal users.
+- An IdP admin modifies conditional access or MFA policy for a privileged group, reducing authentication requirements for high-risk accounts.
+- A cloud storage bucket that was private is suddenly changed to public or cross-account accessible, materially increasing exposure.
 
 **Multi-Event Correlation** — Several individually weak signals combining into an anomalous chain against one entity. Telemetry: SIEM / XDR across all sources. Approach: correlation rules, graph/session stitching, entity risk scoring. Stability: high when carefully tuned. FP risk: Low–Medium.
+Examples:
+- An account shows an unusual sign-in from an unfamiliar ASN, immediately creates a new OAuth application, then performs bulk file access — no individual signal triggers an alert, but the chain maps to a credential-abuse + persistence + collection pattern.
+- A user authenticates normally, a risky process runs on the endpoint, then data is exported to an external destination — three low-confidence signals that in combination describe a post-exploitation sequence.
+- A privileged service account registers a new API key, accesses a cloud resource tier it has never touched, and then initiates a large data transfer — each step within normal bounds but the sequence is anomalous.
+- An endpoint shows a new unsigned binary, a new outbound network connection, and a credential-access attempt against LSASS in a 10-minute window — individually each might be noise; combined they constitute a high-priority alert.
+- A user resets MFA, signs in from a new location, grants OAuth consent to a new app, and creates an inbox forwarding rule to an external domain — the full chain is a documented identity-attack pattern.
 
 ---
 
