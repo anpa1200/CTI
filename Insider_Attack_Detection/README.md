@@ -45,11 +45,13 @@ External attacker detection relies on the contrast between attacker behaviour an
 
 **Statistical context**
 
-The CERT/CMU Insider Threat Center has documented more than 1,500 cases across its research programme, spanning IT sabotage, IP theft, fraud, and espionage categories [4]. These cases form the empirical foundation for the detection patterns in this guide.
+The CERT/CMU Insider Threat Center has documented more than 1,500 cases across its research programme (as stated in the 7th edition [4]; the database continues to grow), spanning IT sabotage, IP theft, fraud, and espionage categories. These cases form the empirical foundation for the detection patterns in this guide.
+
+Several industry surveys track insider incident metrics across wider populations. The Cybersecurity Insiders annual Insider Threat Report [1] and the Verizon Data Breach Investigations Report [2] provide broader cross-industry context; the DBIR's "internal actor" category encompasses both malicious insiders and negligent human error and should not be read as a measure of malicious insider prevalence alone [2].
 
 On detection method: the CERT/USSS banking-and-finance sector study found that 61% of insider incidents were detected by people not responsible for security, and only 22% were caught by auditing or monitoring procedures. Logs were used for attribution in 74% of cases where the insider's identity was eventually established — meaning logs are most often a forensic tool rather than a detection trigger [4]. This finding is specific to the banking and finance sector and may not generalise precisely to all industries, but the directional pattern is consistent with findings across CERT's broader case database.
 
-On incident containment: the 2023 Ponemon Cost of Insider Risks report found that organisations took an average of 86 days to contain an insider incident [3]. This figure covers the full lifecycle from initial identification to containment, not dwell time before first detection.
+On incident containment: the 2023 Ponemon Cost of Insider Risks Global Report found that organisations took an average of 86 days to contain an insider incident [3]. This figure covers the full lifecycle from initial identification to containment, not dwell time before first detection.
 
 **The detection paradox**
 
@@ -130,7 +132,7 @@ Manning downloaded approximately 750,000 classified US government documents, dip
 
 **What triggered detection:** A tip from Adrian Lamo, to whom Manning had disclosed the activity. Technical controls did not detect the exfiltration. [Documented]
 
-**Key detection lesson:** Physical exfiltration via writable optical or portable media is invisible to technical controls if removable media DLP is absent. The behavioural and command-level signals were present; the programme to act on them was not.
+**Key detection lesson:** [Inferred] Physical exfiltration via writable optical or portable media is invisible to technical controls if removable media DLP is absent. The behavioural and command-level signals were present; the programme to act on them was not.
 
 ---
 
@@ -146,7 +148,7 @@ Snowden, a system administrator contractor at the NSA, exfiltrated a large volum
 
 **What triggered detection:** Snowden departed the country before any detection occurred. Discovery was via journalistic publication of the disclosed documents. [Documented]
 
-**Key detection lesson:** Privileged users (sysadmins, contractors with elevated access) require monitoring separate from standard users. Access-based need-to-know enforcement and anomaly detection on privileged account scope are prerequisites. The credential-sharing pattern — documented in the NSA OIG report — was a detectable identity anomaly.
+**Key detection lesson:** [Inferred] Privileged users (sysadmins, contractors with elevated access) require monitoring separate from standard users. Access-based need-to-know enforcement and anomaly detection on privileged account scope are prerequisites. The credential-sharing pattern — documented in the NSA OIG report — was a detectable identity anomaly.
 
 ---
 
@@ -162,7 +164,7 @@ Duronio, a disgruntled UBS systems administrator who had been denied a bonus, pl
 
 **What triggered detection:** The destructive execution of the code — a system failure event — triggered investigation and forensic attribution. [Documented]
 
-**Key detection lesson:** Logic bombs are detectable before execution through monitoring of scheduled task creation by non-standard accounts outside change windows. By the time the code fires, detection is too late for prevention.
+**Key detection lesson:** [Inferred] Logic bombs are detectable before execution through monitoring of scheduled task creation by non-standard accounts outside change windows. By the time the code fires, detection is too late for prevention.
 
 ---
 
@@ -178,7 +180,7 @@ Levandowski, a senior Waymo engineer, downloaded more than 14,000 confidential f
 
 **What triggered detection:** During adversarial civil litigation, a Waymo subpoena served on a common LiDAR component supplier produced compelled documentation showing that Uber's LiDAR hardware design replicated Waymo's proprietary circuit board — identified through litigation discovery, not through internal detection controls. [Documented]
 
-**Key detection lesson:** The departure window for senior staff with access to crown-jewel IP requires heightened monitoring. The mass download volume, extended removable media connection, and subsequent laptop reformat were all detectable in endpoint and file-server logs.
+**Key detection lesson:** [Inferred] The departure window for senior staff with access to crown-jewel IP requires heightened monitoring. The mass download volume, extended removable media connection, and subsequent laptop reformat were all detectable in endpoint and file-server logs.
 
 ---
 
@@ -194,7 +196,7 @@ Ramesh, a former Cisco engineer, retained access to Cisco's AWS cloud environmen
 
 **What triggered detection:** The service outage itself. [Documented]
 
-**Key detection lesson:** Post-termination access is one of the most reliable and actionable deterministic signals available. The `TerminateInstances` API call volume was a high-signal event in CloudTrail. Neither control — departure-credential revocation nor bulk-deletion alerting — was in place.
+**Key detection lesson:** [Inferred] Post-termination access is among the most reliable and actionable deterministic signals available. The `TerminateInstances` API call volume was a high-signal event in CloudTrail. Neither control — departure-credential revocation nor bulk-deletion alerting — was in place.
 
 ---
 
@@ -210,7 +212,7 @@ Zheng, a GE turbine design engineer, stole proprietary turbine design files over
 
 **What triggered detection:** FBI counterintelligence referral. GE's internal systems did not identify the exfiltration. [Documented]
 
-**Key detection lesson:** Keyword-based DLP fails entirely against steganographic exfiltration. Detection requires either specialised steganalysis tools that perform statistical analysis of pixel-level distributions (chi-square analysis of least-significant bits, RS analysis, Sample Pair Analysis) or DCT coefficient histogram patterns in JPEG files — capabilities that are not present in any standard commercial DLP product — or behavioural controls: long-running relationship between a corporate email account and a personal webmail domain with consistent attachment sending is a detectable pattern even without content inspection.
+**Key detection lesson:** [Inferred] Keyword-based DLP fails entirely against steganographic exfiltration. Detection requires either specialised steganalysis tools that perform statistical analysis of pixel-level distributions (chi-square analysis of least-significant bits, RS analysis, Sample Pair Analysis) or DCT coefficient histogram patterns in JPEG files — capabilities that are not present in any standard commercial DLP product — or behavioural controls: long-running relationship between a corporate email account and a personal webmail domain with consistent attachment sending is a detectable pattern even without content inspection.
 
 ---
 
@@ -226,7 +228,7 @@ Skelton, a Morrisons internal auditor who held a grievance over a prior discipli
 
 **What triggered detection:** A newspaper contacted Morrisons before publication. Internal controls did not detect the exfiltration. [Documented]
 
-**Key detection lesson:** Bulk export of an entire sensitive dataset by a single account is a high-signal event. TOR access from a corporate device is a strong pre-indicator of intent to evade monitoring and should generate an alert regardless of what data is subsequently accessed.
+**Key detection lesson:** [Inferred] Bulk export of an entire sensitive dataset by a single account is a high-signal event. TOR network tooling on a corporate device is a strong indicator of intent to evade monitoring and should generate an alert regardless of what data is subsequently accessed.
 
 ---
 
@@ -242,7 +244,7 @@ Ruiz, a Yahoo software engineer, used his work access to compromise approximatel
 
 **What triggered detection:** Employer observation of suspicious account activity. [Documented]
 
-**Key detection lesson:** Privileged access to user data requires both purpose-binding (access must correlate with an open ticket) and anomaly detection on access patterns. The cross-account pivoting into external services was an access velocity and scope anomaly detectable in user-data access logs.
+**Key detection lesson:** [Inferred] Privileged access to user data requires both purpose-binding (access must correlate with an open ticket) and anomaly detection on access patterns. The cross-account pivoting into external services was an access velocity and scope anomaly detectable in user-data access logs.
 
 ---
 
@@ -256,7 +258,7 @@ Sharp, a senior developer with cloud admin access, cloned hundreds of GitHub rep
 
 **What triggered detection:** During a home internet outage, Sharp's VPN connection dropped while he continued working. His residential IP was logged in CloudTrail for a brief unmasked window, linking the activity to his home address. [Documented — DOJ press release]
 
-**Key detection lesson:** CloudTrail logs contained the full evidence trail throughout the incident. The actor was identified not by monitoring but by an operational security failure on his own part. Mass repository cloning and high-volume administrative AWS API activity under a single admin identity should trigger a real-time alert independent of source IP. The case also illustrates the risk of an insider participating in their own incident response.
+**Key detection lesson:** [Documented — DOJ criminal complaint] CloudTrail logs contained the full evidence trail throughout the incident. The actor was identified not by monitoring but by an operational security failure on his own part. [Inferred] Mass repository cloning and high-volume administrative AWS API activity under a single admin identity should trigger a real-time alert independent of source IP. The case also illustrates the risk of an insider participating in their own incident response.
 
 ---
 
@@ -272,7 +274,7 @@ Kvashuk, a software engineer with access to Microsoft's testing environment, sto
 
 **What triggered detection:** Microsoft detected unusual gift-card redemption activity and referred the matter to law enforcement. [Documented]
 
-**Key detection lesson:** Financial fraud by a technical insider exploiting production-adjacent test access is a separation-of-duties problem first and a monitoring problem second. Anomalous financial operation velocity and cross-account identity inconsistency are the detectable signals.
+**Key detection lesson:** [Inferred] Financial fraud by a technical insider exploiting production-adjacent test access is a separation-of-duties problem first and a monitoring problem second. Anomalous financial operation velocity and cross-account identity inconsistency are the detectable signals.
 
 ---
 
@@ -288,7 +290,7 @@ Over at least 26 months, a malicious employee copied sensitive personal informat
 
 **What triggered detection:** The Laval police notified Desjardins during a separate criminal investigation. Internal controls detected nothing over 26 months. [Documented]
 
-**Key detection lesson:** The OPC findings are the most explicit regulatory documentation of threshold-based DLP failure in this case set. The regulator required controls that address transfers below the minimum volume threshold. Sensitivity-aware controls — triggering review on any movement of regulated data regardless of volume — and UEBA were both required remediation items.
+**Key detection lesson:** [Documented — OPC PIPEDA Investigation 2020-001] The OPC findings are the most explicit regulatory documentation of threshold-based DLP failure in this case set. The regulator's remediation order explicitly required controls covering transfers below the minimum volume threshold, as well as SIEM and UEBA deployment. [Inferred] Sensitivity-aware controls — triggering review on any movement of regulated data regardless of volume — directly address the failure mode documented in the OPC findings.
 
 ---
 
@@ -302,7 +304,7 @@ Two former Tesla employees leaked approximately 100 GB of confidential data — 
 
 **What triggered detection:** Handelsblatt contacted Tesla before publication. Tesla's investigation identified the former employees via access logs. [Documented]
 
-**Key detection lesson:** CERT data indicates approximately 70% of last-confirmed IP-theft events in studied cases occurred within 60 days before departure [4]. Volume monitoring on data exports should be specifically heightened during this window. Access to data outside current role scope during a departure window should generate alerts regardless of volume.
+**Key detection lesson:** [Documented — CERT/CMU [4]] CERT data indicates that in studied IP-theft cases, the last-confirmed harmful act occurred disproportionately in the period leading up to or shortly following departure. The exact percentage varies across CERT study cohorts and editions; consult [4] for the most current figure. [Inferred] Volume monitoring on data exports should be specifically heightened during the departure window. Access to data outside current role scope during this window should generate alerts regardless of volume.
 
 ---
 
@@ -318,7 +320,7 @@ Ahmad Abouammo (a former media partnerships manager) and Ali Alzabarah (a former
 
 **What triggered detection:** Twitter management confronted Alzabarah after observing one suspicious access. He fled the country the following day. The FBI investigation followed. [Documented]
 
-**Key detection lesson:** The access tool existed; alerting on its abuse did not. A simple daily count threshold on user-information tool queries would have flagged the 6,000-account single-day access pattern. Access to sensitive data categories (journalist and activist accounts) requires purpose-binding regardless of the employee's role.
+**Key detection lesson:** [Documented — DOJ criminal complaint [17]] The access tool existed; alerting on its abuse did not. [Inferred] A daily count threshold on user-information tool queries would have flagged the 6,000-account single-day access pattern. Access to sensitive data categories (journalist and activist accounts) requires purpose-binding controls regardless of the employee's role.
 
 ---
 
@@ -326,11 +328,13 @@ Ahmad Abouammo (a former media partnerships manager) and Ali Alzabarah (a former
 
 **Category:** Former employee knowledge exploitation | **Organisation:** Capital One (victim); Amazon Web Services (Thompson's prior employer)
 
-Thompson, a former Amazon Web Services software engineer, exploited a misconfigured Web Application Firewall to perform an SSRF attack against Capital One's AWS EC2 Instance Metadata Service (IMDS), obtaining temporary IAM credentials. She used those credentials to access S3 buckets containing personal data of approximately 106 million customers in the US and Canada. Thompson's deep familiarity with AWS infrastructure — gained through her prior AWS employment — directly enabled her identification and exploitation of the specific misconfiguration. This case is classified as external attack; it is included here to illustrate the risk of institutional knowledge persisting after access is revoked. [Documented — DOJ indictment; Senate Banking Committee testimony]
+Thompson, a former Amazon Web Services software engineer, exploited a misconfigured Web Application Firewall to perform an SSRF attack against Capital One's AWS EC2 Instance Metadata Service (IMDS), obtaining temporary IAM credentials. She used those credentials to access S3 buckets containing personal data of approximately 106 million customers in the US and Canada. Thompson's prior AWS employment gave her deep familiarity with AWS infrastructure; that familiarity is reasonably inferred to have informed her identification of the specific misconfiguration, though the DOJ indictment does not explicitly attribute the capability to prior employment. [Documented — DOJ indictment and conviction press release [18]; prior employment context established via public record. Classification: external attack.] [Inferred — causal link between prior employment and exploitation method]
+
+This case is classified as an external attack; it is included here to illustrate the risk of institutional knowledge persisting after technical access is revoked.
 
 **What was missed:** The WAF misconfiguration existed for months undetected. CloudTrail logs captured the SSRF-based credential acquisition and subsequent S3 access but no alerting was configured for that access pattern. Detection came via Thompson's own GitHub post in which she described the data she had obtained. [Documented]
 
-**Key detection lesson:** Institutional knowledge of internal architecture is a risk that persists after technical access is revoked — and after an employment relationship ends. CloudTrail evidence was present throughout; the missing element was alerting on anomalous credential-origin patterns (IMDS-derived credentials being used for large-scale S3 access).
+**Key detection lesson:** [Inferred] Institutional knowledge of internal architecture is a risk that persists after technical access is revoked. CloudTrail evidence was present throughout; the missing element was alerting on anomalous credential-origin patterns — specifically, IMDS-derived temporary credentials being used for large-scale S3 data access from an unexpected principal.
 
 ---
 
@@ -349,7 +353,7 @@ CERT's case database documents recurring fraud patterns in the financial and bro
 
 CERT's banking-and-finance sector study found that 61% of cases were detected by non-security personnel, 22% by auditing or monitoring, and logs were used for attribution in 74% of cases where the insider's identity was established. [Documented — CERT/CMU]
 
-**Key detection lesson:** Financial fraud detection is primarily a business process control problem — segregation of duties, dual approval, payment integrity verification — not a network or endpoint security problem. SIEM-based detection for this category requires integration with ERP audit logs (SAP, Oracle, Workday) and transaction metadata, not just authentication events.
+**Key detection lesson:** [Inferred from CERT case patterns [4]] Financial fraud detection is primarily a business process control problem — segregation of duties, dual approval, payment integrity verification — not a network or endpoint security problem. SIEM-based detection for this category requires integration with ERP audit logs (SAP, Oracle, Workday) and transaction metadata, not just authentication events.
 
 ---
 
@@ -387,7 +391,7 @@ Catches covering-tracks activity: clearing Windows Event Logs, disabling cloud a
 
 Log source: Windows Security Event 1102 ("The audit log was cleared" — Security channel); Microsoft-Windows-Eventlog/Operational Event 104 (non-Security log cleared, e.g., System, Application); AWS CloudTrail `StopLogging`, `DeleteTrail`; Azure Diagnostic Settings deletion or Log Analytics workspace deletion; SIEM ingestion health monitoring for unexpected log-source silence.
 
-Detection logic: Alert on any occurrence of Security/1102 or Eventlog/Operational/104 outside a documented maintenance window. Alert on any `StopLogging` or `DeleteTrail` API call — these have near-zero legitimate ad-hoc prevalence on production infrastructure. Alert on any critical log source going silent unexpectedly for more than 15 minutes during business hours. [Inferred] Log clearing should generate an immediate incident ticket, not a risk score increment within a UEBA framework. It should not be handled via threshold accumulation.
+Detection logic: Alert on any occurrence of Security/1102 or Eventlog/Operational/104 outside a documented maintenance window. Alert on any `StopLogging` or `DeleteTrail` API call — these have near-zero legitimate ad-hoc prevalence on production infrastructure. Alert when a monitored critical log source stops producing events for longer than your expected collection latency (15 minutes is a commonly used illustrative threshold; calibrate to your pipeline's actual latency characteristics). [Inferred] Log clearing should generate an immediate incident ticket, not a risk score increment within a UEBA framework. It should not be handled via threshold accumulation.
 
 False positives: System reimaging, approved maintenance. Require change ticket correlation to suppress.
 
@@ -437,7 +441,7 @@ False positives: Legitimate backup processes and developer packaging. Mitigate b
 
 Catches "repository drain" — large-scale file download from document stores, SharePoint sites, or source code repositories.
 
-Log source: Microsoft 365 UAL operations `FileDownloaded`, `FileSyncDownloadedFull`, `FolderDownloaded`; GitHub audit log repository clone events; GitLab clone API events; Confluence space export audit.
+Log source: Microsoft 365 UAL operations `FileDownloaded`, `FileSyncDownloadedFull`; GitHub audit log repository clone events; GitLab clone API events; Confluence space export audit. Note: `FolderDownloaded` is not a confirmed standard M365 UAL operation — validate the exact operation names available in your tenant, as they vary by workload, licence tier, and client type.
 
 Detection logic: Alert when a user's daily download event count from SharePoint or OneDrive exceeds their 30-day rolling average by a material threshold (a Z-score ≥ 3 is a commonly used starting point; however, file download counts are typically right-skewed rather than normally distributed, so untransformed Z-score thresholds will underperform for power users and over-alert for low-volume users. Consider log-transforming download counts or using percentile-based thresholds calibrated per role cluster before using Z-score as the primary metric). Additionally, alert on any single-session bulk download exceeding a fixed count threshold (e.g., >500 files) by a non-IT account. Specific thresholds are illustrative and require environment calibration. [Inferred]
 
@@ -499,7 +503,7 @@ Log source: Identity metadata (department, title, team, project assignments); ap
 
 Detection logic: Cluster users by role, department, and seniority. Compute a deviation score comparing individual behaviour against the cluster centroid across: resource access diversity, data volume, application mix, time-of-day distribution, and external communication volume. Alert when a user's deviation score places them in the top 1–2% of their cluster, particularly when combined with an HR risk or departure flag. [Inferred]
 
-Research context: Academic work using the CERT Insider Threat Synthetic Dataset (CMU-CERT r4.2–r6.2) has explored peer-group approaches and shown that incorporating organisational metadata improves model performance on those benchmark datasets. However, these datasets are synthetic and limited in scale; production performance requires independent validation on real enterprise telemetry. Results from benchmark evaluations should not be taken as production guarantees.
+Research context: Academic work using the CERT Insider Threat Synthetic Dataset (CMU-CERT r4.2–r6.2) has explored peer-group and role-aware approaches. No specific performance figures from that research are cited here, as those datasets are synthetic and limited in scale; benchmark results from synthetic datasets should not be taken as production performance guarantees. Production results require independent validation on real enterprise telemetry. [Inferred from published research direction; no specific paper is cited]
 
 False positives: Heterogeneous peer groups, stale role metadata. Review cluster composition quarterly.
 
@@ -521,7 +525,7 @@ Real cases: Levandowski — repository access followed by extended removable med
 
 **Departing employee volume spike**
 
-Catches bulk data staging in the departure window, which CERT data indicates occurs in approximately 70% of documented IP theft cases within 60 days before departure [4].
+Catches bulk data staging in the departure window, which CERT data consistently identifies as the highest-risk period across IP-theft cases [4]. The exact percentage varies across CERT study cohorts and editions; consult [4] for the most current figure.
 
 Log source: HR departure date flag (must reach SIEM within hours of resignation); download event counts; DLP events; removable media events; first-time repository access events.
 
@@ -835,11 +839,11 @@ Insider threat monitoring operates in legally constrained territory. The followi
 
 **United States**
 
-The Electronic Communications Privacy Act (ECPA) and the Computer Fraud and Abuse Act (CFAA) generally permit employer monitoring of employer-owned systems, networks, and devices for legitimate business purposes.
+The Electronic Communications Privacy Act (ECPA) and the Computer Fraud and Abuse Act (CFAA) generally permit employer monitoring of employer-owned systems, networks, and devices where a legitimate business purpose exists and employees have been notified. The precise legal standard depends on the circuit and the specific monitoring activity; this is a summary of general principles, not a definitive statement of law. [Documented — ECPA 18 U.S.C. §§ 2510–2523; CFAA 18 U.S.C. § 1030]
 
-An employee's expectation of privacy on corporate devices is reduced when: a clear Acceptable Use Policy (AUP) has been communicated to employees, the monitoring is of work systems for stated business purposes, and the policy has been acknowledged in writing. [Documented — ECPA; ODNI NITTF guidance]
+An employee's expectation of privacy on corporate devices is reduced — though not eliminated — when: a clear Acceptable Use Policy (AUP) has been communicated, the monitoring is of work systems for stated business purposes, and the policy has been acknowledged in writing. [Inferred from case law; ODNI NITTF guidance [21] provides operational framing]
 
-The NLRB has issued guidance indicating that monitoring policies framed or applied so broadly as to chill protected concerted activity (employees' rights to organise and discuss working conditions) may be unlawful. [Documented — NLRB guidance]
+The NLRB has issued guidance indicating that overly broad monitoring policies that could reasonably be read to prohibit or chill employees' rights to discuss working conditions may be unlawful under the National Labor Relations Act. Consult current NLRB General Counsel guidance for the most recent position, as it can change between administrations. [Documented — NLRB GC 23-02 [25]]
 
 CERT's Common Sense Guide adds an operational boundary: do not monitor privileged personal communications (e.g., employee communications with doctors or attorneys); do not target protected disclosures or whistleblower-protected reports through the insider threat programme. [Documented — CERT/CMU 7th ed.]
 
@@ -859,7 +863,7 @@ Works council or employee representative consultation is required in many EU mem
 
 **Australia (Privacy Act 1988)**
 
-The Privacy Act applies to organisations with annual turnover exceeding AUD 3 million and to all Commonwealth agencies.
+The Privacy Act 1988 currently applies to organisations with annual turnover exceeding AUD 3 million and to all Commonwealth agencies. Note: the Privacy Act Review (2022) recommended expanding coverage to smaller organisations; verify current threshold applicability against the OAIC's published guidance, as the legislative position may have changed. [Documented — Privacy Act 1988; OAIC [23]]
 
 The employee records exemption means that personal information held by private-sector employers in employment records, handled for direct employment-related purposes, is exempt from the Privacy Act's requirements. Monitoring activities extending beyond HR purposes (content monitoring, communications surveillance) may fall under state and territory workplace surveillance legislation, which varies (e.g., New South Wales Workplace Surveillance Act 2005). [Documented — OAIC guidance]
 
@@ -918,7 +922,7 @@ Target outcome: "Authorised but anomalous" detection coverage for the patterns t
 1. **Role-based peer groups**: define user clusters using HR department, job title, and access tier. Validate cluster composition before enabling anomaly scoring.
 2. **After-hours access detection**: integrate HR calendar; deploy composite alerting (after-hours + sensitive resource access, not time-of-day alone).
 3. **Access outside role scope**: build role-to-resource-path baseline; deploy deviation alerting with a 30-day sensitivity baseline.
-4. **Entity risk scoring**: select 5–8 weighted signals; operate in observation-only mode for 30 days before enabling analyst queue entries. Tune false-positive rate before expanding signal set.
+4. **Entity risk scoring**: select 5–8 signals and assign each an ordinal risk tier (LOW / MEDIUM / HIGH / CRITICAL, per §4.6); operate in observation-only mode for 30 days before enabling analyst queue entries. Tune false-positive rate before expanding the signal set.
 5. **CI/CD pipeline tampering**: integrate source-control audit; configure protected-branch commit alerting and pipeline configuration change monitoring.
 6. **Logic bomb artefact alerting**: Windows Security Event 4698 and WMI-Activity/Operational Event 5861 scoped to non-IT accounts; correlate with HR departure status.
 7. **Analyst playbook**: create a written escalation process for each alert type that explicitly maps signals to kill-chain phases (planning, staging, exfiltration, sabotage, concealment).
@@ -942,13 +946,13 @@ Target outcome: Comprehensive coverage including sophisticated, long-dwell actor
 
 ### What the evidence shows
 
-**Human detection still leads.** CERT's banking-and-finance sector study found 61% of insider incidents were detected by non-security personnel and only 22% by auditing or monitoring procedures [4]. The case studies in §3 — drawn predominantly from technology, government, and defense sectors — are consistent with this directional finding: in 12 of the 15 documented cases, initial detection came from human observation, external notification, law enforcement referral, or operational failure rather than internal technical monitoring. This is not a statistically representative sample, and the banking-sector percentages should not be read as precise estimates for other industries; however, the pattern is directionally consistent across sectors.
+**Human detection still leads.** CERT's banking-and-finance sector study found 61% of insider incidents were detected by non-security personnel and only 22% by auditing or monitoring procedures [4]. The case studies in §3 — drawn predominantly from technology, government, and defense sectors — are consistent with this directional finding: of the 14 individual incident cases documented in §3.1–3.14 (§3.15 is a CERT pattern set without a specific detection trigger), initial detection came from human observation, external notification, law enforcement referral, or operational failure in the large majority of cases; internal technical monitoring was the primary trigger in at most two to three (Kvashuk, and arguably Twitter/Alzabarah and Yahoo/Ruiz). [Inferred from case records] This is not a statistically representative sample, and the banking-sector percentages should not be read as precise estimates for other industries; however, the pattern is directionally consistent across sectors.
 
 **Deterministic rules deliver the best ROI.** Post-termination access, audit log clearing, email forwarding rules, and privileged account creation are high-signal, low-noise controls that require minimal tuning. They should be the first investment, not deferred in favour of complex UEBA.
 
 **DLP is necessary but routinely insufficient.** The case evidence consistently shows DLP failing against: steganographic encoding (GE/Zheng), physical exfiltration (Manning), sub-threshold transfers over extended periods (Desjardins), and channels outside DLP scope (personal cloud sync, SaaS uploads, physical capture). A DLP-only programme misses a majority of documented exfiltration methods.
 
-**Dwell time is the central operational problem.** The Desjardins insider operated for at least 26 months undetected. Zheng's conduct spanned more than a decade before a counterintelligence referral. The Ponemon 2023 report found an average of 86 days to contain an insider incident after identification [3]. Detection programmes must account for long-dwell scenarios, require adequate log retention, and must not rely exclusively on volume thresholds.
+**Dwell time is the central operational problem.** The Desjardins insider operated for at least 26 months undetected. Zheng's conduct spanned more than a decade before a counterintelligence referral. The 2023 Ponemon Cost of Insider Risks Global Report found an average of 86 days to contain an insider incident after identification [3]. Detection programmes must account for long-dwell scenarios, require adequate log retention, and must not rely exclusively on volume thresholds. For comparison with external attacker dwell-time trends, see Mandiant's M-Trends 2025 annual report [19].
 
 **Privileged users are the highest-risk category.** Sysadmins, DBAs, DevOps engineers, cloud admins, and security team members can operate below alert thresholds precisely because they understand the monitoring. This category requires: PAM with session recording, a logging pipeline they cannot access or modify, need-to-know enforcement beyond their administrative role, and tighter change-window controls for their actions.
 
@@ -972,7 +976,7 @@ Target outcome: Comprehensive coverage including sophisticated, long-dwell actor
 
 ## 10. References
 
-The following primary sources are cited in this guide. For DOJ criminal matters, press releases and criminal complaints are cited; where the original filing URL has changed, the relevant DOJ press office page is provided as an entry point. Note that [5] and [6] are based on publicly available secondary sources; primary government documents in those cases are partially restricted or not available in consolidated public form.
+The following primary sources are cited in this guide. For DOJ criminal matters, press releases and criminal complaints are cited; where the original filing URL has changed, the relevant DOJ press office page is provided as an entry point. Note that [5] and [6] are based on publicly available secondary sources; primary government documents in those cases are partially restricted or not available in consolidated public form. References [1] and [2] are supplementary industry survey context cited in §1; they are not primary sources for detection claims.
 
 [1] Cybersecurity Insiders. *2024 Insider Threat Report*. 2024. https://www.cybersecurity-insiders.com/portfolio/insider-threat-report/
 *(Self-reported industry survey; methodology and sampling are not independently audited. Use statistics with appropriate caveats.)*
@@ -980,7 +984,7 @@ The following primary sources are cited in this guide. For DOJ criminal matters,
 [2] Verizon. *2025 Data Breach Investigations Report*. 2025. https://www.verizon.com/business/resources/reports/dbir/
 *(DBIR "internal actor" category includes both malicious insiders and negligent human error. Not all internal-actor incidents represent malicious insider cases.)*
 
-[3] Ponemon Institute / DTEX Systems. *2023 Cost of Insider Risks Global Report*. 2023. *(Publicly available via DTEX Systems website. Sponsored research; reported figures reflect organisations that agreed to participate.)*
+[3] Ponemon Institute / DTEX Systems. *2023 Cost of Insider Risks Global Report*. 2023. https://www.dtexsystems.com/resource/2023-insider-risk-report/ *(Sponsored research; available via DTEX Systems' resources page — confirm the URL is current. Self-selected survey methodology; reported figures reflect participating organisations only.)*
 
 [4] Carnegie Mellon University SEI CERT Division. *Common Sense Guide to Mitigating Insider Threats, Seventh Edition*. 2022. https://resources.sei.cmu.edu/library/asset-view.cfm?assetid=552459
 *(Primary source for CERT case statistics, taxonomy, kill chain model, and sector study statistics cited throughout this guide.)*
@@ -1016,15 +1020,16 @@ The following primary sources are cited in this guide. For DOJ criminal matters,
 
 [18] US Department of Justice, USAO Western District of Washington. *United States v. Paige A. Thompson*. Press release, 2022. https://www.justice.gov/usao-wdwa/pr/former-seattle-tech-worker-convicted-wire-fraud-computer-intrusion
 
-[19] Mandiant / Google Cloud Security. *M-Trends 2025*. 2025. https://cloud.google.com/blog/topics/threat-intelligence/m-trends-2025
+[19] Mandiant / Google Cloud Security. *M-Trends 2025: Threat Intelligence Report*. 2025. https://cloud.google.com/blog/topics/threat-intelligence/m-trends-2025 *(Landing page and download registration for the full report. Published annually; cited for external attacker dwell-time comparisons and enterprise detection trend context.)*
 
 [20] CISA. *Insider Threat Mitigation Guide*. 2020. https://www.cisa.gov/resources-tools/resources/insider-threat-mitigation-guide
 
-[21] ODNI National Insider Threat Task Force. *Insider Threat Program Maturity Framework*. 2018. https://www.dni.gov/files/NCSC/documents/nittf/NITTF_Insider_Threat_Program_Maturity_Framework.pdf
+[21] ODNI National Insider Threat Task Force. *Insider Threat Program Maturity Framework*. 2018. https://www.dni.gov/files/NCSC/documents/nittf/NITTF_Insider_Threat_Program_Maturity_Framework.pdf *(Operational guidance framework for US government programmes; referenced for monitoring boundary guidance, not as legal authority.)*
 
 [22] European Data Protection Board / Official GDPR text. Articles 6, 13, 35. https://gdpr-info.eu/
 
 [23] Office of the Australian Information Commissioner. *Employee Records Exemption*. https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/workplace-privacy/employee-records-exemption
 
-[24] Mandiant (formerly FireEye). *SUNBURST Additional Technical Details*. December 2020.
-*(Original post at fireeye.com/blog; URL has migrated due to Mandiant acquisition and rebranding. Search "SUNBURST additional technical details Mandiant" for current location. Cited for the documented use of low-entropy domain-generation algorithm to evade DNS-based detection.)*
+[24] Mandiant (formerly FireEye). *SUNBURST Additional Technical Details*. December 2020. https://www.fireeye.com/blog/threat-research/2020/12/sunburst-additional-technical-details.html *(Original publication URL; archived at the Internet Archive Wayback Machine as the fireeye.com domain was retired following the FireEye → Mandiant → Google Cloud rebrand sequence. Cited for the documented use of a low-entropy subdomain DGA in the C2 channel, which evades DNS entropy-based detection heuristics.)*
+
+[25] National Labor Relations Board, Office of the General Counsel. *Electronic Monitoring and Algorithmic Management of Employees That Implicates the National Labor Relations Act*. GC 23-02. October 2022. https://www.nlrb.gov/news-outreach/news-story/nlrb-general-counsel-issues-memo-on-electronic-monitoring *(GC memos reflect the position of the General Counsel, not binding NLRB precedent; consult current guidance as positions may change.)*
