@@ -324,17 +324,19 @@ Ahmad Abouammo (a former media partnerships manager) and Ali Alzabarah (a former
 
 ---
 
-### 3.14 Capital One — Paige Thompson, Former AWS Engineer (2019)
+### 3.14 Juliana Barile — Former New York Credit Union Employee (2021)
 
-**Category:** Former employee knowledge exploitation | **Organisation:** Capital One (victim); Amazon Web Services (Thompson's prior employer)
+**Category:** Sabotage / post-termination destructive access | **Organisation:** New York credit union (unnamed in public record)
 
-Thompson, a former Amazon Web Services software engineer, exploited a misconfigured Web Application Firewall to perform an SSRF attack against Capital One's AWS EC2 Instance Metadata Service (IMDS), obtaining temporary IAM credentials. She used those credentials to access S3 buckets containing personal data of approximately 106 million customers in the US and Canada. Thompson's prior AWS employment gave her deep familiarity with AWS infrastructure; that familiarity is reasonably inferred to have informed her identification of the specific misconfiguration, though the DOJ indictment does not explicitly attribute the capability to prior employment. [Documented — DOJ indictment and conviction press release [18]; prior employment context established via public record. Classification: external attack.] [Inferred — causal link between prior employment and exploitation method]
+Barile, a former employee at a New York credit union, was terminated on 19 May 2021. Her remote access credentials were not revoked at the time of departure. Two days after termination, on 21 May 2021, she remotely accessed the credit union's file servers without authorisation and deleted approximately 21.3 GB of data — approximately 20,000 files and 3,500 directories — in apparent retaliation. She was charged in June 2021 with intentional damage to a protected computer under the Computer Fraud and Abuse Act (18 U.S.C. § 1030(a)(5)(A)) and subsequently pleaded guilty. [Documented — DOJ USAO SDNY press release, June 2021 [18]]
 
-This case is classified as an external attack; it is included here to illustrate the risk of institutional knowledge persisting after technical access is revoked.
+**Signals present in retrospect:** Post-termination remote authentication using credentials that should have been revoked at departure. Bulk file deletion at scale — 20,000 files and 3,500 directories in a single session — visible in file server and VPN access logs. Temporal pattern: access occurred 48 hours after documented termination date. [Documented — DOJ press release [18]]
 
-**What was missed:** The WAF misconfiguration existed for months undetected. CloudTrail logs captured the SSRF-based credential acquisition and subsequent S3 access but no alerting was configured for that access pattern. Detection came via Thompson's own GitHub post in which she described the data she had obtained. [Documented]
+**What was missed:** Credentials not revoked on termination. No alerting on authentication by a departed employee's account. No real-time alerting on bulk deletion volume in that session. [Inferred from documented facts]
 
-**Key detection lesson:** [Inferred] Institutional knowledge of internal architecture is a risk that persists after technical access is revoked. CloudTrail evidence was present throughout; the missing element was alerting on anomalous credential-origin patterns — specifically, IMDS-derived temporary credentials being used for large-scale S3 data access from an unexpected principal.
+**What triggered detection:** The data loss itself — the credit union discovered the deletion after the fact. Technical controls did not detect the access in real time. [Documented]
+
+**Key detection lesson:** [Inferred] This case follows the same structural failure as Cisco/Ramesh (§3.5): credentials not revoked at departure are an open door. Two independent alerting opportunities existed in real time — a post-termination account authentication and a mass deletion event in the same session — and neither was monitored. The detection gap was not a signal-availability problem; it was a programme-deployment problem. Both signals (post-termination auth, bulk deletion threshold) are Tier 1 controls requiring no machine learning or baseline periods.
 
 ---
 
@@ -417,6 +419,8 @@ Catches USB drives, SD cards, or external hard disks used to stage files for phy
 
 Log source: Windows Security Event 4663 (object access, with SACL configured on sensitive directory paths) correlated with a removable volume path; DLP endpoint agent removable media events; Sysmon Event 11 (FileCreate) where the target path is a removable volume; Windows Event 6416 (new external device recognised by the system).
 
+> **Operational warning — Event 4663 EPS/ingestion cost**: Enabling object access auditing (Event 4663) for file reads on general file shares will immediately destroy a SOC's EPS budget. On a typical enterprise file server handling thousands of concurrent sessions, read-access events generate tens of thousands to hundreds of thousands of events per minute. In SIEM platforms priced by EPS (such as IBM QRadar) this directly translates to licence overrun; in consumption-based platforms (such as Google SecOps / Chronicle) it creates immediate ingestion cost spikes. **SACLs for read auditing must be scoped exclusively to crown-jewel directory paths** — specific directories containing classified data, source code, financial records, or regulated HR data. Write and delete auditing (Events 4660 and 4663 for write/delete operations) generate substantially lower event volumes and can be deployed more broadly, but still require deliberate SACL scoping rather than share-root application.
+
 Detection logic: Alert on file writes to a removable volume by a non-IT user account; escalate when: (a) source files originate from monitored sensitive paths, (b) file count exceeds a threshold in the session (calibrate per role — a starting point is >50 files), or (c) the user is in a departure window flagged by HR. [Inferred]
 
 False positives: IT imaging, authorised offline backup. A device control policy that blocks unauthorised USB by default reduces false positives substantially — the alert then fires only for authorised devices with unusual activity patterns.
@@ -443,9 +447,13 @@ Catches "repository drain" — large-scale file download from document stores, S
 
 Log source: Microsoft 365 UAL operations `FileDownloaded`, `FileSyncDownloadedFull`; GitHub audit log repository clone events; GitLab clone API events; Confluence space export audit. Note: `FolderDownloaded` is not a confirmed standard M365 UAL operation — validate the exact operation names available in your tenant, as they vary by workload, licence tier, and client type.
 
-Detection logic: Alert when a user's daily download event count from SharePoint or OneDrive exceeds their 30-day rolling average by a material threshold (a Z-score ≥ 3 is a commonly used starting point; however, file download counts are typically right-skewed rather than normally distributed, so untransformed Z-score thresholds will underperform for power users and over-alert for low-volume users. Consider log-transforming download counts or using percentile-based thresholds calibrated per role cluster before using Z-score as the primary metric). Additionally, alert on any single-session bulk download exceeding a fixed count threshold (e.g., >500 files) by a non-IT account. Specific thresholds are illustrative and require environment calibration. [Inferred]
+Detection logic: Alert when a user's daily download event count from SharePoint or OneDrive exceeds their 30-day rolling average by a material threshold. Additionally, alert on any single-session bulk download exceeding a fixed count threshold (e.g., >500 files) by a non-IT account. Specific thresholds are illustrative and require environment calibration. [Inferred]
 
-False positives: Legal discovery runs, project migrations, DR tests. Require change tickets for large-scale movements to suppress false positives.
+> **Operational warning — Z-score and right-skewed distributions**: A Z-score ≥ 3 is a commonly cited starting point, but it is mathematically flawed as a standalone threshold for file download counts. Human file-access and download counts are right-skewed, not normally distributed: a small number of power users (developers, data engineers, project leads) generate dramatically higher volumes than the median user. Applying an untransformed Z-score will simultaneously under-alert on power users (whose baseline absorbs large spikes) and over-alert on low-volume users (whose small increase registers as a large standard-deviation event). **Before deploying Z-score alerting, log-transform the download counts or use percentile-based thresholds calibrated per role cluster.** Validate that your threshold produces acceptable alert rates across all role cohorts, not just the median user, before enabling automated queue entries.
+
+> **Operational warning — OneDrive/SharePoint sync client false positive**: When a user provisions a new device, the OneDrive or SharePoint sync client performs a full library resync, generating a burst of `FileDownloaded` and `FileSyncDownloadedFull` events that is volumetrically identical to a repository drain by a malicious actor. A SOC that does not filter automated sync user-agents before enabling download-volume alerting will experience immediate and sustained alert fatigue from this false positive. **Filter events where the `UserAgent` field contains known sync client identifiers** (e.g., `OneDriveMpc-Transform_Sync`, `Microsoft SkyDriveSync`, or equivalent strings for your client version) prior to applying volume thresholds. Consider excluding `FileSyncDownloadedFull` events that are not correlated with any human-interaction signals in the same session.
+
+False positives: Legal discovery runs, project migrations, DR tests, and new device provisioning (see sync client warning above). Require change tickets for large-scale movements to suppress false positives.
 
 ---
 
@@ -473,9 +481,11 @@ Catches activity outside the user's established working-hours baseline.
 
 Log source: IdP sign-in timestamps; file server access timestamps; SaaS audit log timestamps; EDR process execution timestamps; badge-access records (correlate with digital access where available).
 
-Detection logic: Establish a per-user working-hours baseline over a 30–90 day rolling window. Alert when activity occurs materially outside the user's normal distribution AND is combined with: sensitive resource access, bulk data volume, departure status, or privilege use. Time-of-day alone is a weak signal and should not be used as a standalone alert trigger. [Inferred]
+Detection logic: Establish a per-user working-hours baseline over a 30–90 day rolling window. Alert when activity occurs materially outside the user's normal distribution AND is combined with at least one identity-context signal: impossible travel, access from an unmanaged or non-compliant device, conditional access policy failure, MFA anomaly, sensitive resource access, bulk data volume, departure status, or privilege use. Time-of-day alone is a weak signal and must not be used as a standalone alert trigger. [Inferred]
 
 False positives: International travel, time zone changes, on-call rotations, global teams. Correlate with HR calendar to reduce.
+
+Note: In modern asynchronous remote-work environments, time-of-day has become a near-dead standalone signal. An organisation with employees across time zones, flexible work arrangements, or work-from-home policies will have significant legitimate after-hours activity across every cohort. Standalone temporal deviation, even when combined with sensitive resource access, generates high false-positive rates in these environments. After-hours alerting must be paired with identity-context signals to produce actionable alerts; without that pairing it belongs in Tier 3, not Tier 2. [Inferred]
 
 Note: Sophisticated, planned insiders deliberately operate within their own normal working hours to evade temporal detection. After-hours detection has higher value for reactive and opportunistic actors. [Inferred]
 
@@ -486,6 +496,8 @@ Note: Sophisticated, planned insiders deliberately operate within their own norm
 Catches users accessing data, systems, or applications that their peer cohort never or rarely accesses.
 
 Log source: File server access logs (Event 4663 with SACL); SharePoint site audit logs; CRM and ticketing system audit logs; ERP audit logs; database access logs.
+
+> **Operational warning — Event 4663 EPS/ingestion cost**: See the same warning under §4.1 Bulk file copy. The ingestion-budget risk applies here as well: SACLs enabling read-access auditing on broad file share paths will generate unmanageable event volumes in any SIEM deployment. Scope Event 4663 read auditing to crown-jewel paths only. For role-scope detection on general shares, rely on SharePoint site audit logs, CASB, and application-layer audit trails rather than file-system read events.
 
 Detection logic: Build access frequency profiles per resource path per role group. Alert when a user accesses a resource with zero or near-zero access frequency among their peer group, particularly when the access is high-volume, involves sensitive data, or lacks an open ticket or business purpose. [Inferred]
 
@@ -757,11 +769,9 @@ These require moderate configuration, baseline setup, or endpoint agent deployme
 
 - **Departing employee composite rule** — Requires HR departure date integration. Highest single ROI for IP theft category. FP rate: low when HR feed is timely.
 - **Mass deletion alerting** — Requires cloud and file audit configuration; threshold calibration per role.
-- **Bulk repository download anomaly** — Requires M365 UAL + 30-day per-user baseline.
+- **Bulk repository download anomaly** — Requires M365 UAL + 30-day per-user baseline; sync client user-agent filtering required before enablement (see §4.1 warning).
 - **USB/removable media DLP** — Requires endpoint DLP agent deployment.
-- **After-hours access with sensitive resource correlation** — Requires IdP + HR calendar integration.
 - **Logic bomb artefact detection** — Windows Security Event 4698 and WMI-Activity/Operational Event 5861; scope to non-IT accounts.
-- **Print volume monitoring** — Requires deliberate PrintService/Operational log forwarding and 90-day baseline; high FP rate during business cycle peaks.
 
 ---
 
@@ -774,6 +784,8 @@ Require baseline periods, role taxonomy, or HR metadata integration.
 - **Entity risk scoring (UEBA)** — Requires 30-day baseline and ongoing tuning. Low FP rate when HR and role context are integrated. Explicitly required by the Desjardins OPC remediation order.
 - **CI/CD pipeline tampering detection** — Requires source-control audit integration. Low FP rate.
 - **Data staging sequence detection** — Requires correlated process, file, and egress telemetry.
+- **After-hours access with sensitive resource correlation** — Requires IdP + HR calendar integration. In async, remote-work, or multi-timezone environments, time-of-day is a near-dead standalone signal with high FP rates; must be paired with identity-context signals (impossible travel, unmanaged device, conditional access failures, MFA anomaly) before enabling automated alerting. Misclassified as Tier 2 in many reference guides.
+- **Print volume monitoring** — Requires deliberate PrintService/Operational Event 307 forwarding (non-default in most SIEM deployments), a mature endpoint log pipeline, and a per-user, per-application 90-day baseline. FP rate is high during business cycle peaks (board packs, financial close, audit preparation). Not a Tier 2 control despite frequent reference-guide placement; practical deployment complexity and FP burden place it here.
 
 ---
 
@@ -946,7 +958,7 @@ Target outcome: Comprehensive coverage including sophisticated, long-dwell actor
 
 ### What the evidence shows
 
-**Human detection still leads.** CERT's banking-and-finance sector study found 61% of insider incidents were detected by non-security personnel and only 22% by auditing or monitoring procedures [4]. The case studies in §3 — drawn predominantly from technology, government, and defense sectors — are consistent with this directional finding: of the 14 individual incident cases documented in §3.1–3.14 (§3.15 is a CERT pattern set without a specific detection trigger), initial detection came from human observation, external notification, law enforcement referral, or operational failure in the large majority of cases; internal technical monitoring was the primary trigger in at most two to three (Kvashuk, and arguably Twitter/Alzabarah and Yahoo/Ruiz). [Inferred from case records] This is not a statistically representative sample, and the banking-sector percentages should not be read as precise estimates for other industries; however, the pattern is directionally consistent across sectors.
+**Human detection still leads.** CERT's banking-and-finance sector study found 61% of insider incidents were detected by non-security personnel and only 22% by auditing or monitoring procedures [4]. The case studies in §3 — drawn predominantly from technology, government, defense, and financial services sectors — are consistent with this directional finding: of the 14 individual incident cases documented in §3.1–3.14 (§3.15 is a CERT pattern set without a specific detection trigger), initial detection came from human observation, external notification, law enforcement referral, or operational failure in the large majority of cases; internal technical monitoring was the primary trigger in at most two to three (Kvashuk, and arguably Twitter/Alzabarah and Yahoo/Ruiz). [Inferred from case records] This is not a statistically representative sample, and the banking-sector percentages should not be read as precise estimates for other industries; however, the pattern is directionally consistent across sectors.
 
 **Deterministic rules deliver the best ROI.** Post-termination access, audit log clearing, email forwarding rules, and privileged account creation are high-signal, low-noise controls that require minimal tuning. They should be the first investment, not deferred in favour of complex UEBA.
 
@@ -1018,7 +1030,7 @@ The following primary sources are cited in this guide. For DOJ criminal matters,
 
 [17] US Department of Justice, USAO Northern District of California. *United States v. Ahmad Abouammo*. Press release and verdict, 2022. https://www.justice.gov/usao-ndca/pr/former-twitter-employee-found-guilty-acting-agent-foreign-government-kingdom-saudi
 
-[18] US Department of Justice, USAO Western District of Washington. *United States v. Paige A. Thompson*. Press release, 2022. https://www.justice.gov/usao-wdwa/pr/former-seattle-tech-worker-convicted-wire-fraud-computer-intrusion
+[18] US Department of Justice, USAO Southern District of New York. *Former Employee Of New York Credit Union Charged With Unauthorized Computer Access And Intentional Damage To A Protected Computer*. Press release, 2021. https://www.justice.gov/usao-sdny/pr/former-employee-new-york-credit-union-charged-unauthorized-computer-access-and
 
 [19] Mandiant / Google Cloud Security. *M-Trends 2025: Threat Intelligence Report*. 2025. https://cloud.google.com/blog/topics/threat-intelligence/m-trends-2025 *(Landing page and download registration for the full report. Published annually; cited for external attacker dwell-time comparisons and enterprise detection trend context.)*
 
