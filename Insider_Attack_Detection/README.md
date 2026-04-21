@@ -8,6 +8,7 @@
 
 ## Table of Contents
 
+- [Introduction](#introduction)
 1. [Why Insider Detection Is Structurally Harder](#1-why-insider-detection-is-structurally-harder)
 2. [Insider Threat Taxonomy and Kill Chain](#2-insider-threat-taxonomy-and-kill-chain)
 3. [Documented Case Studies](#3-documented-case-studies)
@@ -25,6 +26,25 @@
 8. [Implementation Guidance](#8-implementation-guidance)
 9. [Conclusion and Coverage Gaps](#9-conclusion-and-coverage-gaps)
 10. [References](#10-references)
+
+---
+
+## Introduction
+
+This guide is a technical detection engineering reference for analysts, security architects, and programme leads responsible for detecting malicious insider activity in enterprise environments. Its focus is **operationalisable detection**: every method described identifies a specific log source, event, or telemetry field, and every claim is either grounded in a cited primary source or explicitly labelled [Inferred].
+
+**Scope.** This guide covers malicious insiders — employees, contractors, and privileged users who intentionally cause harm through data theft, sabotage, financial fraud, or espionage. Negligent insiders (accidental data loss, misconfiguration) are not covered; their detection posture differs substantially. Compromised insiders (external attackers operating through a taken-over account) are noted where detection overlaps.
+
+**Evidence base.** Detection claims are grounded primarily in CERT/CMU case research [4], DOJ criminal records and indictments, regulatory findings (OPC PIPEDA, UKSC), and published IR data (Ponemon, Verizon DBIR, Mandiant M-Trends). Fourteen real cases (§3) are analysed for signals present in retrospect, what was missed, and what triggered detection. Where no primary source exists for a detection claim, it is marked [Inferred].
+
+**How to use this guide.**
+
+- **Build a new programme**: start with §8 Implementation Guidance and work backwards into the relevant §4 subsections. The phased approach is structured to deliver maximum ROI first.
+- **Triage an active investigation**: use §3 to pattern-match case type, then §4 for the specific telemetry and logic relevant to your scenario.
+- **Audit an existing programme**: use §5 Detection Priority Matrix to identify gaps and confirm correct tier placement of deployed controls.
+- **Legal and compliance review**: §7 covers monitoring constraints under US law, GDPR, and the Australian Privacy Act.
+
+**What this guide does not provide.** Specific product configuration instructions, vendor-specific SIEM query syntax, production-ready threshold values (these must be calibrated per environment), or legal advice.
 
 ---
 
