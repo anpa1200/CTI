@@ -1,6 +1,8 @@
 # Detecting Malicious Insider Activity: A Technical Detection Engineering Guide
 
-**April 2026**
+**Detection logic, case evidence from 14 documented incidents, and a four-phase implementation programme — covering deterministic rules, behavioural heuristics, UEBA, exfiltration path coverage, and the telemetry required before any of it works.**
+
+By [Andrey Pautov](https://medium.com/@1200km) — April 2026
 
 > **Epistemic labels:** [Documented] = a cited source explicitly states this. [Inferred] = a reasonable analytic conclusion derived from documented facts or established detection engineering practice. Unlabelled claims have consensus support in the cited literature. This guide is not legal advice.
 
