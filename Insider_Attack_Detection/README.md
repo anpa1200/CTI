@@ -108,7 +108,7 @@ The CERT Division's kill chain model identifies the following phases [4]. Phases
 
 **Phase 6 — Post-incident.** Covering tracks, denying involvement. Detection opportunity: log clearing, file timestamp modification, anti-forensic tool execution, physical media destruction.
 
-**Critical observation:** Most technical detection opportunities are concentrated in phases 3–6. Phases 1–2 require non-technical signals. Programmes that rely solely on technical controls miss the early warning window that CERT's data shows is often present weeks or months before the primary harmful act. CERT's sabotage dataset found that 80% of cases showed concerning behaviour beforehand visible to supervisors, and 94% were detected because a system failure or operational irregularity occurred — not by pre-action monitoring [4].
+**Critical observation:** Most technical detection opportunities are concentrated in phases 3–6. Phases 1–2 require non-technical signals. Programmes that rely solely on technical controls miss the early warning window that CERT's data shows is often present weeks or months before the primary harmful act. CERT's sabotage dataset found that 80% of cases showed concerning behaviour beforehand visible to supervisors, and the substantial majority were detected because a system failure or operational irregularity occurred — not by pre-action monitoring [4] (Specific percentage figures vary across CERT editions and study cohorts; see CERT 7th Ed. for the most current figure.).
 
 ---
 
@@ -122,7 +122,7 @@ The following cases are drawn from DOJ press releases, criminal complaints, appe
 
 **Category:** Espionage / mass data exfiltration | **Organisation:** US Army
 
-Manning downloaded approximately 700,000 classified US government documents, diplomatic cables, and battlefield reports from the Secret Internet Protocol Router Network (SIPRNet) over several months, using a rewritable CD. The data was transmitted to WikiLeaks. [Documented — DOJ charging documents, US Army court-martial record]
+Manning downloaded approximately 750,000 classified US government documents, diplomatic cables, and battlefield reports from the Secret Internet Protocol Router Network (SIPRNet) over several months, using a rewritable CD. The data was transmitted to WikiLeaks. [Documented — DOJ charging documents, US Army court-martial record]
 
 **Signals present in retrospect:** Anomalous download volume from SIPRNet. Repeated removable media use on a classified network. Prior reported behavioural and disciplinary concerns that were not escalated to security personnel. [Documented — US Army court-martial record]
 
@@ -154,7 +154,7 @@ Snowden, a system administrator contractor at the NSA, exfiltrated a large volum
 
 **Category:** Sabotage (logic bomb) | **Organisation:** UBS PaineWebber
 
-Duronio, a disgruntled UBS systems administrator who had been denied a bonus, planted malicious code on approximately 1,000 computers and servers across UBS's network, timed to execute the morning after he resigned. The code deleted files, causing more than $3 million in damage and disrupting brokerage operations. Duronio also shorted UBS stock in anticipation of the attack. [Documented — DOJ press release, criminal complaint, sentencing record]
+Duronio, a disgruntled UBS systems administrator who had been denied a bonus, planted malicious code on more than 1,000 computers and servers across UBS's network, timed to execute the morning after he resigned. The code deleted files, causing more than $3 million in damage and disrupting brokerage operations. Duronio also shorted UBS stock in anticipation of the attack. [Documented — DOJ press release, criminal complaint, sentencing record]
 
 **Signals present in retrospect:** Prior grievance and disciplinary history. Unusual scheduling activity on production servers. Scripts placed outside normal change windows. A financial position that would profit from UBS stock decline. [Documented — trial record]
 
@@ -176,7 +176,7 @@ Levandowski, a senior Waymo engineer, downloaded more than 14,000 confidential f
 
 **What was missed:** Heightened monitoring was not triggered for a senior technical engineer in the notice window. No DLP alert on the volume of the bulk download. [Inferred from documented case facts]
 
-**What triggered detection:** A supplier email to Uber that exposed design similarity to Waymo technology. Internal controls did not detect the exfiltration. [Documented]
+**What triggered detection:** During adversarial civil litigation, a Waymo subpoena served on a common LiDAR component supplier produced compelled documentation showing that Uber's LiDAR hardware design replicated Waymo's proprietary circuit board — identified through litigation discovery, not through internal detection controls. [Documented]
 
 **Key detection lesson:** The departure window for senior staff with access to crown-jewel IP requires heightened monitoring. The mass download volume, extended removable media connection, and subsequent laptop reformat were all detectable in endpoint and file-server logs.
 
@@ -210,7 +210,7 @@ Zheng, a GE turbine design engineer, stole proprietary turbine design files over
 
 **What triggered detection:** FBI counterintelligence referral. GE's internal systems did not identify the exfiltration. [Documented]
 
-**Key detection lesson:** Keyword-based DLP fails entirely against steganographic exfiltration. Detection requires either specialised content analysis (statistical anomalies in image payload vs. declared file dimensions) or behavioural controls: long-running relationship between a corporate email account and a personal webmail domain with consistent attachment sending is a detectable pattern even without content inspection.
+**Key detection lesson:** Keyword-based DLP fails entirely against steganographic exfiltration. Detection requires either specialised steganalysis tools that perform statistical analysis of pixel-level distributions (chi-square analysis of least-significant bits, RS analysis, Sample Pair Analysis) or DCT coefficient histogram patterns in JPEG files — capabilities that are not present in any standard commercial DLP product — or behavioural controls: long-running relationship between a corporate email account and a personal webmail domain with consistent attachment sending is a detectable pattern even without content inspection.
 
 ---
 
@@ -387,7 +387,7 @@ Catches covering-tracks activity: clearing Windows Event Logs, disabling cloud a
 
 Log source: Windows Security Event 1102 ("The audit log was cleared" — Security channel); Microsoft-Windows-Eventlog/Operational Event 104 (non-Security log cleared, e.g., System, Application); AWS CloudTrail `StopLogging`, `DeleteTrail`; Azure Diagnostic Settings deletion or Log Analytics workspace deletion; SIEM ingestion health monitoring for unexpected log-source silence.
 
-Detection logic: Alert on any occurrence of Security/1102 or Eventlog/Operational/104 outside a documented maintenance window. Alert on any `StopLogging` or `DeleteTrail` API call — these have near-zero legitimate ad-hoc prevalence on production infrastructure. Alert on any critical log source going silent unexpectedly for more than 15 minutes during business hours. [Inferred]
+Detection logic: Alert on any occurrence of Security/1102 or Eventlog/Operational/104 outside a documented maintenance window. Alert on any `StopLogging` or `DeleteTrail` API call — these have near-zero legitimate ad-hoc prevalence on production infrastructure. Alert on any critical log source going silent unexpectedly for more than 15 minutes during business hours. [Inferred] Log clearing should generate an immediate incident ticket, not a risk score increment within a UEBA framework. It should not be handled via threshold accumulation.
 
 False positives: System reimaging, approved maintenance. Require change ticket correlation to suppress.
 
@@ -439,7 +439,7 @@ Catches "repository drain" — large-scale file download from document stores, S
 
 Log source: Microsoft 365 UAL operations `FileDownloaded`, `FileSyncDownloadedFull`, `FolderDownloaded`; GitHub audit log repository clone events; GitLab clone API events; Confluence space export audit.
 
-Detection logic: Alert when a user's daily download event count from SharePoint or OneDrive exceeds their 30-day rolling average by a material threshold (a Z-score ≥ 3 is a commonly used starting point; calibrate per role). Additionally, alert on any single-session bulk download exceeding a fixed count threshold (e.g., >500 files) by a non-IT account. Specific thresholds are illustrative and require environment calibration. [Inferred]
+Detection logic: Alert when a user's daily download event count from SharePoint or OneDrive exceeds their 30-day rolling average by a material threshold (a Z-score ≥ 3 is a commonly used starting point; however, file download counts are typically right-skewed rather than normally distributed, so untransformed Z-score thresholds will underperform for power users and over-alert for low-volume users. Consider log-transforming download counts or using percentile-based thresholds calibrated per role cluster before using Z-score as the primary metric). Additionally, alert on any single-session bulk download exceeding a fixed count threshold (e.g., >500 files) by a non-IT account. Specific thresholds are illustrative and require environment calibration. [Inferred]
 
 False positives: Legal discovery runs, project migrations, DR tests. Require change tickets for large-scale movements to suppress false positives.
 
@@ -451,23 +451,9 @@ Catches capture of data that cannot be exfiltrated via file copy — an employee
 
 Log source: Sysmon Event 1 / Event 4688 with command-line: `SnippingTool.exe`, `ScreenSketch.exe`, `ShareX.exe`, `Greenshot.exe`, `PSR.exe` (Problem Steps Recorder).
 
-Detection logic: Alert on first-ever execution of known screen capture tools by a user on hosts handling sensitive data. Alert on high-frequency screen capture tool execution during repository access sessions. [Inferred]
+Detection logic: Alert when screen capture tool execution is correlated within a configurable time window with concurrent access to a monitored sensitive directory path. Standalone first-execution alerting on screen capture tools is impractical on most endpoint populations: SnippingTool.exe and ScreenSketch.exe ship with Windows and have significant organic usage that will generate high false-positive volumes without the sensitive-directory correlation as a primary condition. Alert on high-frequency screen capture tool execution during repository access sessions. [Inferred]
 
 False positives: Support desk documentation, training materials. Allowlist expected tools on designated support workstations.
-
----
-
-**Print-volume spikes**
-
-Catches conversion of digital data to paper — bypassing all digital file-movement controls.
-
-Log source: Microsoft-Windows-PrintService/Operational Event 307 ("A document was printed" — includes user, printer, document name, page count, job size); DLP print channel monitor; network print server audit logs.
-
-Detection logic: Alert when a user's daily page count from sensitive applications (HR systems, financial platforms, source code viewers) exceeds their 90-day rolling average by a meaningful multiple. Alert on printing of documents matching DLP classification labels. Specific multiplier thresholds are environment-dependent. [Inferred]
-
-False positives: Board packs, financial close, audit preparation packages. Calibrate per business cycle.
-
-Note: The print vector is under-represented in publicly documented prosecution records. This reflects investigative limitations, not low prevalence. [Inferred]
 
 ---
 
@@ -557,6 +543,20 @@ Detection logic: Alert when a user's unique file access count in a rolling 60-mi
 
 ---
 
+**Print-volume spikes**
+
+Catches conversion of digital data to paper — bypassing all digital file-movement controls.
+
+Log source: Microsoft-Windows-PrintService/Operational Event 307 ("A document was printed" — includes user, printer, document name, page count, job size); DLP print channel monitor; network print server audit logs.
+
+Detection logic: Note: PrintService/Operational log forwarding requires deliberate configuration in most SIEM deployments and is not present by default. Volume-based anomaly alerting on printing requires a per-user, per-application 90-day baseline. False-positive volume is high during business cycle peaks (board packs, financial close, audit preparation). This detection is Tier 2, not Tier 1, despite its appearance in many reference guides. Alert when a user's daily page count from sensitive applications (HR systems, financial platforms, source code viewers) exceeds their 90-day rolling average by a meaningful multiple. Alert on printing of documents matching DLP classification labels. Specific multiplier thresholds are environment-dependent. [Inferred]
+
+False positives: Board packs, financial close, audit preparation packages. Calibrate per business cycle.
+
+Note: The print vector is under-represented in publicly documented prosecution records. This reflects investigative limitations, not low prevalence. [Inferred]
+
+---
+
 ### 4.3 Identity and Privilege Anomalies
 
 ---
@@ -633,7 +633,7 @@ A complete programme must monitor all meaningful exfiltration channels. Email DL
 
 **SaaS upload (Slack, GitHub, Jira, Confluence).** Monitor: SaaS audit logs for file upload and attachment operations; CASB file upload events; GitHub personal access token creation and clone events; OAuth grant events. Key signal: volume of uploads deviating from peer baseline; new OAuth grants to unrecognised applications; long-lived personal access token creation. Primary limitation: SaaS platforms with limited or no native file-operation audit logging; abuse of existing approved integrations. [Inferred]
 
-**Printing.** See §4.1 for log sources and logic. Primary limitation: physical capture of printed output has no technical detection.
+**Printing.** See §4.2 for log sources and logic. Primary limitation: physical capture of printed output has no technical detection.
 
 **Screen capture tools.** See §4.1. Primary limitation: a personal phone aimed at a monitor has no technical detection solution.
 
@@ -669,21 +669,11 @@ UEBA addresses the "authorised but anomalous" problem that deterministic rules c
 
 The most practical bridge between deterministic rules and full ML-based UEBA. Aggregates multiple weak signals into a per-user risk score over a rolling time window.
 
-Implementation: each signal contributes a weighted point value; the composite score triggers an analyst queue entry — not an automated response. The weights below are illustrative examples for programme design discussion; production values must be calibrated to your environment, role distribution, and baseline false-positive tolerance:
-
-- After-hours access to sensitive resources: +5
-- First-time access to a high-sensitivity system: +10
-- Removable media write from a sensitive path: +15
-- Archive creation on a sensitive directory: +10
-- Email forwarding rule to external domain: +25
-- HR departure flag active: +20
-- Peer-group deviation in top percentile: +10
-- Repository download volume materially above baseline: +15
-- Log clearing event: +40 (immediate escalation)
+Each signal should be assigned an ordinal risk tier — LOW, MEDIUM, HIGH, or CRITICAL — based on its prevalence in your environment and its correlation with documented insider behaviour. Treat LOW signals as corroborating evidence only; treat HIGH signals as sufficient to open analyst review when combined with two or more LOW or MEDIUM signals; treat CRITICAL signals as requiring immediate incident response independent of any accumulated score. Representative tier assignments (calibrate before deployment): after-hours access to sensitive resources [LOW]; peer-group deviation in top percentile [LOW]; first-time access to a high-sensitivity system [MEDIUM]; repository download volume materially above baseline [MEDIUM]; removable media write from a sensitive path [HIGH]; email forwarding rule to external domain [HIGH]; HR departure flag active [HIGH]. Remove log clearing from this risk-scoring framework entirely — see §4.7 and §4.1 for log clearing as a deterministic incident trigger.
 
 Score decay: reduce scores that are not reinforced within a defined window (e.g., 7 days). The score should reflect current risk trajectory, not historical events. [Inferred — general UEBA design principle]
 
-Commercial platforms implementing this approach include Microsoft Purview Insider Risk Management, Exabeam, Securonix, Varonis Data Security Platform, and Splunk UBA. Capabilities differ across platforms; evaluate against your specific telemetry sources.
+Commercial platforms implementing this approach include Microsoft Purview Insider Risk Management, Exabeam, Securonix, Varonis Data Security Platform, and Splunk Enterprise Security (with integrated UEBA capabilities). Capabilities differ across platforms; evaluate against your specific telemetry sources.
 
 Limitation: Risk scores require a baseline period (typically 30 days). New and transferred employees generate cold-start false positives. HR role context is essential for suppressing noise — scores without role integration produce unacceptable false-positive rates in most environments.
 
@@ -733,7 +723,7 @@ Covering-tracks activity typically occurs in Phase 6, after the primary harmful 
 
 **PowerShell history deletion.** Sysmon Event 23 (FileDelete, available from Sysmon v7.01 onwards) targeting `%APPDATA%\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt`; PowerShell Script Block Logging Event 4104 for execution of the `Clear-History` cmdlet (requires Script Block Logging enabled via Group Policy). Note: Sysmon Event 11 is FileCreate, not FileDelete — use Event 23 for file deletion detection. Alert on deletion of the history file or execution of `Clear-History`, particularly within a short window of sensitive operations. [Inferred]
 
-**File timestamp manipulation (timestomping).** Sysmon Event 2 (FileCreateTime changed) — fires when a process modifies a file's creation timestamp to differ from the file system's recorded modification time. Alert on any Event 2 occurrence on files in sensitive directories or on archive files. Cross-reference with USN journal entries where available.
+**File timestamp manipulation (timestomping).** Sysmon Event 2 (FileCreateTime changed) — fires when any process programmatically modifies a file's CreationTime attribute. Alert on any Event 2 occurrence on files in sensitive directories or on archive files. Cross-reference with USN journal entries where available.
 
 **Linux audit trail manipulation.** auditd configuration changes (`auditctl -e 0` disabling auditing); deletion or truncation of `/var/log/audit/audit.log`, `/var/log/auth.log`, `/var/log/secure`. Alert on any audit configuration change that reduces logging scope. Forward auditd logs to SIEM via a write-protected pipeline that host-level root access cannot modify — if audit logs exist only on the local host, a privileged insider can destroy the evidence trail entirely.
 
@@ -767,6 +757,7 @@ These require moderate configuration, baseline setup, or endpoint agent deployme
 - **USB/removable media DLP** — Requires endpoint DLP agent deployment.
 - **After-hours access with sensitive resource correlation** — Requires IdP + HR calendar integration.
 - **Logic bomb artefact detection** — Windows Security Event 4698 and WMI-Activity/Operational Event 5861; scope to non-IT accounts.
+- **Print volume monitoring** — Requires deliberate PrintService/Operational log forwarding and 90-day baseline; high FP rate during business cycle peaks.
 
 ---
 
@@ -951,7 +942,7 @@ Target outcome: Comprehensive coverage including sophisticated, long-dwell actor
 
 ### What the evidence shows
 
-**Human detection still leads.** CERT's banking-and-finance sector study found 61% of insider incidents were detected by non-security personnel and only 22% by auditing or monitoring procedures [4]. The case studies in §3 confirm this directionally: Manning, Levandowski, Morrisons, GE/Zheng, Capital One, and the Twitter/Saudi Arabia case were all surfaced by human observation, external notification, or law enforcement referral — not by internal technical controls. Technical controls were more often used for post-detection attribution than as the initial detection trigger.
+**Human detection still leads.** CERT's banking-and-finance sector study found 61% of insider incidents were detected by non-security personnel and only 22% by auditing or monitoring procedures [4]. The case studies in §3 — drawn predominantly from technology, government, and defense sectors — are consistent with this directional finding: in 12 of the 15 documented cases, initial detection came from human observation, external notification, law enforcement referral, or operational failure rather than internal technical monitoring. This is not a statistically representative sample, and the banking-sector percentages should not be read as precise estimates for other industries; however, the pattern is directionally consistent across sectors.
 
 **Deterministic rules deliver the best ROI.** Post-termination access, audit log clearing, email forwarding rules, and privileged account creation are high-signal, low-noise controls that require minimal tuning. They should be the first investment, not deferred in favour of complex UEBA.
 
