@@ -37,7 +37,7 @@ This guide is a technical detection engineering reference for analysts, security
 
 **Scope.** This guide covers malicious insiders — employees, contractors, and privileged users who intentionally cause harm through data theft, sabotage, financial fraud, or espionage. Negligent insiders (accidental data loss, misconfiguration) are not covered; their detection posture differs substantially. Compromised insiders (external attackers operating through a taken-over account) are noted where detection overlaps.
 
-**Evidence base.** Detection claims are grounded primarily in CERT/CMU case research [[4]](https://resources.sei.cmu.edu/library/asset-view.cfm?assetid=552459), DOJ criminal records and indictments, regulatory findings (OPC PIPEDA, UKSC), and published IR data (Ponemon, Verizon DBIR, Mandiant M-Trends). Fourteen real cases (§3) are analysed for signals present in retrospect, what was missed, and what triggered detection. Where no primary source exists for a detection claim, it is marked [Inferred].
+**Evidence base.** Detection claims are grounded primarily in CERT/CMU case research [[4]](https://www.sei.cmu.edu/library/common-sense-guide-to-mitigating-insider-threats-seventh-edition/), DOJ criminal records and indictments, regulatory findings (OPC PIPEDA, UKSC), and published IR data (Ponemon, Verizon DBIR, Mandiant M-Trends). Fourteen real cases (§3) are analysed for signals present in retrospect, what was missed, and what triggered detection. Where no primary source exists for a detection claim, it is marked [Inferred].
 
 **How to use this guide.**
 
@@ -67,13 +67,13 @@ External attacker detection relies on the contrast between attacker behaviour an
 
 **Statistical context**
 
-The CERT/CMU Insider Threat Center has documented more than 1,500 cases across its research programme (as stated in the 7th edition [[4]](https://resources.sei.cmu.edu/library/asset-view.cfm?assetid=552459); the database continues to grow), spanning IT sabotage, IP theft, fraud, and espionage categories. These cases form the empirical foundation for the detection patterns in this guide.
+The CERT/CMU Insider Threat Center has documented more than 1,500 cases across its research programme (as stated in the 7th edition [[4]](https://www.sei.cmu.edu/library/common-sense-guide-to-mitigating-insider-threats-seventh-edition/); the database continues to grow), spanning IT sabotage, IP theft, fraud, and espionage categories. These cases form the empirical foundation for the detection patterns in this guide.
 
 Several industry surveys track insider incident metrics across wider populations. The Cybersecurity Insiders annual Insider Threat Report [[1]](https://www.cybersecurity-insiders.com/portfolio/insider-threat-report/) and the Verizon Data Breach Investigations Report [[2]](https://www.verizon.com/business/resources/reports/dbir/) provide broader cross-industry context; the DBIR's "internal actor" category encompasses both malicious insiders and negligent human error and should not be read as a measure of malicious insider prevalence alone [[2]](https://www.verizon.com/business/resources/reports/dbir/).
 
-On detection method: the CERT/USSS banking-and-finance sector study found that 61% of insider incidents were detected by people not responsible for security, and only 22% were caught by auditing or monitoring procedures. Logs were used for attribution in 74% of cases where the insider's identity was eventually established — meaning logs are most often a forensic tool rather than a detection trigger [[4]](https://resources.sei.cmu.edu/library/asset-view.cfm?assetid=552459). This finding is specific to the banking and finance sector and may not generalise precisely to all industries, but the directional pattern is consistent with findings across CERT's broader case database.
+On detection method: the CERT/USSS banking-and-finance sector study found that 61% of insider incidents were detected by people not responsible for security, and only 22% were caught by auditing or monitoring procedures. Logs were used for attribution in 74% of cases where the insider's identity was eventually established — meaning logs are most often a forensic tool rather than a detection trigger [[4]](https://www.sei.cmu.edu/library/common-sense-guide-to-mitigating-insider-threats-seventh-edition/). This finding is specific to the banking and finance sector and may not generalise precisely to all industries, but the directional pattern is consistent with findings across CERT's broader case database.
 
-On incident containment: the 2023 Ponemon Cost of Insider Risks Global Report found that organisations took an average of 86 days to contain an insider incident [[3]](https://www.dtexsystems.com/resource/2023-insider-risk-report/). This figure covers the full lifecycle from initial identification to containment, not dwell time before first detection.
+On incident containment: the 2023 Ponemon Cost of Insider Risks Global Report found that organisations took an average of 86 days to contain an insider incident [[3]](https://ponemonsullivanreport.com/2023/10/cost-of-insider-risks-global-report-2023/). This figure covers the full lifecycle from initial identification to containment, not dwell time before first detection.
 
 **The detection paradox**
 
@@ -93,7 +93,7 @@ The Desjardins regulatory findings are the most explicit documentation of this f
 
 **Privileged users versus standard employees**
 
-Detection differs materially by user type. CERT's sabotage research found that most sabotage insiders held technical or privileged roles and that administrator access was common [[4]](https://resources.sei.cmu.edu/library/asset-view.cfm?assetid=552459). These users can create persistence, alter logs, destroy backups, or make destructive changes that look like normal administration unless control-plane actions are monitored separately. Standard employees are more often detected through repository-drain patterns, role-scope deviations, departure-linked volume spikes, and human observation.
+Detection differs materially by user type. CERT's sabotage research found that most sabotage insiders held technical or privileged roles and that administrator access was common [[4]](https://www.sei.cmu.edu/library/common-sense-guide-to-mitigating-insider-threats-seventh-edition/). These users can create persistence, alter logs, destroy backups, or make destructive changes that look like normal administration unless control-plane actions are monitored separately. Standard employees are more often detected through repository-drain patterns, role-scope deviations, departure-linked volume spikes, and human observation.
 
 ---
 
@@ -101,7 +101,7 @@ Detection differs materially by user type. CERT's sabotage research found that m
 
 ### 2.1 Threat Categories
 
-The CERT/CMU Division classifies insider threats across three primary types, based on analysis of more than 1,500 documented cases [[4]](https://resources.sei.cmu.edu/library/asset-view.cfm?assetid=552459):
+The CERT/CMU Division classifies insider threats across three primary types, based on analysis of more than 1,500 documented cases [[4]](https://www.sei.cmu.edu/library/common-sense-guide-to-mitigating-insider-threats-seventh-edition/):
 
 **Malicious Insider** — intentional harmful action for personal gain, revenge, ideology, or coercion. Subdivided by goal:
 
@@ -114,11 +114,11 @@ The CERT/CMU Division classifies insider threats across three primary types, bas
 
 **Compromised Insider** — a legitimate account taken over by an external attacker. Detection overlaps with insider methods but the attacker profile and motivation differ. Distinguished where relevant below.
 
-**Departing Employee** — the 30–90 day window around resignation or termination is consistently the highest-risk period across CERT case data [[4]](https://resources.sei.cmu.edu/library/asset-view.cfm?assetid=552459). Behaviour patterns shift: unusual access hours, access to data outside current role, bulk downloads, and data staging.
+**Departing Employee** — the 30–90 day window around resignation or termination is consistently the highest-risk period across CERT case data [[4]](https://www.sei.cmu.edu/library/common-sense-guide-to-mitigating-insider-threats-seventh-edition/). Behaviour patterns shift: unusual access hours, access to data outside current role, bulk downloads, and data staging.
 
 ### 2.2 The CMU SEI Insider Threat Kill Chain
 
-The CERT Division's kill chain model identifies the following phases [[4]](https://resources.sei.cmu.edu/library/asset-view.cfm?assetid=552459). Phases are not strictly sequential and some may be skipped:
+The CERT Division's kill chain model identifies the following phases [[4]](https://www.sei.cmu.edu/library/common-sense-guide-to-mitigating-insider-threats-seventh-edition/). Phases are not strictly sequential and some may be skipped:
 
 **Phase 1 — Predisposition.** Pre-existing psychological, financial, or ideological factors that create susceptibility. Not technically observable. Requires HR, management, and peer awareness.
 
@@ -132,7 +132,7 @@ The CERT Division's kill chain model identifies the following phases [[4]](https
 
 **Phase 6 — Post-incident.** Covering tracks, denying involvement. Detection opportunity: log clearing, file timestamp modification, anti-forensic tool execution, physical media destruction.
 
-**Critical observation:** Most technical detection opportunities are concentrated in phases 3–6. Phases 1–2 require non-technical signals. Programmes that rely solely on technical controls miss the early warning window that CERT's data shows is often present weeks or months before the primary harmful act. CERT's sabotage dataset found that 80% of cases showed concerning behaviour beforehand visible to supervisors, and the substantial majority were detected because a system failure or operational irregularity occurred — not by pre-action monitoring [[4]](https://resources.sei.cmu.edu/library/asset-view.cfm?assetid=552459) (Specific percentage figures vary across CERT editions and study cohorts; see CERT 7th Ed. for the most current figure.).
+**Critical observation:** Most technical detection opportunities are concentrated in phases 3–6. Phases 1–2 require non-technical signals. Programmes that rely solely on technical controls miss the early warning window that CERT's data shows is often present weeks or months before the primary harmful act. CERT's sabotage dataset found that 80% of cases showed concerning behaviour beforehand visible to supervisors, and the substantial majority were detected because a system failure or operational irregularity occurred — not by pre-action monitoring [[4]](https://www.sei.cmu.edu/library/common-sense-guide-to-mitigating-insider-threats-seventh-edition/) (Specific percentage figures vary across CERT editions and study cohorts; see CERT 7th Ed. for the most current figure.).
 
 ---
 
@@ -182,7 +182,7 @@ Duronio, a disgruntled UBS systems administrator who had been denied a bonus, pl
 
 **Signals present in retrospect:** Prior grievance and disciplinary history. Unusual scheduling activity on production servers. Scripts placed outside normal change windows. A financial position that would profit from UBS stock decline. [Documented — trial record]
 
-**What was missed:** Admin-action auditing that would have detected unusual scheduled task or script creation outside a change window by a non-IT-automation account. Pre-trigger behavioural monitoring. CERT's sabotage data shows 80% of sabotage cases displayed concerning behaviour beforehand visible to management [[4]](https://resources.sei.cmu.edu/library/asset-view.cfm?assetid=552459).
+**What was missed:** Admin-action auditing that would have detected unusual scheduled task or script creation outside a change window by a non-IT-automation account. Pre-trigger behavioural monitoring. CERT's sabotage data shows 80% of sabotage cases displayed concerning behaviour beforehand visible to management [[4]](https://www.sei.cmu.edu/library/common-sense-guide-to-mitigating-insider-threats-seventh-edition/).
 
 **What triggered detection:** The destructive execution of the code — a system failure event — triggered investigation and forensic attribution. [Documented]
 
@@ -326,7 +326,7 @@ Two former Tesla employees leaked approximately 100 GB of confidential data — 
 
 **What triggered detection:** Handelsblatt contacted Tesla before publication. Tesla's investigation identified the former employees via access logs. [Documented]
 
-**Key detection lesson:** [Documented — CERT/CMU [[4]](https://resources.sei.cmu.edu/library/asset-view.cfm?assetid=552459)] CERT data indicates that in studied IP-theft cases, the last-confirmed harmful act occurred disproportionately in the period leading up to or shortly following departure. The exact percentage varies across CERT study cohorts and editions; consult [[4]](https://resources.sei.cmu.edu/library/asset-view.cfm?assetid=552459) for the most current figure. [Inferred] Volume monitoring on data exports should be specifically heightened during the departure window. Access to data outside current role scope during this window should generate alerts regardless of volume.
+**Key detection lesson:** [Documented — CERT/CMU [[4]](https://www.sei.cmu.edu/library/common-sense-guide-to-mitigating-insider-threats-seventh-edition/)] CERT data indicates that in studied IP-theft cases, the last-confirmed harmful act occurred disproportionately in the period leading up to or shortly following departure. The exact percentage varies across CERT study cohorts and editions; consult [[4]](https://www.sei.cmu.edu/library/common-sense-guide-to-mitigating-insider-threats-seventh-edition/) for the most current figure. [Inferred] Volume monitoring on data exports should be specifically heightened during the departure window. Access to data outside current role scope during this window should generate alerts regardless of volume.
 
 ---
 
@@ -364,7 +364,7 @@ Barile, a former employee at a New York credit union, was terminated on 19 May 2
 
 ### 3.15 CERT Financial Fraud Operational Patterns
 
-**Category:** Financial fraud | **Source:** CERT/CMU Common Sense Guide to Mitigating Insider Threats, 7th Ed. [[4]](https://resources.sei.cmu.edu/library/asset-view.cfm?assetid=552459)
+**Category:** Financial fraud | **Source:** CERT/CMU Common Sense Guide to Mitigating Insider Threats, 7th Ed. [[4]](https://www.sei.cmu.edu/library/common-sense-guide-to-mitigating-insider-threats-seventh-edition/)
 
 CERT's case database documents recurring fraud patterns in the financial and broader commercial sector:
 
@@ -377,7 +377,7 @@ CERT's case database documents recurring fraud patterns in the financial and bro
 
 CERT's banking-and-finance sector study found that 61% of cases were detected by non-security personnel, 22% by auditing or monitoring, and logs were used for attribution in 74% of cases where the insider's identity was established. [Documented — CERT/CMU]
 
-**Key detection lesson:** [Inferred from CERT case patterns [[4]](https://resources.sei.cmu.edu/library/asset-view.cfm?assetid=552459)] Financial fraud detection is primarily a business process control problem — segregation of duties, dual approval, payment integrity verification — not a network or endpoint security problem. SIEM-based detection for this category requires integration with ERP audit logs (SAP, Oracle, Workday) and transaction metadata, not just authentication events.
+**Key detection lesson:** [Inferred from CERT case patterns [[4]](https://www.sei.cmu.edu/library/common-sense-guide-to-mitigating-insider-threats-seventh-edition/)] Financial fraud detection is primarily a business process control problem — segregation of duties, dual approval, payment integrity verification — not a network or endpoint security problem. SIEM-based detection for this category requires integration with ERP audit logs (SAP, Oracle, Workday) and transaction metadata, not just authentication events.
 
 ---
 
@@ -559,7 +559,7 @@ Real cases: Levandowski — repository access followed by extended removable med
 
 **Departing employee volume spike**
 
-Catches bulk data staging in the departure window, which CERT data consistently identifies as the highest-risk period across IP-theft cases [[4]](https://resources.sei.cmu.edu/library/asset-view.cfm?assetid=552459). The exact percentage varies across CERT study cohorts and editions; consult [[4]](https://resources.sei.cmu.edu/library/asset-view.cfm?assetid=552459) for the most current figure.
+Catches bulk data staging in the departure window, which CERT data consistently identifies as the highest-risk period across IP-theft cases [[4]](https://www.sei.cmu.edu/library/common-sense-guide-to-mitigating-insider-threats-seventh-edition/). The exact percentage varies across CERT study cohorts and editions; consult [[4]](https://www.sei.cmu.edu/library/common-sense-guide-to-mitigating-insider-threats-seventh-edition/) for the most current figure.
 
 Log source: HR departure date flag (must reach SIEM within hours of resignation); download event counts; DLP events; removable media events; first-time repository access events.
 
@@ -877,7 +877,7 @@ The Electronic Communications Privacy Act (ECPA) and the Computer Fraud and Abus
 
 An employee's expectation of privacy on corporate devices is reduced — though not eliminated — when: a clear Acceptable Use Policy (AUP) has been communicated, the monitoring is of work systems for stated business purposes, and the policy has been acknowledged in writing. [Inferred from case law; ODNI NITTF guidance [[21]](https://www.dni.gov/files/NCSC/documents/nittf/NITTF_Insider_Threat_Program_Maturity_Framework.pdf) provides operational framing]
 
-The NLRB has issued guidance indicating that overly broad monitoring policies that could reasonably be read to prohibit or chill employees' rights to discuss working conditions may be unlawful under the National Labor Relations Act. Consult current NLRB General Counsel guidance for the most recent position, as it can change between administrations. [Documented — NLRB GC 23-02 [[25]](https://www.nlrb.gov/news-outreach/news-story/nlrb-general-counsel-issues-memo-on-electronic-monitoring)]
+The NLRB has issued guidance indicating that overly broad monitoring policies that could reasonably be read to prohibit or chill employees' rights to discuss working conditions may be unlawful under the National Labor Relations Act. Consult current NLRB General Counsel guidance for the most recent position, as it changes between administrations. GC 23-02 was explicitly rescinded in February 2025 by Acting General Counsel Cowen via GC 25-05. [[25]](#ref-25)
 
 CERT's Common Sense Guide adds an operational boundary: do not monitor privileged personal communications (e.g., employee communications with doctors or attorneys); do not target protected disclosures or whistleblower-protected reports through the insider threat programme. [Documented — CERT/CMU 7th ed.]
 
@@ -897,7 +897,7 @@ Works council or employee representative consultation is required in many EU mem
 
 **Australia (Privacy Act 1988)**
 
-The Privacy Act 1988 currently applies to organisations with annual turnover exceeding AUD 3 million and to all Commonwealth agencies. Note: the Privacy Act Review (2022) recommended expanding coverage to smaller organisations; verify current threshold applicability against the OAIC's published guidance, as the legislative position may have changed. [Documented — Privacy Act 1988; OAIC [[23]](https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/workplace-privacy/employee-records-exemption)]
+The Privacy Act 1988 currently applies to organisations with annual turnover exceeding AUD 3 million and to all Commonwealth agencies. Note: the Privacy Act Review (2022) recommended expanding coverage to smaller organisations; verify current threshold applicability against the OAIC's published guidance, as the legislative position may have changed. [Documented — Privacy Act 1988; OAIC [[23]](https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/organisations/employee-records-exemption)]
 
 The employee records exemption means that personal information held by private-sector employers in employment records, handled for direct employment-related purposes, is exempt from the Privacy Act's requirements. Monitoring activities extending beyond HR purposes (content monitoring, communications surveillance) may fall under state and territory workplace surveillance legislation, which varies (e.g., New South Wales Workplace Surveillance Act 2005). [Documented — OAIC guidance]
 
@@ -980,13 +980,13 @@ Target outcome: Comprehensive coverage including sophisticated, long-dwell actor
 
 ### What the evidence shows
 
-**Human detection still leads.** CERT's banking-and-finance sector study found 61% of insider incidents were detected by non-security personnel and only 22% by auditing or monitoring procedures [[4]](https://resources.sei.cmu.edu/library/asset-view.cfm?assetid=552459). The case studies in §3 — drawn predominantly from technology, government, defense, and financial services sectors — are consistent with this directional finding: of the 14 individual incident cases documented in §3.1–3.14 (§3.15 is a CERT pattern set without a specific detection trigger), initial detection came from human observation, external notification, law enforcement referral, or operational failure in the large majority of cases; internal technical monitoring was the primary trigger in at most two to three (Kvashuk, and arguably Twitter/Alzabarah and Yahoo/Ruiz). [Inferred from case records] This is not a statistically representative sample, and the banking-sector percentages should not be read as precise estimates for other industries; however, the pattern is directionally consistent across sectors.
+**Human detection still leads.** CERT's banking-and-finance sector study found 61% of insider incidents were detected by non-security personnel and only 22% by auditing or monitoring procedures [[4]](https://www.sei.cmu.edu/library/common-sense-guide-to-mitigating-insider-threats-seventh-edition/). The case studies in §3 — drawn predominantly from technology, government, defense, and financial services sectors — are consistent with this directional finding: of the 14 individual incident cases documented in §3.1–3.14 (§3.15 is a CERT pattern set without a specific detection trigger), initial detection came from human observation, external notification, law enforcement referral, or operational failure in the large majority of cases; internal technical monitoring was the primary trigger in at most two to three (Kvashuk, and arguably Twitter/Alzabarah and Yahoo/Ruiz). [Inferred from case records] This is not a statistically representative sample, and the banking-sector percentages should not be read as precise estimates for other industries; however, the pattern is directionally consistent across sectors.
 
 **Deterministic rules deliver the best ROI.** Post-termination access, audit log clearing, email forwarding rules, and privileged account creation are high-signal, low-noise controls that require minimal tuning. They should be the first investment, not deferred in favour of complex UEBA.
 
 **DLP is necessary but routinely insufficient.** The case evidence consistently shows DLP failing against: steganographic encoding (GE/Zheng), physical exfiltration (Manning), sub-threshold transfers over extended periods (Desjardins), and channels outside DLP scope (personal cloud sync, SaaS uploads, physical capture). A DLP-only programme misses a majority of documented exfiltration methods.
 
-**Dwell time is the central operational problem.** The Desjardins insider operated for at least 26 months undetected. Zheng's conduct spanned more than a decade before a counterintelligence referral. The 2023 Ponemon Cost of Insider Risks Global Report found an average of 86 days to contain an insider incident after identification [[3]](https://www.dtexsystems.com/resource/2023-insider-risk-report/). Detection programmes must account for long-dwell scenarios, require adequate log retention, and must not rely exclusively on volume thresholds. For comparison with external attacker dwell-time trends, see Mandiant's M-Trends 2025 annual report [[19]](https://cloud.google.com/blog/topics/threat-intelligence/m-trends-2025).
+**Dwell time is the central operational problem.** The Desjardins insider operated for at least 26 months undetected. Zheng's conduct spanned more than a decade before a counterintelligence referral. The 2023 Ponemon Cost of Insider Risks Global Report found an average of 86 days to contain an insider incident after identification [[3]](https://ponemonsullivanreport.com/2023/10/cost-of-insider-risks-global-report-2023/). Detection programmes must account for long-dwell scenarios, require adequate log retention, and must not rely exclusively on volume thresholds. For comparison with external attacker dwell-time trends, see Mandiant's M-Trends 2025 annual report [[19]](https://cloud.google.com/blog/topics/threat-intelligence/m-trends-2025).
 
 **Privileged users are the highest-risk category.** Sysadmins, DBAs, DevOps engineers, cloud admins, and security team members can operate below alert thresholds precisely because they understand the monitoring. This category requires: PAM with session recording, a logging pipeline they cannot access or modify, need-to-know enforcement beyond their administrative role, and tighter change-window controls for their actions.
 
@@ -1018,9 +1018,9 @@ The following primary sources are cited in this guide. For DOJ criminal matters,
 <a id="ref-2"></a>[[2]](https://www.verizon.com/business/resources/reports/dbir/) Verizon. *2025 Data Breach Investigations Report*. 2025. https://www.verizon.com/business/resources/reports/dbir/
 *(DBIR "internal actor" category includes both malicious insiders and negligent human error. Not all internal-actor incidents represent malicious insider cases.)*
 
-<a id="ref-3"></a>[[3]](https://www.dtexsystems.com/resource/2023-insider-risk-report/) Ponemon Institute / DTEX Systems. *2023 Cost of Insider Risks Global Report*. 2023. https://www.dtexsystems.com/resource/2023-insider-risk-report/ *(Sponsored research; available via DTEX Systems' resources page — confirm the URL is current. Self-selected survey methodology; reported figures reflect participating organisations only.)*
+<a id="ref-3"></a>[[3]](https://ponemonsullivanreport.com/2023/10/cost-of-insider-risks-global-report-2023/) Ponemon Institute / DTEX Systems. *2023 Cost of Insider Risks Global Report*. 2023. https://www.dtexsystems.com/resource/2023-insider-risk-report/ *(Sponsored research; available via DTEX Systems' resources page — confirm the URL is current. Self-selected survey methodology; reported figures reflect participating organisations only.)*
 
-<a id="ref-4"></a>[[4]](https://resources.sei.cmu.edu/library/asset-view.cfm?assetid=552459) Carnegie Mellon University SEI CERT Division. *Common Sense Guide to Mitigating Insider Threats, Seventh Edition*. 2022. https://resources.sei.cmu.edu/library/asset-view.cfm?assetid=552459
+<a id="ref-4"></a>[[4]](https://www.sei.cmu.edu/library/common-sense-guide-to-mitigating-insider-threats-seventh-edition/) Carnegie Mellon University SEI CERT Division. *Common Sense Guide to Mitigating Insider Threats, Seventh Edition*. 2022. https://resources.sei.cmu.edu/library/asset-view.cfm?assetid=552459
 *(Primary source for CERT case statistics, taxonomy, kill chain model, and sector study statistics cited throughout this guide.)*
 
 <a id="ref-5"></a>[[5]](#ref-5) US Army / DOJ. *United States v. Bradley (Chelsea) Manning*. Court-martial record, 2013. Manning v. United States, subsequent legal proceedings.
@@ -1031,17 +1031,17 @@ The following primary sources are cited in this guide. For DOJ criminal matters,
 
 <a id="ref-7"></a>[[7]](https://www.justice.gov/usao-ndca/pr/former-cisco-engineer-sentenced-two-years-federal-prison-intentionally-damaging) US Department of Justice, USAO Northern District of California. *United States v. Sudhish Kasaba Ramesh*. Press release, 2020. https://www.justice.gov/usao-ndca/pr/former-cisco-engineer-sentenced-two-years-federal-prison-intentionally-damaging
 
-<a id="ref-8"></a>[[8]](https://www.justice.gov/opa/pr/ge-engineer-and-chinese-businessman-charged-economic-espionage-and-theft-trade-secrets) US Department of Justice. *United States v. Xiaoqing Zheng*. Indictment, 2019; Conviction press release, 2023. https://www.justice.gov/opa/pr/ge-engineer-and-chinese-businessman-charged-economic-espionage-and-theft-trade-secrets
+<a id="ref-8"></a>[[8]](https://www.justice.gov/archives/opa/pr/former-ge-power-engineer-convicted-conspiracy-commit-economic-espionage) US Department of Justice. *United States v. Xiaoqing Zheng*. Indictment, 2019; Conviction press release, 2023. https://www.justice.gov/opa/pr/ge-engineer-and-chinese-businessman-charged-economic-espionage-and-theft-trade-secrets
 
 <a id="ref-9"></a>[[9]](https://www.justice.gov/usao-sdny/pr/former-employee-ubiquiti-sentenced-six-years-prison-stealing-confidential-data-and) US Department of Justice, SDNY. *United States v. Nickolas Sharp*. Press release, 2023. https://www.justice.gov/usao-sdny/pr/former-employee-ubiquiti-sentenced-six-years-prison-stealing-confidential-data-and
 
 <a id="ref-10"></a>[[10]](#ref-10) Tesla, Inc. v. Tripp and related proceedings; Handelsblatt reporting, 2023. *(Primary legal filings are the authoritative source; Handelsblatt and Tesla legal disclosures are cited as secondary sources in the absence of a consolidated public primary document.)*
 
-<a id="ref-11"></a>[[11]](https://www.justice.gov/archive/usao/nj/Press/files/pdffiles/Duroniosen.pdf) US Department of Justice, USAO District of New Jersey. *United States v. Roger Duronio*. Press release and sentencing documents, 2006. https://www.justice.gov/archive/usao/nj/Press/files/pdffiles/Duroniosen.pdf
+<a id="ref-11"></a>[[11]](https://www.justice.gov/archive/usao/nj/Press/files/pdffiles/Older/duro1213rel.pdf) US Department of Justice, USAO District of New Jersey. *United States v. Roger Duronio*. Press release and sentencing documents, 2006. https://www.justice.gov/archive/usao/nj/Press/files/pdffiles/Duroniosen.pdf
 
 <a id="ref-12"></a>[[12]](https://www.justice.gov/usao-ndca/pr/google-self-driving-car-engineer-pleads-guilty-federal-trade-secret-theft-charges) US Department of Justice, USAO Northern District of California. *United States v. Anthony Scott Levandowski*. Press release, 2020. https://www.justice.gov/usao-ndca/pr/google-self-driving-car-engineer-pleads-guilty-federal-trade-secret-theft-charges
 
-<a id="ref-13"></a>[[13]](https://www.supremecourt.uk/cases/uksc-2018-0090.html) UK Supreme Court. *Wm Morrison Supermarkets plc v Various Claimants* [2020] UKSC 12. https://www.supremecourt.uk/cases/uksc-2018-0090.html
+<a id="ref-13"></a>[[13]](https://www.supremecourt.uk/cases/uksc-2018-0213) UK Supreme Court. *Wm Morrison Supermarkets plc v Various Claimants* [2020] UKSC 12. https://www.supremecourt.uk/cases/uksc-2018-0090.html
 *(The Supreme Court reversed Court of Appeal findings of vicarious liability and held Morrisons was NOT vicariously liable.)*
 
 <a id="ref-14"></a>[[14]](https://www.justice.gov/usao-ndca/pr/former-yahoo-employee-pleads-guilty-computer-intrusion) US Department of Justice, USAO Northern District of California. *United States v. Reyes Daniel Ruiz*. Press release, 2019. https://www.justice.gov/usao-ndca/pr/former-yahoo-employee-pleads-guilty-computer-intrusion
@@ -1056,14 +1056,14 @@ The following primary sources are cited in this guide. For DOJ criminal matters,
 
 <a id="ref-19"></a>[[19]](https://cloud.google.com/blog/topics/threat-intelligence/m-trends-2025) Mandiant / Google Cloud Security. *M-Trends 2025: Threat Intelligence Report*. 2025. https://cloud.google.com/blog/topics/threat-intelligence/m-trends-2025 *(Landing page and download registration for the full report. Published annually; cited for external attacker dwell-time comparisons and enterprise detection trend context.)*
 
-<a id="ref-20"></a>[[20]](https://www.cisa.gov/resources-tools/resources/insider-threat-mitigation-guide) CISA. *Insider Threat Mitigation Guide*. 2020. https://www.cisa.gov/resources-tools/resources/insider-threat-mitigation-guide
+<a id="ref-20"></a>[[20]](https://web.archive.org/web/20230330112310/https://www.cisa.gov/sites/default/files/2022-11/Insider%20Threat%20Mitigation%20Guide_Final_508.pdf) CISA. *Insider Threat Mitigation Guide*. 2020. https://www.cisa.gov/resources-tools/resources/insider-threat-mitigation-guide
 
 <a id="ref-21"></a>[[21]](https://www.dni.gov/files/NCSC/documents/nittf/NITTF_Insider_Threat_Program_Maturity_Framework.pdf) ODNI National Insider Threat Task Force. *Insider Threat Program Maturity Framework*. 2018. https://www.dni.gov/files/NCSC/documents/nittf/NITTF_Insider_Threat_Program_Maturity_Framework.pdf *(Operational guidance framework for US government programmes; referenced for monitoring boundary guidance, not as legal authority.)*
 
 <a id="ref-22"></a>[[22]](https://gdpr-info.eu/) European Data Protection Board / Official GDPR text. Articles 6, 13, 35. https://gdpr-info.eu/
 
-<a id="ref-23"></a>[[23]](https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/workplace-privacy/employee-records-exemption) Office of the Australian Information Commissioner. *Employee Records Exemption*. https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/workplace-privacy/employee-records-exemption
+<a id="ref-23"></a>[[23]](https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/organisations/employee-records-exemption) Office of the Australian Information Commissioner. *Employee Records Exemption*. https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/workplace-privacy/employee-records-exemption
 
 <a id="ref-24"></a>[[24]](https://www.fireeye.com/blog/threat-research/2020/12/sunburst-additional-technical-details.html) Mandiant (formerly FireEye). *SUNBURST Additional Technical Details*. December 2020. https://www.fireeye.com/blog/threat-research/2020/12/sunburst-additional-technical-details.html *(Original publication URL; archived at the Internet Archive Wayback Machine as the fireeye.com domain was retired following the FireEye → Mandiant → Google Cloud rebrand sequence. Cited for the documented use of a low-entropy subdomain DGA in the C2 channel, which evades DNS entropy-based detection heuristics.)*
 
-<a id="ref-25"></a>[[25]](https://www.nlrb.gov/news-outreach/news-story/nlrb-general-counsel-issues-memo-on-electronic-monitoring) National Labor Relations Board, Office of the General Counsel. *Electronic Monitoring and Algorithmic Management of Employees That Implicates the National Labor Relations Act*. GC 23-02. October 2022. https://www.nlrb.gov/news-outreach/news-story/nlrb-general-counsel-issues-memo-on-electronic-monitoring *(GC memos reflect the position of the General Counsel, not binding NLRB precedent; consult current guidance as positions may change.)*
+<a id="ref-25"></a>[[25]](#ref-25) National Labor Relations Board, Office of the General Counsel. *Electronic Monitoring and Algorithmic Management of Employees That Implicates the National Labor Relations Act*. GC 23-02. October 2022. https://www.nlrb.gov/news-outreach/news-story/nlrb-general-counsel-issues-memo-on-electronic-monitoring *(GC memos reflect the position of the General Counsel, not binding NLRB precedent. Note: GC 23-02 was rescinded in February 2025 by Acting GC Cowen via GC 25-05. The memo is cited as a documented point-in-time position on electronic monitoring; it no longer reflects current NLRB GC guidance.)*
