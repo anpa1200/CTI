@@ -63,66 +63,2934 @@
     <p>Author: <a href="https://medium.com/@1200km">Andrey Pautov</a>. <a href="https://medium.com/@1200km/att-ck-as-a-working-tool-theory-and-hands-on-practical-usage-d63835c9f101">Published on Medium</a></p>
   </header>
   <h1 id="attck-as-a-working-tool-theory-and-hands-on-practical-usage">ATT&amp;CK as a Working Tool: Theory and Hands-On Practical Usage</h1>
-<p><strong>A practitioner's guide for CTI analysts, detection engineers, and threat hunters.</strong><br />
-By <a href="https://medium.com/@1200km">Andrey Pautov</a> — March 2026 · 64 min read</p>
+<p>By <a href="https://medium.com/@1200km">Andrey Pautov</a> · <a href="https://medium.com/@1200km/att-ck-as-a-working-tool-theory-and-hands-on-practical-usage-d63835c9f101">Published on Medium</a></p>
 <hr />
-<h2 id="contents">Contents</h2>
-<table>
-<thead>
-<tr>
-<th>File</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>ATT&amp;CK as a Working Tool_ Theory and Hands-On Practical Usage _ by Andrey Pautov _ Mar, 2026 _ Medium.pdf</strong></td>
-<td>Full article PDF saved from Medium.</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="about-this-guide">About This Guide</h2>
-<p>This is not a framework overview or a "here is the matrix, good luck" introduction. It is a working practitioner's reference built around tasks you actually do: analyze a threat actor, write a CTI report, build detection rules, run a purple team exercise.</p>
-<p><strong>Audience:</strong> CTI analysts, detection engineers, SOC analysts, and security practitioners transitioning into threat intelligence.</p>
-<p><strong>What you will be able to do after reading:</strong><br />
-- Read any threat report and extract a complete, evidence-labeled ATT&amp;CK mapping table with correct technique IDs, tactic assignments, and confidence levels<br />
-- Build ATT&amp;CK Navigator layers that accurately represent a threat actor's TTP profile<br />
-- Overlay a threat actor profile against your detection coverage and produce a prioritized gap analysis<br />
-- Write Sigma detection rules correctly tagged with ATT&amp;CK IDs, based on the technique's documented data sources<br />
-- Design a threat hunt hypothesis from ATT&amp;CK technique data and formulate the corresponding queries<br />
-- Run adversary emulation and purple team exercises driven by ATT&amp;CK TTPs<br />
-- Identify and avoid the seven most common analyst mistakes that undermine the framework's value</p>
-<hr />
-<h2 id="table-of-contents">Table of Contents</h2>
-<ol>
-<li>Introduction: Why You Need This Guide</li>
-<li>A Note on How to Use This Guide</li>
-<li>Why ATT&amp;CK Exists — The Problem It Solves</li>
-<li>Framework Anatomy — Reading the Map</li>
-<li>The 14 Tactics: Adversary Goals, Not Steps</li>
-<li>Techniques, Sub-Techniques, and Procedures</li>
-<li>ATT&amp;CK Domains: Enterprise, Mobile, ICS</li>
-<li>How a CTI Analyst Actually Uses ATT&amp;CK</li>
-<li>Use Case 1: Mapping a Threat Report to ATT&amp;CK</li>
-<li>Use Case 2: Coverage Gap Analysis with ATT&amp;CK Navigator</li>
-<li>What ATT&amp;CK Navigator Is and Why It Matters</li>
-<li>Use Case 3: Detection Engineering (Sigma + ATT&amp;CK)</li>
-<li>Use Case 4: Threat Hunting with ATT&amp;CK</li>
-<li>Use Case 5: Adversary Emulation and Purple Teaming</li>
-<li>Hands-On: Step-by-Step Worked Example</li>
-<li>Essential Tooling Reference</li>
-<li>Common Pitfalls and Analyst Mistakes</li>
-<li>ATT&amp;CK in a CTI Workflow: Putting It All Together</li>
-<li>Quick Reference Cheatsheet</li>
-</ol>
-<hr />
-<h2 id="source">Source</h2>
+<p>A practitioner’s guide for CTI analysts, detection engineers, and threat<br />
+hunters</p>
+<pre><code>Andrey Pautov 64 min read · 13 hours ago
+</code></pre>
+<h3 id="table-of-contents">Table of Contents</h3>
+<h2 id="1-introduction-why-you-need-this-guide">1. Introduction: Why You Need This Guide</h2>
+<h2 id="2-a-note-on-how-to-use-this-guide">2. A Note on How to Use This Guide</h2>
+<h2 id="3-why-attck-exists-the-problem-it-solves">3. Why ATT&amp;CK Exists — The Problem It Solves</h2>
+<h2 id="4-framework-anatomy-reading-the-map">4. Framework Anatomy — Reading the Map</h2>
+<h2 id="5-the-14-tactics-adversary-goals-not-steps">5. The 14 Tactics: Adversary Goals, Not Steps</h2>
+<h2 id="6-techniques-sub-techniques-and-procedures">6. Techniques, Sub-Techniques, and Procedures</h2>
+<h2 id="7-attck-domains-enterprise-mobile-ics">7. ATT&amp;CK Domains: Enterprise, Mobile, ICS</h2>
+<h2 id="8-how-a-cti-analyst-actually-uses-attck">8. How a CTI Analyst Actually Uses ATT&amp;CK</h2>
+<h2 id="9-use-case-1-mapping-a-threat-report-to-attck">9. Use Case 1: Mapping a Threat Report to ATT&amp;CK</h2>
+<h2 id="10-use-case-2-coverage-gap-analysis-with-attck-navigator">10. Use Case 2: Coverage Gap Analysis with ATT&amp;CK Navigator</h2>
+<h2 id="11-what-attck-navigator-is-and-why-it-matters">11. What ATT&amp;CK Navigator Is and Why It Matters</h2>
+<h2 id="12-use-case-3-detection-engineering-sigma-attck">12. Use Case 3: Detection Engineering (Sigma + ATT&amp;CK)</h2>
+<h2 id="13-use-case-4-threat-hunting-with-attck">13. Use Case 4: Threat Hunting with ATT&amp;CK</h2>
+<h2 id="14-use-case-5-adversary-emulation-and-purple-teaming">14. Use Case 5: Adversary Emulation and Purple Teaming</h2>
+<h2 id="15-hands-on-step-by-step-worked-example">15. Hands-On: Step-by-Step Worked Example</h2>
+<h2 id="16-essential-tooling-reference">16. Essential Tooling Reference</h2>
+<h2 id="17-common-pitfalls-and-analyst-mistakes">17. Common Pitfalls and Analyst Mistakes</h2>
+<h2 id="18-attck-in-a-cti-workflow-putting-it-all-together">18. ATT&amp;CK in a CTI Workflow: Putting It All Together</h2>
+<h2 id="19-quick-reference-cheatsheet">19. Quick Reference Cheatsheet</h2>
+<p>If you like this research, buy me a coffee (PayPal) — Keep the lab running</p>
+<h3 id="introduction-why-you-need-this-guide">Introduction: Why You Need This Guide</h3>
+<p>Every week, another threat report drops. Another advisory from<br />
+CISA(Cybersecurity and Infrastructure Security Agency). Another vendor<br />
+The information is abundant. The problem is not a shortage of threat data —<br />
+the problem is making that data usable across teams, tools, and time.</p>
+<p>This is exactly the problem that MITRE ATT&amp;CK was designed to solve, and it<br />
+is also the reason why, in 2026, ATT&amp;CK has become the closest thing the<br />
+security industry has to a universal standard for describing adversary<br />
+behavior. Whether you work in threat intelligence, detection engineering,<br />
+incident response, red teaming, or security management, you cannot do<br />
+your job at a high level without being fluent in ATT&amp;CK.</p>
+<p>But fluency is not the same as familiarity. Most security professionals have<br />
+heard of ATT&amp;CK. They have seen a heatmap. They have read reports with T-<br />
+codes appended. Far fewer have internalized how to actually work with the<br />
+framework — how to map behavior to techniques with analytical rigor, how to<br />
+use Navigator for meaningful gap analysis rather than false confidence, how<br />
+to connect a CTI report’s ATT&amp;CK table to a detection engineering backlog,<br />
+how to run a threat hunt driven by TTP data.</p>
+<p>This guide teaches practical, daily-use ATT&amp;CK skills. It is not a marketing<br />
+overview. It is not a “here is the matrix, good luck” introduction. It is a<br />
+working practitioner’s reference built around the tasks you actually do when<br />
+you sit down to analyze a threat actor, write a CTI report, build detection<br />
+rules, or run a purple team exercise.</p>
+<h3 id="who-this-guide-is-for">Who This Guide Is For</h3>
+<h3 id="this-guide-is-written-for-three-primary-audiences">This guide is written for three primary audiences:</h3>
+<p>CTI Analysts who need to produce structured, actionable threat intelligence<br />
+reports — not just narrative prose — and who need to map adversary<br />
+behavior to ATT&amp;CK with the kind of evidence discipline and confidence<br />
+labeling that makes intelligence actually useful to downstream consumers.</p>
+<h3 id="detection-engineers-and-soc-analysts-who-need-to-understand-why-the-t-">Detection Engineers and SOC Analysts who need to understand why the T-</h3>
+<p>codes in CTI reports matter, how to translate them into detection rules, and<br />
+how to measure whether their current rule coverage actually addresses the<br />
+threats their organization faces.</p>
+<h3 id="security-practitioners-transitioning-into-threat-intelligence-who-understand">Security practitioners transitioning into threat intelligence who understand</h3>
+<p>how attacks work technically but haven’t yet developed the structured<br />
+analytical workflow that separates intelligence work from incident response<br />
+or penetration testing.</p>
+<p>You do not need to have prior ATT&amp;CK experience to follow this guide. You<br />
+do need a basic understanding of how attacks work — what phishing is, what<br />
+credential dumping means, what lateral movement looks like. The guide<br />
+builds structured analytical methodology on top of that technical<br />
+foundation.</p>
+<h3 id="what-you-will-be-able-to-do-after-reading-this">What You Will Be Able to Do After Reading This</h3>
+<p>By the time you finish this guide and work through the practical exercises,<br />
+you will be able to:</p>
+<h2 id="1-read-any-threat-report-and-extract-a-complete-evidence-labeled-attck">1. Read any threat report and extract a complete, evidence-labeled ATT&amp;CK</h2>
+<p>mapping table with correct technique IDs, tactic assignments, and<br />
+confidence levels</p>
+<h2 id="2-build-attck-navigator-layers-that-accurately-represent-a-threat-actors">2. Build ATT&amp;CK Navigator layers that accurately represent a threat actor’s</h2>
+<h3 id="ttp-profile">TTP profile</h3>
+<h2 id="3-overlay-a-threat-actor-profile-against-your-detection-coverage-and">3. Overlay a threat actor profile against your detection coverage and</h2>
+<p>produce a prioritized gap analysis</p>
+<h2 id="4-write-sigma-detection-rules-correctly-tagged-with-attck-ids-based-on">4. Write Sigma detection rules correctly tagged with ATT&amp;CK IDs, based on</h2>
+<p>the technique’s documented data sources</p>
+<h2 id="5-design-a-threat-hunt-hypothesis-from-attck-technique-data-and">5. Design a threat hunt hypothesis from ATT&amp;CK technique data and</h2>
+<p>formulate the corresponding queries</p>
+<h2 id="6-explain-in-an-interview-in-a-report-or-to-leadership-how-attck">6. Explain — in an interview, in a report, or to leadership — how ATT&amp;CK</h2>
+<p>fits into the complete intelligence-to-defense cycle</p>
+<h2 id="7-identify-and-avoid-the-seven-most-common-analyst-mistakes-that">7. Identify and avoid the seven most common analyst mistakes that</h2>
+<p>undermine the framework’s value</p>
+<h3 id="a-note-on-how-to-use-this-guide">A Note on How to Use This Guide</h3>
+<h3 id="the-guide-is-structured-to-work-both-as-a-linear-read-and-as-a-reference">The guide is structured to work both as a linear read and as a reference</h3>
+<p>document. If you are new to ATT&amp;CK, read sections 1–6 in order first — they<br />
+build the conceptual foundation that makes the practical use cases in<br />
+sections 7–12 comprehensible and immediately applicable. If you are already<br />
+familiar with the framework, jump directly to the use case sections or the<br />
+worked example in section 12.</p>
+<h3 id="every-claim-about-how-techniques-map-to-real-world-behaviors-is-grounded">Every claim about how techniques map to real-world behaviors is grounded</h3>
+<p>in MITRE ATT&amp;CK’s public knowledge base (v16, Enterprise). Every tool<br />
+referenced is open source or publicly accessible. Every workflow described<br />
+is based on how actual CTI teams operate — not how vendor whitepapers say<br />
+they should.</p>
+<h2 id="1-why-attck-exists-the-problem-it-solves">1. Why ATT&amp;CK Exists — The Problem It Solves</h2>
+<h3 id="the-fragmentation-problem">The Fragmentation Problem</h3>
+<p>Before MITRE ATT&amp;CK, cybersecurity teams across defenders, red teams,<br />
+CTI analysts, and vendors all described adversary behavior in incompatible<br />
+languages. A red teamer said “pass-the-hash.” A SIEM vendor said “lateral<br />
+movement via credential reuse.” An incident responder said “mimikatz<br />
+activity detected.” A CTI analyst wrote “the actor pivoted using stolen NTLM<br />
+hashes.” Same behavior. Four different descriptions. Zero interoperability.</p>
+<p>This fragmentation had real consequences. A CTI team produced a detailed<br />
+report on a threat actor’s methods. The detection engineering team received<br />
+it, read through the narrative, and had to manually decode every behavioral<br />
+description into something they could turn into a detection rule — and they<br />
+often got it wrong because the terminology was imprecise. The red team was<br />
+told to “simulate APT29 behavior” but had no structured definition of what<br />
+that meant. The CISO asked “are we protected against this group?” and</p>
+<p>nobody could give a definitive answer because “protected” meant different<br />
+things to different teams.</p>
+<p>The problem was structural. Cybersecurity lacked a shared taxonomy. Every<br />
+team, every vendor, every researcher used their own vocabulary.</p>
+<h3 id="intelligence-could-not-flow-cleanly-between-producers-and-consumers">Intelligence could not flow cleanly between producers and consumers</h3>
+<p>because there was no common language to carry it.</p>
+<h3 id="the-mitre-solution">The MITRE Solution</h3>
+<p>ATT&amp;CK (Adversary Tactics, Techniques, and Common Knowledge) was<br />
+created by MITRE Corporation in 2013 as an internal research project. The<br />
+original goal was modest: document the post-compromise behavior of<br />
+adversaries observed on MITRE’s own networks, creating a structured<br />
+reference for the organization’s internal red team operations. The project<br />
+was made public in 2015, and what followed was one of the most rapid<br />
+adoptions of any framework in the security industry’s history.</p>
+<h3 id="the-core-idea-was-deceptively-simple-observe-real-adversary-behavior-in">The core idea was deceptively simple: observe real adversary behavior in</h3>
+<p>real incidents, document it, categorize it into a structured taxonomy, and<br />
+make that taxonomy openly available. Every entry in the knowledge base<br />
+must be grounded in evidence from actual intrusions — not theoretical<br />
+attacks, not vendor feature marketing, not what attacks could look like.</p>
+<h3 id="the-result-is-a-common-operating-language-that-lets">The result is a common operating language that lets:</h3>
+<p>A CTI analyst write “the actor used T1566.001 (Spearphishing<br />
+Attachment)” in a report</p>
+<h3 id="a-detection-engineer-immediately-build-a-sigma-rule-tagged">A detection engineer immediately build a Sigma rule tagged</h3>
+<p>attack.t1566.001 — no interpretation required</p>
+<h3 id="a-red-teamer-emulate-that-exact-behavior-with-an-atomic-red-team-test">A red teamer emulate that exact behavior with an Atomic Red Team test</h3>
+<p>for T1566.001</p>
+<h3 id="a-threat-hunter-know-exactly-what-data-sources-to-search-and-what">A threat hunter know exactly what data sources to search and what</h3>
+<p>anomalies to look for</p>
+<h3 id="a-ciso-look-at-a-navigator-heatmap-and-see-at-a-glance-which-techniques">A CISO look at a Navigator heatmap and see at a glance which techniques</h3>
+<p>their controls cover against the techniques their adversaries use</p>
+<p>One ID. One behavior. One shared understanding across every team in the<br />
+organization.</p>
+<h3 id="the-scale-of-adoption">The Scale of Adoption</h3>
+<p>As of 2026, ATT&amp;CK is referenced in virtually every major threat intelligence<br />
+report, government advisory (CISA, NCSC, ANSSI, BSI), and security<br />
+platform. EDR vendors tag their alerts with ATT&amp;CK IDs. SIEMs ship<br />
+ATT&amp;CK-mapped detection content. ISACs share threat data in ATT&amp;CK-</p>
+<p>aligned formats. Security certifications and job postings list ATT&amp;CK fluency<br />
+as a baseline requirement.</p>
+<h3 id="this-ubiquity-matters-for-a-practical-reason-attck-is-the-lingua-franca-of">This ubiquity matters for a practical reason: ATT&amp;CK is the lingua franca of</h3>
+<p>the industry. Not using it fluently puts you at a disadvantage in every cross-<br />
+team and cross-organization conversation about threat behavior.</p>
+<h3 id="what-attck-is-not">What ATT&amp;CK Is NOT</h3>
+<p>Understanding the framework’s boundaries is as important as understanding<br />
+what it covers:</p>
+<p>It is not a kill chain. The Cyber Kill Chain (Lockheed Martin, 2011) describes<br />
+an attack as a linear, sequential process: Reconnaissance → Weaponization →<br />
+Delivery → Exploitation → Installation → C2 → Actions on Objectives. The Kill</p>
+<h3 id="chain-is-useful-for-high-level-attack-lifecycle-framing-but-fails-at-the">Chain is useful for high-level attack lifecycle framing but fails at the</h3>
+<p>behavioral level — adversaries don’t move in neat steps. ATT&amp;CK, by<br />
+contrast, describes a menu of behaviors. Adversaries skip tactics, repeat<br />
+them, run them in parallel, and return to earlier ones. A ransomware<br />
+operator might go from Initial Access directly to Impact in under 45 minutes,<br />
+skipping Discovery and Lateral Movement entirely. ATT&amp;CK handles this<br />
+reality; the Kill Chain does not.</p>
+<p>It is not a compliance checklist. One of the most dangerous misuses of</p>
+<h3 id="attck-is-treating-it-as-a-compliance-framework-checking-boxes-to-claim">ATT&amp;CK is treating it as a compliance framework — checking boxes to claim</h3>
+<p>coverage. Claiming “we have a rule for T1003” means nothing if that rule has<br />
+never been validated, never fires in practice, or fires against a data source<br />
+you stopped collecting six months ago. ATT&amp;CK is a behavioral taxonomy,<br />
+not a control inventory.</p>
+<p>It is not exhaustive. ATT&amp;CK documents what has been observed with<br />
+sufficient public evidence to support an entry. Novel zero-day techniques,<br />
+classified nation-state operations, and incidents where forensic evidence<br />
+was destroyed or never collected are systematically underrepresented. The<br />
+framework is comprehensive, but it is not complete — and it will never be<br />
+complete, because adversary tradecraft evolves continuously.</p>
+<p>It is not a vulnerability database. ATT&amp;CK describes how adversaries behave<br />
+after a foothold is established (and increasingly, before it, via the<br />
+Reconnaissance and Resource Development tactics). It does not catalog<br />
+vulnerabilities. CVEs live in the National Vulnerability Database. The<br />
+connection between a CVE and ATT&amp;CK is: the CVE is the vehicle (e.g.,<br />
+T1190 Exploit Public-Facing Application), not the destination.</p>
+<p>It is not a replacement for analysis. ATT&amp;CK provides structure, not<br />
+judgment. A framework can tell you which techniques exist. It cannot tell</p>
+<p>you which techniques your specific adversary will use next, whether a<br />
+specific piece of telemetry constitutes evidence of a technique, or whether<br />
+your detection is actually effective. Those judgments require a trained<br />
+analyst — which is what this guide helps you become.</p>
+<h2 id="2-framework-anatomy-reading-the-map">2. Framework Anatomy — Reading the Map</h2>
+<h3 id="the-matrix-structure">The Matrix Structure</h3>
+<h3 id="attck-is-visualized-as-a-matrix-a-grid-where-columns-are-tactics-and">ATT&amp;CK is visualized as a matrix — a grid where columns are tactics and</h3>
+<p>cells within each column are techniques. When you open attack.mitre.org,<br />
+you are looking at this matrix. Understanding how to read it is the<br />
+prerequisite for everything else.</p>
+<h3 id="the-four-level-hierarchy-of-the-framework">The four-level hierarchy of the framework:</h3>
+<p>Each level answers a different question. Tactics answer why. Techniques<br />
+answer what. Sub-techniques answer how, specifically. Procedures answer<br />
+who did what, exactly, in which incident.</p>
+<h3 id="the-matrix-visualization">The Matrix Visualization</h3>
+<p>Every cell in the matrix is a technique. Techniques that have sub-techniques<br />
+appear with a small triangle indicator on the website — clicking expands the<br />
+sub-technique list. Techniques without sub-techniques stand alone.</p>
+<h3 id="what-a-technique-page-contains">What a Technique Page Contains</h3>
+<p>When you click on any technique — for example, T1566.001 (Spearphishing<br />
+Attachment) — you land on a page with a standardized structure.<br />
+Understanding this structure is essential, because the technique page is your<br />
+primary working document:</p>
+<p>Description: A detailed explanation of what the technique is, why<br />
+adversaries use it, what variations exist in the wild, and what makes it<br />
+effective. Read this section carefully. The description contains behavioral<br />
+nuances that inform both detection logic and mapping decisions.</p>
+<h3 id="procedure-examples-a-curated-list-of-real-world-usages-by-specific-threat">Procedure Examples: A curated list of real-world usages by specific threat</h3>
+<p>groups and malware families, each linked to the Groups or Software entry<br />
+where the evidence originated. This is the empirical backbone of ATT&amp;CK —<br />
+every entry comes from a real incident with documented evidence. When<br />
+you read “APT29 used spearphishing attachments in the following<br />
+campaigns,” those claims are sourced to government advisories, vendor<br />
+reports, or IR findings.</p>
+<p>Mitigations: Recommended preventive controls, linked to ATT&amp;CK’s<br />
+Mitigation entries (M-codes). For T1566.001, mitigations include user<br />
+training (M1017), antivirus/antimalware (M1049), and software configuration<br />
+(M1054). These are useful for writing defensive recommendations in CTI<br />
+reports.</p>
+<h3 id="detection-the-most-actionable-section-for-detection-engineers-and-threat">Detection: The most actionable section for detection engineers and threat</h3>
+<p>hunters. This section lists:</p>
+<h3 id="data-sources-what-telemetry-you-need-to-collect-to-have-visibility">Data Sources — what telemetry you need to collect to have visibility</h3>
+<p>(process creation, email logs, file monitoring, etc.)</p>
+<p>Detection approaches — what patterns, behaviors, or anomalies to look<br />
+for in that telemetry</p>
+<p>References: Every claim in ATT&amp;CK is cited. The references section lists the<br />
+primary sources — vendor threat reports, government advisories, academic<br />
+papers, blog posts from reputable researchers. If you need to verify an<br />
+ATT&amp;CK claim or read the original evidence, start here.</p>
+<h3 id="the-groups-and-software-pages">The Groups and Software Pages</h3>
+<h3 id="attck-maintains-two-additional-knowledge-bases-tightly-integrated-with">ATT&amp;CK maintains two additional knowledge bases tightly integrated with</h3>
+<p>the technique matrix:</p>
+<p>Groups (G-codes): Entries for known threat actor groups, organized by their<br />
+ATT&amp;CK ID. For example, G0016 is APT29, G0034 is Sandworm, G0065 is<br />
+Leviathan/APT40. Each group page lists: all techniques observed being used<br />
+by that group (with procedure examples), associated software/tools, and<br />
+references. When you want to understand what a specific threat actor does,<br />
+the Group page is your starting point.</p>
+<p>Software (S-codes): Entries for malware families, tools, and utilities used by<br />
+adversaries. For example, S0002 is Mimikatz, S0105 is dsquery, S0154 is<br />
+Cobalt Strike. Each software entry lists which techniques it implements and<br />
+which groups use it. This allows you to chain threat actor → tool → technique<br />
+in both directions.</p>
+<p>Understanding these three linked knowledge bases — Techniques, Groups,</p>
+<h3 id="software-gives-you-a-complete-picture-of-adversary-behavior-that-is-far">Software — gives you a complete picture of adversary behavior that is far</h3>
+<p>richer than the matrix alone.</p>
+<h2 id="3-the-14-tactics-adversary-goals-not-steps">3. The 14 Tactics: Adversary Goals, Not Steps</h2>
+<h3 id="what-a-tactic-actually-means">What a Tactic Actually Means</h3>
+<p>A tactic is the reason an adversary is performing a behavior. It is their<br />
+immediate objective. The word “tactic” in ATT&amp;CK does not carry the<br />
+military strategy connotation you might expect — it is closer to “goal” or<br />
+“phase of operation.”</p>
+<p>This distinction is critical: tactics are not sequential phases. They are<br />
+categories of intent. An adversary may be simultaneously operating under<br />
+multiple tactics — exfiltrating data while maintaining persistence while<br />
+evading defense — and may revisit the same tactic multiple times in a single<br />
+operation. Do not let the matrix’s column order mislead you into thinking<br />
+left-to-right equals time.</p>
+<p>The 14 Enterprise Tactics in Depth</p>
+<h3 id="note-that-reconnaissance-and-resource-development-are-pre-compromise">Note that Reconnaissance and Resource Development are pre-compromise</h3>
+<p>tactics — they describe what the adversary does before breaching the target<br />
+environment. This is important for CTI analysts: intelligence about these<br />
+tactics (infrastructure acquisition, typosquatting domains, persona creation)<br />
+can enable anticipatory defense, not just reactive response.</p>
+<h3 id="why-this-matters-for-mapping">Why This Matters for Mapping</h3>
+<p>When you map a behavior to ATT&amp;CK, you assign both a tactic and a<br />
+technique. The same observable — for example, PowerShell executing a<br />
+command — can belong to different tactics depending on context:</p>
+<p>PowerShell running a download cradle to fetch a payload = Execution<br />
+(T1059.001) + C2 (T1105)</p>
+<p>PowerShell enumerating Active Directory = Discovery (T1059.001 +<br />
+T1087.002)</p>
+<p>PowerShell deleting logs = Defense Evasion (T1059.001 + T1070.001)</p>
+<p>PowerShell encrypting files = Impact (T1059.001 + T1486)</p>
+<h3 id="the-tactic-assignment-tells-the-reader-what-the-adversary-was-trying-to">The tactic assignment tells the reader what the adversary was trying to</h3>
+<p>accomplish at that moment. It provides strategic context to the technical<br />
+observation.</p>
+<h3 id="analyst-note-on-tactic-ordering">Analyst Note on Tactic Ordering</h3>
+<p>The matrix displays tactics in a rough left-to-right operational flow, but this<br />
+is a convenience for visualization, not a prescribed sequence. Adversaries<br />
+frequently:</p>
+<h3 id="use-execution-before-completing-persistence-run-the-payload">Use Execution before completing Persistence — run the payload</h3>
+<p>immediately, establish persistence in the next step</p>
+<h3 id="skip-tactics-entirely-many-modern-ransomware-operations-proceed">Skip tactics entirely — many modern ransomware operations proceed</h3>
+<p>directly from Initial Access through Execution to Impact in under an<br />
+hour, bypassing Discovery and Lateral Movement if they have already<br />
+mapped the environment in prior reconnaissance</p>
+<p>Return to earlier tactics — re-establish C2 after losing a beacon, move<br />
+back to Credential Access after an initial lateral move fails</p>
+<h3 id="operate-multiple-tactics-simultaneously-collecting-files-while">Operate multiple tactics simultaneously — collecting files while</h3>
+<p>maintaining C2 while evading defense</p>
+<p>When mapping behaviors to ATT&amp;CK, always assign the tactic based on the<br />
+purpose of the observed action — not its position in a timeline.</p>
+<h2 id="4-techniques-sub-techniques-and-procedures">4. Techniques, Sub-Techniques, and Procedures</h2>
+<h3 id="techniques-in-depth">Techniques in Depth</h3>
+<p>A technique is a specific method an adversary uses to achieve a tactic goal.<br />
+Techniques are the core analytical unit of ATT&amp;CK. When you say “map the<br />
+behavior to ATT&amp;CK,” you are primarily identifying which techniques were<br />
+observed.</p>
+<p>Technique IDs are formatted as T followed by four digits: T1003, T1059,<br />
+T1566. The numbers are not hierarchical or sequential — they are assigned<br />
+identifiers, not ordered by importance or frequency.</p>
+<h3 id="each-technique-describes-a-class-of-behavior-abstract-enough-to-cover">Each technique describes a class of behavior abstract enough to cover</h3>
+<p>multiple specific implementations while specific enough to have a distinct<br />
+detection profile. For example:</p>
+<p>T1003 — OS Credential Dumping: The adversary extracts credentials<br />
+from the operating system. This is specific enough to have clear<br />
+detection indicators (process access to LSASS, access to SAM registry<br />
+hive, ntdsutil execution) but abstract enough to cover multiple tools and<br />
+approaches.</p>
+<h3 id="sub-techniques-in-depth">Sub-Techniques in Depth</h3>
+<p>Sub-techniques represent specific implementations of a parent technique.<br />
+They were introduced in ATT&amp;CK v7 to resolve a tension: parent techniques<br />
+were too broad for precise detection, but adding a separate top-level<br />
+technique for every tool and variation would make the matrix<br />
+unmanageable.</p>
+<p>Sub-technique IDs are formatted as T + four digits + . + three digits:<br />
+T1003.001.</p>
+<p>The full sub-technique tree for T1003 illustrates the pattern:</p>
+<p>T1003 — OS Credential Dumping</p>
+<pre><code>├── T1003.001 — LSASS Memory
+│     → Dumping credentials from the Local Security Authority Subsystem Servic
+│     → Tools: Mimikatz (sekurlsa::logonpasswords), ProcDump, comsvcs.dll Mini
+│
+├── T1003.002 — Security Account Manager (SAM)
+│     → Reading the SAM registry hive for local account hashes
+│     → Tools: reg save, Mimikatz (lsadump::sam)
+│
+├── T1003.003 — NTDS
+│     → Extracting the Active Directory database (NTDS.dit)
+│     → Tools: ntdsutil, vssadmin + manual copy, secretsdump
+│
+├── T1003.004 — LSA Secrets
+│     → Reading cached service account passwords from LSA registry keys
+│     → Tools: Mimikatz (lsadump::secrets), secretsdump
+│
+├── T1003.005 — Cached Domain Credentials
+│     → Extracting domain credentials cached locally for offline authenticatio
+│     → Tools: Mimikatz (lsadump::cache)
+│
+├── T1003.006 — DCSync
+│     → Impersonating a domain controller to replicate credential data via MS-
+│     → Tools: Mimikatz (lsadump::dcsync), secretsdump
+│
+├── T1003.007 — Proc Filesystem (Linux)
+│     → Reading process memory via /proc/[pid]/mem on Linux systems
+│
+└── T1003.008 — /etc/passwd and /etc/shadow (Linux)
+→ Directly reading Linux credential files
+</code></pre>
+<p>Each sub-technique has its own detection profile, data sources, and<br />
+procedure examples. T1003.001 (LSASS) is detected via Sysmon EventID 10<br />
+(process access). T1003.003 (NTDS) is detected via ntdsutil.exe execution,<br />
+VSSAdmin commands, and NTDS.dit file access monitoring. T1003.006<br />
+(DCSync) is detected via Windows Event 4662 (directory service replication)<br />
+on domain controllers. These are completely different detection approaches<br />
+despite all belonging to the same parent technique.</p>
+<h3 id="the-practical-implication-never-conflate-parent-and-sub-technique-when">The practical implication: Never conflate parent and sub-technique when</h3>
+<p>writing detection rules. A rule for “OS Credential Dumping” that only<br />
+monitors LSASS access will completely miss a DCSync attack happening on a<br />
+domain controller. Sub-technique granularity is detection granularity.</p>
+<h3 id="the-parent-vs-sub-technique-decision-rule">The Parent-vs-Sub-Technique Decision Rule</h3>
+<h3 id="a-question-every-analyst-faces-should-i-map-to-the-parent-or-the-sub-">A question every analyst faces: should I map to the parent or the sub-</h3>
+<p>technique?</p>
+<p>The answer is driven by evidence, not preference:</p>
+<p>Do you have specific evidence of the implementation method?</p>
+<pre><code>→ YES: Use the sub-technique (T1003.001, T1003.006, etc.)
+→ NO: Use the parent technique (T1003)
+</code></pre>
+<p>"Specific evidence" means:</p>
+<pre><code>- A tool name with a specific command or module
+- A log entry showing the specific access pattern
+- A malware sample that implements a specific approach
+- A credible vendor report with artifact-level detail
+</code></pre>
+<p>"Not specific evidence" means:</p>
+<pre><code>- The report says &quot;credentials were stolen&quot;
+- The actor is known to use credential dumping generally
+- An alert fired for &quot;suspicious LSASS access&quot; without further
+</code></pre>
+<p>forensics</p>
+<h3 id="never-assign-a-sub-technique-because-it-seems-like-the-most-probable">Never assign a sub-technique because it seems like the most probable</h3>
+<p>implementation. Assign the parent, note the uncertainty, and flag it for<br />
+further investigation. Over-specific mappings create false confidence and<br />
+mislead downstream consumers.</p>
+<h3 id="procedures-in-depth">Procedures in Depth</h3>
+<p>A procedure is the specific, real-world implementation of a technique by a<br />
+particular threat actor or tool, in a particular observed incident. Procedures<br />
+are not a separate taxonomy level with their own IDs — they are documented<br />
+as prose examples on technique pages and as structured entries on Group<br />
+and Software pages.</p>
+<h3 id="an-example-of-what-a-procedure-entry-looks-like">An example of what a procedure entry looks like:</h3>
+<p>APT29 — Used Mimikatz’s sekurlsa::logonpasswords command to dump<br />
+credentials from LSASS memory on compromised hosts prior to lateral<br />
+movement. Observed in the SolarWinds supply chain campaign, 2020.<br />
+[Source: CISA AA21-008A]</p>
+<p>This is the procedure: APT29, Mimikatz, sekurlsa::logonpasswords, in the<br />
+context of the SolarWinds campaign. It maps to the technique T1003.001<br />
+(LSASS Memory).</p>
+<h3 id="the-three-level-separation-technique-sub-technique-procedure-is">The three-level separation — technique / sub-technique / procedure — is</h3>
+<p>what makes ATT&amp;CK useful at different levels of abstraction:</p>
+<p>Technique level:   "We need detection for credential dumping"</p>
+<pre><code>→ Build detections for T1003 and its sub-techniques
+</code></pre>
+<p>Sub-technique level: "We need LSASS-specific detection"</p>
+<pre><code>→ Build detection based on T1003.001 data sources
+</code></pre>
+<p>and indicators<br />
+Procedure level:   "APT29 specifically uses Mimikatz<br />
+sekurlsa::logonpasswords"</p>
+<pre><code>→ Add Mimikatz-specific indicators (command line,
+</code></pre>
+<p>hash) to detection</p>
+<pre><code>→ Hunt for that specific string in historical
+</code></pre>
+<p>telemetry</p>
+<p>In CTI report writing: document procedures in your narrative, map them to<br />
+techniques in your ATT&amp;CK table. Both serve different readers. The<br />
+procedure description serves the analyst who wants to understand what the<br />
+actor actually did. The technique mapping serves the detection engineer<br />
+who needs to know what to build.</p>
+<h2 id="5-attck-domains-enterprise-mobile-ics">5. ATT&amp;CK Domains: Enterprise, Mobile, ICS</h2>
+<p>ATT&amp;CK is not a single matrix — it is three distinct knowledge bases, each<br />
+organized around a different platform context. Failing to specify which<br />
+domain you are mapping to is an analytical error.</p>
+<h3 id="enterprise-attck">Enterprise ATT&amp;CK</h3>
+<p>Enterprise is the largest and most widely used domain. It covers adversary<br />
+behavior against:</p>
+<p>Windows, macOS, Linux — endpoint and server operating systems,<br />
+covering the majority of corporate and government environments</p>
+<p>Cloud platforms — AWS, Azure, GCP, and SaaS applications (Office 365,<br />
+Google Workspace). Cloud coverage was added in ATT&amp;CK v7 and has<br />
+expanded significantly, reflecting the reality that most modern<br />
+environments are hybrid. Cloud-specific techniques cover identity-based<br />
+attacks, storage manipulation, serverless abuse, and container escape.</p>
+<p>Network devices — routers, switches, and other network infrastructure<br />
+running proprietary operating systems. This sub-platform covers attacks<br />
+on Cisco IOS, JunOS, and similar systems that most endpoint-focused<br />
+tools cannot monitor.</p>
+<p>Containers — Docker and Kubernetes environments, including container<br />
+escape techniques, image tampering, and Kubernetes RBAC abuse.</p>
+<p>For the majority of corporate threat intelligence work, Enterprise is the<br />
+default matrix. When a CTI report says “mapped to ATT&amp;CK” without<br />
+specifying a domain, it almost certainly means Enterprise.</p>
+<p>Cloud sub-platform deserves specific attention. As organizations migrate<br />
+workloads to cloud environments, threat actors have developed cloud-native</p>
+<p>attack techniques that have no equivalent on traditional enterprise<br />
+endpoints. T1078.004 (Valid Accounts: Cloud Accounts), T1530 (Data from<br />
+Cloud Storage Object), T1537 (Transfer Data to Cloud Account), and T1619<br />
+(Cloud Storage Object Discovery) are examples of techniques that require<br />
+cloud-specific telemetry (CloudTrail, Azure Monitor, GCP Audit Logs) —<br />
+telemetry that many organizations either don’t collect or don’t analyze with<br />
+the same rigor as endpoint logs.</p>
+<h3 id="mobile-attck">Mobile ATT&amp;CK</h3>
+<h3 id="mobile-attck-covers-adversary-behavior-targeting-android-and-ios">Mobile ATT&amp;CK covers adversary behavior targeting Android and iOS</h3>
+<p>devices. It includes tactics and techniques that have no Enterprise<br />
+equivalent, reflecting the fundamentally different attack surface of mobile<br />
+platforms:</p>
+<h3 id="network-based-effects-techniques-that-intercept-or-manipulate">Network-Based Effects — techniques that intercept or manipulate</h3>
+<p>network communications at the carrier or Wi-Fi level, without requiring<br />
+device compromise</p>
+<h3 id="remote-service-effects-techniques-that-leverage-device-management">Remote Service Effects — techniques that leverage device management</h3>
+<p>systems or cloud-connected services to affect devices without direct on-<br />
+device access</p>
+<h3 id="device-access-via-physical-access-techniques-unique-to-physical">Device Access via Physical Access — techniques unique to physical</h3>
+<p>possession scenarios</p>
+<h3 id="mobile-attck-is-used-primarily-by-teams-tracking-mobile-surveillance">Mobile ATT&amp;CK is used primarily by teams tracking mobile surveillance</h3>
+<p>tooling (Pegasus, FinFisher, Predator), nation-state operations targeting<br />
+activists and journalists, and mobile financial fraud. For most enterprise CTI<br />
+mobile implants alongside traditional enterprise operations.</p>
+<h3 id="ics-attck">ICS ATT&amp;CK</h3>
+<h3 id="ics-industrial-control-systems-attck-covers-adversary-behavior">ICS (Industrial Control Systems) ATT&amp;CK covers adversary behavior</h3>
+<p>targeting operational technology environments: SCADA systems, PLCs<br />
+(Programmable Logic Controllers), HMIs (Human-Machine Interfaces),<br />
+engineering workstations, and safety systems.</p>
+<h3 id="ics-attck-was-developed-by-analyzing-major-otics-incidents-including">ICS ATT&amp;CK was developed by analyzing major OT/ICS incidents including:</h3>
+<p>Stuxnet (2010) — the first confirmed destructive cyberweapon, targeting</p>
+<h3 id="iranian-uranium-enrichment-centrifuges-via-siemens-plcs">Iranian uranium enrichment centrifuges via Siemens PLCs</h3>
+<p>Industroyer/CrashOverride (2016) — attacked Ukrainian power grid<br />
+switching equipment, causing a 1-hour blackout in Kyiv</p>
+<p>Triton/TRISIS (2017) — targeted safety instrumented systems (SIS) at a<br />
+Saudi petrochemical facility, the first known malware explicitly targeting<br />
+safety systems</p>
+<p>PIPEDREAM/Incontroller (2022) — modular ICS attack framework<br />
+capable of targeting multiple PLC and OT protocols</p>
+<p>ICS ATT&amp;CK has different tactics than Enterprise, reflecting the different<br />
+adversary objectives in OT environments:</p>
+<h3 id="inhibit-response-function-preventing-safety-systems-and-operators">Inhibit Response Function — preventing safety systems and operators</h3>
+<p>from responding to an attack</p>
+<h3 id="impair-process-control-manipulating-industrial-processes-to-cause">Impair Process Control — manipulating industrial processes to cause</h3>
+<p>physical damage or unsafe conditions</p>
+<p>Impact — achieving the physical consequence (explosion, outage,<br />
+equipment damage)</p>
+<h3 id="critical-analyst-note-sophisticated-attacks-on-critical-infrastructure">Critical analyst note: Sophisticated attacks on critical infrastructure</h3>
+<p>frequently combine Enterprise ATT&amp;CK (using IT networks to reach OT)<br />
+with ICS ATT&amp;CK (acting within the OT environment). The Industroyer2</p>
+<p>attack on Ukrainian power infrastructure in 2022 used standard Enterprise<br />
+techniques for initial access and lateral movement from IT to OT, then ICS-<br />
+specific techniques to interact with IEC-104 power grid protocols. A<br />
+complete CTI report on such an actor requires mapping to both domains<br />
+explicitly.</p>
+<h2 id="6-how-a-cti-analyst-actually-uses-attck">6. How a CTI Analyst Actually Uses ATT&amp;CK</h2>
+<h3 id="the-five-core-workflows">The Five Core Workflows</h3>
+<p>In practice, a CTI analyst uses ATT&amp;CK in five core workflows. These are not<br />
+theoretical — they are the actual tasks that appear in a typical week of threat<br />
+intelligence work:</p>
+<h2 id="1-mapping-reading-intelligence-and-extracting-structured-attck-mapping">1. MAPPING       — Reading intelligence and extracting structured ATT&amp;CK mapping</h2>
+<h2 id="2-profiling-building-a-comprehensive-behavioral-model-of-a-threat-actor">2. PROFILING     — Building a comprehensive behavioral model of a threat actor</h2>
+<h2 id="3-gap-analysis-identifying-where-your-defenses-have-no-coverage-against-your">3. GAP ANALYSIS — Identifying where your defenses have no coverage against your</h2>
+<h2 id="4-prioritizing-deciding-which-detections-to-build-first-based-on-threat-rel">4. PRIORITIZING — Deciding which detections to build first, based on threat rel</h2>
+<h2 id="5-communicating-writing-intelligence-that-other-teams-can-act-on-immediately">5. COMMUNICATING — Writing intelligence that other teams can act on immediately</h2>
+<p>Each workflow is covered in a dedicated use case section below. But before<br />
+going hands-on, the most important thing to internalize is the analyst<br />
+mindset that makes these workflows produce reliable results.</p>
+<h3 id="the-attck-analyst-mindset-evidence-discipline">The ATT&amp;CK Analyst Mindset: Evidence Discipline</h3>
+<p>Evidence first, technique second.</p>
+<p>This is the most important principle in ATT&amp;CK analysis, and the one most<br />
+frequently violated. Never assign a technique because it seems likely, because</p>
+<p>the actor is known for that technique, or because the report implies it<br />
+happened. Assign a technique only when you have observable evidence: a<br />
+log entry, a command line, a file artifact, a forensic finding, or a credible<br />
+vendor report with artifact-level detail.</p>
+<p>The failure mode here is common and serious. An analyst reads a CTI report<br />
+credentials before lateral movement, and maps T1003 even though the<br />
+report contains no evidence of credential dumping. Now the mapping says<br />
+this actor uses T1003. That mapping is cited in the next report. Then cited<br />
+again. Soon there is a vendor intelligence card attributing credential<br />
+dumping to this actor based on a chain of citations that trace back to a single<br />
+analyst’s inference. This is how intelligence degrades. Evidence discipline is<br />
+what prevents it.</p>
+<p>Be as specific as the evidence allows — no more, and no less.</p>
+<p>If the evidence says “credentials were compromised,” map to T1003 (parent).<br />
+If the evidence says “Mimikatz was executed,” map to T1003.001 (LSASS<br />
+Memory) — because Mimikatz’s primary credential dumping function<br />
+operates against LSASS. If the evidence says “ntdsutil snapshot was created<br />
+and NTDS.dit was copied,” map to T1003.003 (NTDS). Moving up in<br />
+specificity requires evidence; mapping at the parent level is always<br />
+analytically safe when sub-technique evidence is absent.</p>
+<p>One behavior can, and often should, map to multiple techniques across<br />
+multiple tactics.</p>
+<p>This is a design feature of ATT&amp;CK, not a bug. Real adversary behaviors are<br />
+multifunctional. A Base64-encoded PowerShell command executed from a</p>
+<h3 id="word-macro-and-downloading-a-second-stage-simultaneously-demonstrates">Word macro and downloading a second stage simultaneously demonstrates:</h3>
+<p>T1566.001 (Spearphishing Attachment) — Initial Access: delivered via<br />
+email attachment</p>
+<p>T1204.002 (Malicious File) — Execution: user opened the document</p>
+<p>T1059.001 (PowerShell) — Execution: PowerShell was invoked</p>
+<p>T1027.010 (Command Obfuscation) — Defense Evasion: Base64 encoding</p>
+<p>T1105 (Ingress Tool Transfer) — C2: second-stage payload downloaded<br />
+from remote</p>
+<h3 id="mapping-each-of-these-separately-gives-your-downstream-consumers">Mapping each of these separately gives your downstream consumers</h3>
+<p>maximum actionability. The detection engineer builds a rule for T1027.010.<br />
+The threat hunter designs a query for T1105. The SOC analyst understands</p>
+<p>the full kill chain. If you had mapped only “T1059.001” for the PowerShell<br />
+execution, the other dimensions would be invisible.</p>
+<p>Absence of a technique in a report does not mean absence of that behavior.</p>
+<p>If a threat actor report doesn’t mention persistence mechanisms, it does not<br />
+mean the actor didn’t establish persistence. It may mean the forensic<br />
+evidence was wiped, the analyst didn’t look for it, the information was<br />
+withheld, or the actor operates without traditional persistence (relying on re-<br />
+infection instead). When building a comprehensive actor profile, be explicit<br />
+ATT&amp;CK table are as informative as the entries.</p>
+<h2 id="7-use-case-1-mapping-a-threat-report-to-attck">7. Use Case 1: Mapping a Threat Report to ATT&amp;CK</h2>
+<p>Mapping is the daily bread of CTI analysis. You receive intelligence — a<br />
+vendor advisory, an IR debrief, a government alert, a OSINT finding — and<br />
+you extract structured ATT&amp;CK mappings from it. The output of mapping<br />
+feeds every other workflow: actor profiles, gap analysis, detection<br />
+engineering, threat hunting.</p>
+<h3 id="step-by-step-mapping-process">Step-by-Step Mapping Process</h3>
+<p>Step 1: Read the report for behavior statements</p>
+<p>Read the entire report once for understanding, then read it again specifically<br />
+looking for sentences that describe what the adversary did. Mark every action<br />
+verb and its subject.</p>
+<p>Filter ruthlessly. You are not interested in:</p>
+<p>Attribution claims (“believed to be affiliated with…”)</p>
+<p>Victimology (“the targeted organization is a financial institution…”)</p>
+<p>Impact narrative (“the attack resulted in operational downtime…”)</p>
+<p>Actor motive speculation (“likely motivated by espionage…”)</p>
+<h3 id="you-are-only-interested-in-technical-behavioral-statements-what-the">You are only interested in technical behavioral statements: what the</h3>
+<p>adversary executed, what network connections they made, what files they<br />
+created or modified, what commands they ran.</p>
+<h3 id="example-report-excerpt">Example report excerpt:</h3>
+<p>“The actor sent phishing emails with password-protected ZIP attachments<br />
+containing an ISO file. Upon mounting the ISO, a LNK shortcut executed</p>
+<h3 id="powershell-to-download-a-second-stage-payload-from-a-remote-server-over">PowerShell to download a second-stage payload from a remote server over</h3>
+<p>HTTPS. The payload was written to %APPDATA%\Microsoft\Windows\Start<br />
+Menu\Programs\Startup\ for persistence.”</p>
+<p>Step 2: Extract atomic behaviors</p>
+<p>Decompose the narrative into individual, atomic observable actions. Each<br />
+action that can be independently detected or evidenced should be its own<br />
+entry:</p>
+<h2 id="1-phishing-email-containing-an-attachment">1. Phishing email containing an attachment</h2>
+<h2 id="2-attachment-is-a-password-protected-zip-evasion-mechanism">2. Attachment is a password-protected ZIP (evasion mechanism)</h2>
+<h2 id="3-zip-contains-an-iso-file-container-for-motw-bypass">3. ZIP contains an ISO file (container for MOTW bypass)</h2>
+<h2 id="4-lnk-file-inside-iso-triggers-execution">4. LNK file inside ISO triggers execution</h2>
+<h2 id="5-lnk-executes-powershell">5. LNK executes PowerShell</h2>
+<h2 id="6-powershell-connects-to-remote-server-over-https">6. PowerShell connects to remote server over HTTPS</h2>
+<h2 id="7-powershell-downloads-a-payload-second-stage">7. PowerShell downloads a payload (second stage)</h2>
+<h2 id="8-payload-written-to-startup-folder-for-persistence">8. Payload written to Startup folder for persistence</h2>
+<p>Note that step 2 (password-protected ZIP) and step 3 (ISO container) are<br />
+distinct defensive evasion behaviors even though they appear in the same<br />
+sentence. Both deserve separate technique mappings.</p>
+<p>Step 3: Map each behavior to technique + tactic</p>
+<p>For each atomic behavior, identify:</p>
+<p>Which technique best describes the behavior (search attack.mitre.org if<br />
+unsure)</p>
+<h3 id="which-tactic-that-technique-serves-in-this-context">Which tactic that technique serves in this context</h3>
+<h3 id="the-most-specific-sub-technique-the-evidence-supports">The most specific sub-technique the evidence supports</h3>
+<p>Step 4: Assign confidence labels consistently</p>
+<h3 id="confidence-is-not-intuition-it-is-a-structured-assessment-of-the-evidence">Confidence is not intuition — it is a structured assessment of the evidence</h3>
+<p>behind each mapping. Use a three-tier model that you apply consistently<br />
+across all mappings:</p>
+<p>High confidence: Direct technical evidence you can cite. This means: a<br />
+command line visible in logs, a binary with a known hash, a network<br />
+connection with a captured PCAP, a forensic file artifact, or a vendor<br />
+report with artifact-level documentation (not just narrative).</p>
+<h3 id="medium-confidence-credible-secondary-source-reporting-with-partial">Medium confidence: Credible secondary source reporting with partial</h3>
+<p>technical support. The behavior is described by a reputable vendor with a<br />
+track record of accuracy, and there is at least one artifact (even if<br />
+incomplete), but you cannot independently verify the full technical<br />
+detail.</p>
+<h3 id="lowassessed-confidence-analytically-inferred-from-the-overall-pattern">Low/Assessed confidence: Analytically inferred from the overall pattern</h3>
+<p>of evidence. The specific behavior was not directly observed but is<br />
+consistent with and implied by confirmed behaviors. Use sparingly and<br />
+label clearly.</p>
+<h3 id="the-password-protected-zip-in-the-example-above-gets-medium-confidence">The password-protected ZIP in the example above gets Medium confidence</h3>
+<p>not because the behavior is uncertain, but because the specific sub-<br />
+technique (T1027.013) represents an inference from the observed delivery<br />
+mechanism — the report mentioned a password-protected ZIP, which we</p>
+<p>interpret as intentional anti-analysis measure, but we don’t have direct<br />
+forensic evidence of that intent.</p>
+<p>Step 5: Document as a structured table in your report</p>
+<p>The output of mapping is a formatted table that lives in your report’s<br />
+ATT&amp;CK section. Minimum fields:</p>
+<p>This table, plus a Navigator layer export, constitutes a complete ATT&amp;CK-<br />
+mapped deliverable. Anyone on any team can read it and immediately know<br />
+what tools they need, what data sources they need to check, and what<br />
+detection rules they need to build.</p>
+<h3 id="live-example-mapping-handala-hack-group-activity">Live Example: Mapping Handala Hack Group Activity</h3>
+<h3 id="handala-hack-group-also-tracked-as-void-manticore-banished-kitten">Handala Hack Group (also tracked as Void Manticore / BANISHED KITTEN)</h3>
+<p>provides a concrete real-world mapping exercise. From published threat<br />
+reporting and the CTI research assessment:</p>
+<h3 id="references-for-this-section">References for this section:</h3>
+<p>[1] Pautov, Andrey. “CTI Research: Handala Hack Group (aka Handala Hack</p>
+<h3 id="team-evidence-labeled-threat-intelligence-assessment-and-soc-defensive">Team) — Evidence-Labeled Threat Intelligence Assessment and SOC Defensive</h3>
+<p>Guidance (December 2023 to March 2026).” Medium / InfoSec Write-ups, March<br />
+6, 2026. https://medium.com/@1200km/cti-research-handala-hack-group-aka-<br />
+handala-hack-team-ddbdd294cfb8</p>
+<p>[2] Check Point Research. “Bad Karma, No Justice: Void Manticore Destructive<br />
+Activities in Israel.” Check Point Research Blog, May 2024.<br />
+https://research.checkpoint.com/2024/bad-karma-no-justice-void-manticore-<br />
+destructive-activities-in-israel/ (Primary report directly equating Void Manticore<br />
+with Handala Hack Team; artifact-level wiper analysis, BiBi wiper variants, C2<br />
+infrastructure, and collaboration with Storm-0861/Scarred Manticore for initial<br />
+access.)</p>
+<p>[2b] Check Point Research. “Handala Hack — Unveiling Group’s Modus<br />
+Operandi.” Check Point Research Blog, 2026.<br />
+https://research.checkpoint.com/2026/handala-hack-unveiling-groups-modus-<br />
+operandi/ (Updated 2026 analysis covering RDP/NetBird lateral movement, AI-<br />
+assisted PowerShell wipers, and expanded targeting beyond Israel to US<br />
+enterprises.)</p>
+<p>[3] Security Joes IR Team. “BiBi-Linux: A New Wiper Dropped by Pro-Hamas<br />
+Hacktivist Group.” Security Joes Blog, October 30, 2023.</p>
+<p>https://www.securityjoes.com/post/bibi-linux-a-new-wiper-dropped-by-pro-<br />
+hamas-hacktivist-group (First public technical analysis of the BiBi wiper family<br />
+from Security Joes IR forensics; includes ELF binary analysis, file hashes, and<br />
+behavioral breakdown. Data Destruction T1485 confidence: Observed.)</p>
+<p>[4] BlackBerry Research and Intelligence Team. “BiBi Wiper Used in the Israel-<br />
+Hamas War Now Runs on Windows.” BlackBerry Blog, November 2023.<br />
+https://blogs.blackberry.com/en/2023/11/bibi-wiper-used-in-the-israel-hamas-war-<br />
+now-runs-on-windows (Windows PE variant analysis discovered one day after<br />
+Security Joes’ Linux disclosure; confirms cross-platform wiper capability and VSS<br />
+deletion. Inhibit System Recovery T1490 and Disk Structure Wipe T1561.002<br />
+confidence: Observed.)</p>
+<p>[5] Microsoft Threat Intelligence. “Iran Surges Cyber-Enabled Influence Operations<br />
+in Support of Hamas.” Microsoft Security Insider, 2023.<br />
+https://www.microsoft.com/en-us/security/security-insider/threat-landscape/iran-<br />
+surges-cyber-enabled-influence-operations-in-support-of-hamas (Documents<br />
+collaboration between Storm-0861 (access provider) and Storm-0842 (wiper<br />
+executor) against Israeli and Albanian targets; assessed overlap with Handala<br />
+persona.)</p>
+<p>[6] Palo Alto Unit 42. “Insights: Increased Risk of Wiper Attacks — Handala<br />
+Hack.” Unit 42 Threat Research, 2024.<br />
+https://unit42.paloaltonetworks.com/handala-hack-wiper-attacks/ (Independent<br />
+technical analysis of Handala wiper campaigns with ATT&amp;CK-relevant behavioral<br />
+detail.)</p>
+<p>[7] SOCRadar. “Dark Web Profile: Storm-842 (Void Manticore).” SOCRadar Blog.<br />
+https://socradar.io/blog/dark-web-profile-storm-842-void-manticore/ (Cross-<br />
+vendor naming crosswalk and actor profile summary.)</p>
+<p>[8] CrowdStrike Intelligence. BANISHED KITTEN — Threat Actor Profile.<br />
+CrowdStrike Intelligence Portal (subscription required). (CrowdStrike’s tracking<br />
+name for the same MOIS-linked cluster; named in the Check Point [2] crosswalk.)</p>
+<p>[9] Recorded Future. “Dune” Cluster Tracking. Recorded Future Intelligence Cloud<br />
+(subscription required). (Recorded Future’s alias for the same MOIS-linked cluster;<br />
+cited in multiple vendor crosswalks.)</p>
+<h3 id="reading-the-evidence-labels-in-this-mapping">Reading the evidence labels in this mapping:</h3>
+<p>Wiper deployment (T1485) is Observed — Security Joes [3][4] and Check<br />
+Point [2] published full technical analyses including binary hashes,<br />
+behavioral sandbox reports, and static analysis. This is artifact-level<br />
+evidence: the strongest possible confidence tier.</p>
+<p>VSS deletion (T1490) is Reported — documented by Check Point [2] with<br />
+technical detail describing the wiper’s recovery-inhibition behavior, but<br />
+independent forensic verification from victim organizations is not publicly<br />
+available.</p>
+<p>The supply chain pathway (T1195) is Assessed — inferred from victim<br />
+patterns showing compromise of organizations connected to Handala’s<br />
+primary targets through third-party relationships. No direct forensic<br />
+documentation of the supply chain entry point has been publicly released.</p>
+<h3 id="public-data-leaks-are-claimed-the-actor-asserts-exfiltration-and-destruction">Public data leaks are Claimed — the actor asserts exfiltration and destruction</h3>
+<p>via Telegram channels and hacktivist forums. Actor claims are collection<br />
+leads, not evidence. They prompt investigation; they do not constitute</p>
+<h3 id="attck-mappable-behavior-until-corroborated-by-independent-technical">ATT&amp;CK-mappable behavior until corroborated by independent technical</h3>
+<p>findings.</p>
+<h3 id="this-level-of-rigor-in-evidence-labeling-is-what-distinguishes-a-production">This level of rigor in evidence labeling is what distinguishes a production</h3>
+<h3 id="cti-report-from-a-narrative-summary-and-it-is-exactly-why-evidence-labels">CTI report from a narrative summary — and it is exactly why evidence labels</h3>
+<p>belong in every ATT&amp;CK mapping table you publish.8. Use Case 2: Coverage</p>
+<h3 id="gap-analysis-with-attck-navigator">Gap Analysis with ATT&amp;CK Navigator</h3>
+<h3 id="what-attck-navigator-is-and-why-it-matters">What ATT&amp;CK Navigator Is and Why It Matters</h3>
+<p>https://mitre-attack.github.io/attack-navigator/</p>
+<h3 id="attck-navigator-is-the-official-open-source-visualization-tool-for-the">ATT&amp;CK Navigator is the official open-source visualization tool for the</h3>
+<p>ATT&amp;CK matrix. It is a browser-based application that lets you create, layer,<br />
+and compare color-coded representations of the ATT&amp;CK matrix. It is the<br />
+primary tool for coverage analysis, threat actor profiling, and</p>
+<p>communicating detection status to both technical and non-technical<br />
+audiences.</p>
+<p>The core value of Navigator is that it makes invisible things visible. When<br />
+you look at a list of 300 detection rules, you cannot intuitively understand<br />
+which parts of the adversary kill chain you can detect and which parts you<br />
+are blind to. When you project those rules onto an ATT&amp;CK heatmap and<br />
+overlay them against the techniques used by your priority threat actors, the<br />
+gaps become immediately apparent.</p>
+<h3 id="navigator-operates-on-the-concept-of-layers-json-files-that-describe">Navigator operates on the concept of layers — JSON files that describe</h3>
+<p>colors, scores, and annotations for technique cells. You can create multiple<br />
+layers, import them from MITRE’s pre-built actor profiles, and combine<br />
+them for multi-dimensional analysis.</p>
+<h3 id="hands-on-building-a-coverage-map">Hands-On: Building a Coverage Map</h3>
+<p>Access: Open mitre-attack.github.io/attack-navigator in your browser. No<br />
+installation or account required. For persistent work, use the self-hosted<br />
+version or export layers as JSON.</p>
+<p>Workflow 1: Map your existing detections</p>
+<p>This workflow answers: “What does my current detection coverage look like<br />
+against the ATT&amp;CK matrix?”</p>
+<h2 id="1-open-navigator-click-create-new-layer-select-attck-enterprise">1. Open Navigator → click “Create New Layer” → select “ATT&amp;CK Enterprise”</h2>
+<p>and the current version</p>
+<h2 id="2-you-will-see-the-full-matrix-with-all-techniques-visible-but-uncolored-gray">2. You will see the full matrix with all techniques visible but uncolored (gray)</h2>
+<h2 id="3-for-each-detection-rule-in-your-siemedrtool-stack-identify-which">3. For each detection rule in your SIEM/EDR/tool stack, identify which</h2>
+<h3 id="attck-technique-it-addresses">ATT&amp;CK technique it addresses</h3>
+<h3 id="sigma-rules-check-the-tags-field-technique-ids-are-listed-there">Sigma rules: check the tags: field — technique IDs are listed there</h3>
+<h3 id="siem-rules-without-attck-tags-manually-map-based-on-rule-logic">SIEM rules without ATT&amp;CK tags: manually map based on rule logic</h3>
+<h3 id="edr-alerts-most-modern-edr-vendors-tag-alerts-with-attck-ids-in">EDR alerts: most modern EDR vendors tag alerts with ATT&amp;CK IDs in</h3>
+<p>their documentation</p>
+<h2 id="4-select-the-technique-cell-in-navigator-click-to-select-hold-shift-to-select">4. Select the technique cell in Navigator (click to select, hold Shift to select</h2>
+<p>multiple)</p>
+<h2 id="1-use-the-color-selector-to-mark-covered-techniques-green">1. Use the color selector to mark covered techniques green</h2>
+<h2 id="2-for-partial-or-weak-coverage-rule-exists-but-untested-high-false-positive">2. For partial or weak coverage (rule exists but untested / high false positive</h2>
+<p>rate), use yellow</p>
+<h2 id="3-uncolored-cells-your-blind-spots">3. Uncolored cells = your blind spots</h2>
+<p>The resulting green-yellow-gray heatmap is your detection coverage layer.</p>
+<p>Workflow 2: Import a threat actor profile</p>
+<p>This workflow answers: “What techniques does my priority threat actor<br />
+use?”</p>
+<h2 id="1-go-to-attackmitreorggroups-and-find-your-actor">1. Go to attack.mitre.org/groups/ and find your actor</h2>
+<h2 id="2-on-the-group-page-scroll-to-the-bottom-click-attck-navigator">2. On the group page, scroll to the bottom → click “ATT&amp;CK Navigator</h2>
+<p>Layers” → download the JSON for the current version</p>
+<h2 id="3-in-navigator-open-existing-layer-select-the-downloaded-json">3. In Navigator → “Open Existing Layer” → select the downloaded JSON</h2>
+<h2 id="4-the-layer-automatically-loads-with-the-actors-known-techniques">4. The layer automatically loads with the actor’s known techniques</h2>
+<p>highlighted</p>
+<h3 id="json">Json:</h3>
+<p>{</p>
+<pre><code>&quot;description&quot;: &quot;Enterprise techniques used by APT42, ATT&amp;CK group G1044 (v1.0)
+&quot;name&quot;: &quot;APT42 (G1044)&quot;,
+&quot;domain&quot;: &quot;enterprise-attack&quot;,
+&quot;versions&quot;: {
+&quot;layer&quot;: &quot;4.5&quot;,
+&quot;attack&quot;: &quot;18&quot;,
+&quot;navigator&quot;: &quot;5.2.0&quot;
+},
+&quot;techniques&quot;: [
+{
+&quot;techniqueID&quot;: &quot;T1087&quot;,
+&quot;showSubtechniques&quot;: true
+},
+{
+&quot;techniqueID&quot;: &quot;T1087.001&quot;,
+&quot;comment&quot;: &quot;[APT42](https://attack.mitre.org/groups/G1044) has used the Po
+&quot;score&quot;: 1,
+&quot;color&quot;: &quot;#66b1ff&quot;,
+&quot;showSubtechniques&quot;: true
+},
+{
+&quot;techniqueID&quot;: &quot;T1583&quot;,
+&quot;showSubtechniques&quot;: true
+},
+{
+&quot;techniqueID&quot;: &quot;T1583.001&quot;,
+&quot;comment&quot;: &quot;[APT42](https://attack.mitre.org/groups/G1044) has registered
+&quot;score&quot;: 1,
+&quot;color&quot;: &quot;#66b1ff&quot;,
+&quot;showSubtechniques&quot;: true
+},
+{
+&quot;techniqueID&quot;: &quot;T1583.003&quot;,
+&quot;comment&quot;: &quot;[APT42](https://attack.mitre.org/groups/G1044) has used anonym
+&quot;score&quot;: 1,
+&quot;color&quot;: &quot;#66b1ff&quot;,
+&quot;showSubtechniques&quot;: true
+},
+{
+&quot;techniqueID&quot;: &quot;T1071&quot;,
+&quot;showSubtechniques&quot;: true
+},
+{
+&quot;techniqueID&quot;: &quot;T1071.001&quot;,
+&quot;comment&quot;: &quot;[APT42](https://attack.mitre.org/groups/G1044) has used tools
+&quot;score&quot;: 1,
+&quot;color&quot;: &quot;#66b1ff&quot;,
+&quot;showSubtechniques&quot;: true
+</code></pre>
+<p>},<br />
+{<br />
+"techniqueID": "T1547",<br />
+"comment": "<a href="https://attack.mitre.org/groups/G1044">APT42</a> has modified th<br />
+"score": 1,<br />
+"color": "#66b1ff",<br />
+"showSubtechniques": false<br />
+},<br />
+{<br />
+"techniqueID": "T1059",<br />
+"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1059.001",<br />
+"comment": "<a href="https://attack.mitre.org/groups/G1044">APT42</a> has downloaded<br />
+"score": 1,<br />
+"color": "#66b1ff",<br />
+"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1059.005",<br />
+"comment": "<a href="https://attack.mitre.org/groups/G1044">APT42</a> has used a VBSc<br />
+"score": 1,<br />
+"color": "#66b1ff",<br />
+"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1555",<br />
+"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1555.003",<br />
+"comment": "<a href="https://attack.mitre.org/groups/G1044">APT42</a> has used custom<br />
+"score": 1,<br />
+"color": "#66b1ff",<br />
+"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1132",<br />
+"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1132.001",<br />
+"comment": " <a href="https://attack.mitre.org/groups/G1044">APT42</a> has encoded C2<br />
+"score": 1,<br />
+"color": "#66b1ff",<br />
+"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1530",<br />
+"comment": "<a href="https://attack.mitre.org/groups/G1044">APT42</a> has collected d<br />
+"score": 1,<br />
+"color": "#66b1ff",<br />
+"showSubtechniques": false<br />
+},<br />
+{<br />
+"techniqueID": "T1573",<br />
+"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1573.002",<br />
+"comment": "<a href="https://attack.mitre.org/groups/G1044">APT42</a> has used tools<br />
+"score": 1,<br />
+"color": "#66b1ff",<br />
+"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1585",<br />
+"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1585.002",<br />
+"comment": "<a href="https://attack.mitre.org/groups/G1044">APT42</a> has created ema<br />
+"score": 1,<br />
+"color": "#66b1ff",</p>
+<p>"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1656",<br />
+"comment": "<a href="https://attack.mitre.org/groups/G1044">APT42</a> has impersonate<br />
+"score": 1,<br />
+"color": "#66b1ff",<br />
+"showSubtechniques": false<br />
+},<br />
+{<br />
+"techniqueID": "T1070",<br />
+"comment": "<a href="https://attack.mitre.org/groups/G1044">APT42</a> has cleared Chr<br />
+"score": 1,<br />
+"color": "#66b1ff",<br />
+"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1070.008",<br />
+"comment": "<a href="https://attack.mitre.org/groups/G1044">APT42</a> has deleted log<br />
+"score": 1,<br />
+"color": "#66b1ff",<br />
+"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1056",<br />
+"comment": "<a href="https://attack.mitre.org/groups/G1044">APT42</a> has used creden<br />
+"score": 1,<br />
+"color": "#66b1ff",<br />
+"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1056.001",<br />
+"comment": "<a href="https://attack.mitre.org/groups/G1044">APT42</a> has used custom<br />
+"score": 1,<br />
+"color": "#66b1ff",<br />
+"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1036",<br />
+"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1036.005",<br />
+"comment": "<a href="https://attack.mitre.org/groups/G1044">APT42</a> has masqueraded<br />
+"score": 1,<br />
+"color": "#66b1ff",<br />
+"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1112",<br />
+"comment": "<a href="https://attack.mitre.org/groups/G1044">APT42</a> has modified Re<br />
+"score": 1,<br />
+"color": "#66b1ff",<br />
+"showSubtechniques": false<br />
+},<br />
+{<br />
+"techniqueID": "T1111",<br />
+"comment": "<a href="https://attack.mitre.org/groups/G1044">APT42</a> has intercepted<br />
+"score": 1,<br />
+"color": "#66b1ff",<br />
+"showSubtechniques": false<br />
+},<br />
+{<br />
+"techniqueID": "T1588",<br />
+"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1588.002",<br />
+"comment": "<a href="https://attack.mitre.org/groups/G1044">APT42</a> has used built-<br />
+"score": 1,<br />
+"color": "#66b1ff",<br />
+"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1566",</p>
+<p>"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1566.002",<br />
+"comment": "<a href="https://attack.mitre.org/groups/G1044">APT42</a> has sent spearp<br />
+"score": 1,<br />
+"color": "#66b1ff",<br />
+"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1053",<br />
+"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1053.005",<br />
+"comment": "<a href="https://attack.mitre.org/groups/G1044">APT42</a> has used schedu<br />
+"score": 1,<br />
+"color": "#66b1ff",<br />
+"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1113",<br />
+"comment": "<a href="https://attack.mitre.org/groups/G1044">APT42</a> has used malwar<br />
+"score": 1,<br />
+"color": "#66b1ff",<br />
+"showSubtechniques": false<br />
+},<br />
+{<br />
+"techniqueID": "T1518",<br />
+"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1518.001",<br />
+"comment": "<a href="https://attack.mitre.org/groups/G1044">APT42</a> has used Window<br />
+"score": 1,<br />
+"color": "#66b1ff",<br />
+"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1608",<br />
+"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1608.001",<br />
+"comment": "<a href="https://attack.mitre.org/groups/G1044">APT42</a> has used its in<br />
+"score": 1,<br />
+"color": "#66b1ff",<br />
+"showSubtechniques": true<br />
+},<br />
+{<br />
+"techniqueID": "T1539",<br />
+"comment": "<a href="https://attack.mitre.org/groups/G1044">APT42</a> has used custom<br />
+"score": 1,<br />
+"color": "#66b1ff",<br />
+"showSubtechniques": false<br />
+},<br />
+{<br />
+"techniqueID": "T1082",<br />
+"comment": "<a href="https://attack.mitre.org/groups/G1044">APT42</a> has used malwar<br />
+"score": 1,<br />
+"color": "#66b1ff",<br />
+"showSubtechniques": false<br />
+},<br />
+{<br />
+"techniqueID": "T1016",<br />
+"comment": "<a href="https://attack.mitre.org/groups/G1044">APT42</a> has used malwar<br />
+"score": 1,<br />
+"color": "#66b1ff",<br />
+"showSubtechniques": false<br />
+},<br />
+{<br />
+"techniqueID": "T1102",<br />
+"comment": "<a href="https://attack.mitre.org/groups/G1044">APT42</a> has used variou<br />
+"score": 1,<br />
+"color": "#66b1ff",</p>
+<pre><code>&quot;showSubtechniques&quot;: false
+},
+{
+&quot;techniqueID&quot;: &quot;T1047&quot;,
+&quot;comment&quot;: &quot;[APT42](https://attack.mitre.org/groups/G1044) has used Window
+&quot;score&quot;: 1,
+&quot;color&quot;: &quot;#66b1ff&quot;,
+&quot;showSubtechniques&quot;: false
+}
+],
+&quot;gradient&quot;: {
+&quot;colors&quot;: [
+&quot;#ffffff&quot;,
+&quot;#66b1ff&quot;
+],
+&quot;minValue&quot;: 0,
+&quot;maxValue&quot;: 1
+},
+&quot;legendItems&quot;: [
+{
+&quot;label&quot;: &quot;used by APT42&quot;,
+&quot;color&quot;: &quot;#66b1ff&quot;
+}
+]
+</code></pre>
+<p>}</p>
+<p>Alternatively, for actors that MITRE doesn’t have a Group entry for (e.g.,<br />
+newly emerged groups, actors tracked under internal names), you can<br />
+manually build a profile by creating a new layer and coloring techniques<br />
+based on your own CTI analysis.</p>
+<p>Workflow 3: Overlay for gap analysis</p>
+<p>This is the most powerful Navigator workflow. It answers: “Which<br />
+techniques does my threat actor use that I currently cannot detect?”</p>
+<h2 id="1-in-navigator-click-the-tab-to-open-a-new-layer-tab">1. In Navigator, click the “+” tab to open a new layer tab</h2>
+<h2 id="2-import-both-your-detection-layer-green-and-your-threat-actor-layer">2. Import both your detection layer (green) and your threat actor layer</h2>
+<p>(red/orange) as separate tabs</p>
+<h2 id="3-click-the-tab-that-says-new-layer-select-create-layer-from-other">3. Click the tab that says “new layer” → select “Create Layer from Other</h2>
+<p>Layers”</p>
+<h2 id="4-in-the-layer-operation-dialog-select-both-layers-and-configure-the-scoring">4. In the layer operation dialog, select both layers and configure the scoring:</h2>
+<p>Detection layer score: 1</p>
+<p>Threat actor layer score: 1</p>
+<p>Operation: “sum” or use the “populated from” option to show intersection</p>
+<h2 id="4-alternatively-use-the-multi-select-tab-view-to-visually-compare-both-layers">4. Alternatively, use the multi-select tab view to visually compare both layers</h2>
+<p>side by side</p>
+<h3 id="the-resulting-view-reveals-three-categories">The resulting view reveals three categories:</h3>
+<p>Workflow 4: Prioritized gap output</p>
+<h3 id="export-the-gap-analysis-and-build-a-detection-roadmap">Export the gap analysis and build a detection roadmap:</h3>
+<p>Priority 1 — Immediate (next sprint):</p>
+<pre><code>Techniques in Red that appear frequently in actor profile + high impact
+Example: T1003.003 (NTDS dump), T1490 (VSS deletion), T1055 (Process injection
+</code></pre>
+<p>Priority 2 — Near-term (next 30 days):</p>
+<h3 id="techniques-in-red-with-lower-frequency-in-actor-profile-or-moderate">Techniques in Red with lower frequency in actor profile or moderate</h3>
+<p>impact</p>
+<pre><code>Example: T1087.002 (AD account enum), T1018 (network scanning)
+</code></pre>
+<p>Priority 3 — Roadmap (next 90 days):</p>
+<h3 id="techniques-in-yellow-partial-coverage-that-appear-in-actor">Techniques in Yellow (partial coverage) that appear in actor</h3>
+<p>profile</p>
+<pre><code>Example: T1078 (valid accounts) — rule exists but detection is too
+</code></pre>
+<p>broad to be actionable</p>
+<h3 id="this-is-the-framework-for-a-threat-informed-detection-roadmap">This is the framework for a threat-informed detection roadmap —</h3>
+<p>prioritization driven by actual threat data, not vendor recommendations or<br />
+framework compliance percentages.</p>
+<h3 id="reading-and-communicating-gap-analysis-results">Reading and Communicating Gap Analysis Results</h3>
+<h3 id="when-presenting-navigator-outputs-to-a-soc-team-or-security-leadership">When presenting Navigator outputs to a SOC team or security leadership:</h3>
+<p>Avoid percentage-coverage metrics without context. “We cover 40% of<br />
+ATT&amp;CK” is meaningless. “We cover 78% of techniques used by our<br />
+priority threat actors, with critical gaps in credential dumping and<br />
+impact-phase techniques” is actionable.</p>
+<p>Anchor the discussion to your threat model. The question is not “how<br />
+much ATT&amp;CK do we cover?” It is “can we detect the techniques that<br />
+adversaries targeting our sector are actually using?”</p>
+<p>Distinguish theoretical coverage from validated coverage. A technique<br />
+has theoretical coverage if a rule exists for it. It has validated coverage if<br />
+that rule has been confirmed to fire against a realistic test of the<br />
+technique (Atomic Red Team, purple team exercise). Mark the difference<br />
+explicitly in your layer.</p>
+<h2 id="9-use-case-3-detection-engineering-with-sigma-attck">9. Use Case 3: Detection Engineering with Sigma + ATT&amp;CK</h2>
+<h3 id="why-sigma-is-the-right-integration-point">Why Sigma Is the Right Integration Point</h3>
+<h3 id="detection-engineering-teams-face-a-persistent-problem-every-siem-and-edr">Detection engineering teams face a persistent problem: every SIEM and EDR</h3>
+<p>platform uses a different query language. A detection rule written for Splunk<br />
+SPL cannot be directly used in Microsoft Sentinel KQL, Elastic EQL, or<br />
+Chronicle YARA-L. This forces teams to either commit to a single platform or<br />
+maintain parallel rule sets — wasting engineering effort and creating<br />
+inconsistencies.</p>
+<p>Sigma is an open, vendor-neutral YAML-based rule format that solves this. A<br />
+Sigma rule describes the detection logic in abstract terms (which log source,<br />
+which field patterns, which conditions) and can be converted to any SIEM’s<br />
+query language using the pySigma converter. Critically for ATT&amp;CK<br />
+integration, every Sigma rule includes an explicit ATT&amp;CK tag list — making<br />
+it the natural bridge between the framework and live production detections.</p>
+<h3 id="the-sigmahqsigma-repository-on-github-contains-thousands-of">The SigmaHQ/sigma repository on GitHub contains thousands of</h3>
+<p>community-maintained Sigma rules, the vast majority of which are ATT&amp;CK-<br />
+tagged. This is one of the most practical starting points for any detection<br />
+engineering program.</p>
+<h3 id="anatomy-of-a-sigma-rule-with-attck-tags">Anatomy of a Sigma Rule with ATT&amp;CK Tags</h3>
+<pre><code>title: Suspicious PowerShell Download Cradle
+</code></pre>
+<p>id: 3b6ab547-8ec2-4991-a01c-5d46b3e88a8a<br />
+description: &gt;</p>
+<pre><code>Detects PowerShell using common download methods (DownloadString, DownloadFile
+WebClient, IEX) to pull content from a remote server. This pattern is frequent
+observed in initial access and C2 establishment phases of intrusions.
+</code></pre>
+<p>references:</p>
+<pre><code>- https://attack.mitre.org/techniques/T1059/001/
+- https://attack.mitre.org/techniques/T1105/
+- https://attack.mitre.org/techniques/T1027/
+</code></pre>
+<p>author: Andrey Pautov<br />
+date: 2026/03/19<br />
+tags:</p>
+<pre><code>- attack.execution
+- attack.t1059.001         # PowerShell
+- attack.command_and_control
+- attack.t1105             # Ingress Tool Transfer
+- attack.defense_evasion
+- attack.t1027             # Obfuscated Files or Information
+</code></pre>
+<pre><code>logsource:
+category: process_creation
+product: windows
+</code></pre>
+<p>detection:<br />
+selection:<br />
+CommandLine|contains:<br />
+- 'DownloadString'<br />
+- 'DownloadFile'<br />
+- 'WebClient'<br />
+- 'IEX'<br />
+- 'Invoke-Expression'<br />
+- 'Net.WebClient'<br />
+- 'Start-BitsTransfer'<br />
+filter_legitimate:<br />
+ParentImage|contains:<br />
+- 'C:\Windows\System32\wsus'<br />
+- 'C:\Program Files\ManagementEngine'<br />
+condition: selection and not filter_legitimate</p>
+<pre><code>falsepositives:
+</code></pre>
 <ul>
-<li><strong>Medium:</strong> <a href="https://medium.com/@1200km">medium.com/@1200km</a></li>
-<li><strong>Framework reference:</strong> MITRE ATT&amp;CK v16, Enterprise domain</li>
-<li><strong>Evidence cutoff:</strong> March 2026</li>
+<li>Legitimate administrative scripts using WebClient for automation</li>
+<li>Software deployment and management tools (WSUS, MECM)</li>
+<li>Security scanning tools</li>
 </ul>
+<pre><code>level: high
+
+
+### Key fields for ATT&amp;CK integration:
+
+The tags: field is the critical integration point. Each tag follows a specific
+format:
+
+</code></pre>
+<p>attack.<tactic-name> — references the tactic (lowercase, spaces replaced</p>
+<pre><code>
+by underscores)
+
+</code></pre>
+<p>attack.t<technique-number>.<sub-technique-number> — references the</p>
+<pre><code>
+specific technique/sub-technique
+
+
+### One rule carries multiple ATT&amp;CK tags when the observed behavior spans
+multiple techniques. The PowerShell download cradle above tags three
+techniques across three tactics because the behavior serves all three
+purposes simultaneously.
+
+
+### When you import Sigma rules into a platform like Splunk or Elastic with
+ATT&amp;CK integration, these tags automatically populate the ATT&amp;CK field in
+alert metadata — enabling ATT&amp;CK-based alerting dashboards, statistics,
+and Navigator layer exports directly from your SIEM.
+
+
+### From ATT&amp;CK Technique to Detection Rule: The Complete Process
+Most detection engineering guides start with log data. The ATT&amp;CK-first
+approach starts with the threat:
+
+STEP 1: Identify the target technique
+</code></pre>
+<p>You have a CTI report that maps an actor's behavior to T1059.001 (PowerShell).<br />
+You have no validated detection for this technique in your environment.<br />
+Goal: build an effective detection.</p>
+<pre><code>STEP 2: Read the ATT&amp;CK technique page - Data Sources section
+
+Navigate to attack.mitre.org/techniques/T1059/001/
+
+### Data Sources listed:
+</code></pre>
+<ul>
+<li>Command: Command Execution</li>
+<li>Process: Process Creation</li>
+<li>Module: Module Load</li>
+<li>Script: Script Execution</li>
+</ul>
+<pre><code>Translation: To detect PowerShell abuse, you need:
+</code></pre>
+<ul>
+<li>Process creation logs (Windows Event 4688 or Sysmon EventID 1)</li>
+<li>PowerShell script block logging (Windows Event 4104)</li>
+<li>Module load events (Sysmon EventID 7) for .NET assembly loading</li>
+</ul>
+<pre><code>STEP 3: Verify you collect the required data sources
+Check your SIEM: are you receiving Windows Event 4688 with full command line?
+Check: is PowerShell Script Block Logging enabled (HKLM\SOFTWARE\Policies\Micr
+Check: do you have Sysmon deployed with appropriate config?
+
+### If the answer is no to any of these: fix the data collection BEFORE writing de
+A rule without the data source it needs will never fire.
+STEP 4: Read the procedure examples for behavioral pattern
+ATT&amp;CK's procedure examples show what PowerShell abuse actually looks like:
+</code></pre>
+<ul>
+<li>Download cradles: IEX (New-Object Net.WebClient).DownloadString(...)</li>
+<li>Encoded commands: powershell.exe -enc <base64></li>
+<li>Reflection: [System.Reflection.Assembly]::Load(...)</li>
+<li>AMSI bypass patterns</li>
+<li>Living-off-the-land: using built-in PS modules maliciously</li>
+</ul>
+<pre><code>STEP 5: Define detection logic
+Based on the behavioral patterns: what field+value combinations indicate malic
+Consider: true positives (what you want to catch) vs. false positives (what lo
+
+### High-confidence indicators for malicious PowerShell:
+</code></pre>
+<ul>
+<li>CommandLine contains DownloadString/DownloadFile/WebClient + a URL</li>
+<li>CommandLine contains -enc / -EncodedCommand with an unexpectedly long Base</li>
+<li>PowerShell spawned by unexpected parent (Office apps, browsers, email clie</li>
+<li>CommandLine contains known bypass strings (AMSI bypass patterns)</li>
+</ul>
+<pre><code>STEP 6: Write the Sigma rule
+Convert the detection logic to YAML following Sigma spec.
+Tag with relevant ATT&amp;CK IDs.
+Include filter conditions to reduce false positives.
+Add falsepositives documentation for the team that will triage alerts.
+STEP 7: Convert and deploy
+</code></pre>
+<p>sigma convert -t splunk -p splunk_windows rules/powershell_download_cradle.yml</p>
+<pre><code>sigma convert -t elastic -p ecs_windows rules/powershell_download_cradle.yml
+</code></pre>
+<p>sigma convert -t sentinel rules/powershell_download_cradle.yml</p>
+<pre><code>STEP 8: Validate with an atomic test
+Invoke-AtomicTest T1059.001 -TestNumbers 1
+Confirm the alert fires. Confirm the alert contains the expected ATT&amp;CK metada
+Document the validation result in your coverage tracking.
+
+
+### ATT&amp;CK Data Sources — The Underused Feature
+
+
+### The Data Sources section of every ATT&amp;CK technique page is one of the
+most actionable parts of the framework, and one of the most frequently
+overlooked.
+
+Each ATT&amp;CK data source is now structured with a source and component,
+for example:
+
+
+### Process: Process Creation — logs of process start events (Sysmon
+
+</code></pre>
+<p>EventID 1, Windows 4688)</p>
+<pre><code>
+</code></pre>
+<p>Process: Process Access — logs of one process accessing another's</p>
+<pre><code>
+memory (Sysmon EventID 10)
+
+
+### Command: Command Execution — logs of commands run by scripting
+
+interpreters (PowerShell Event 4104)
+
+
+### File: File Creation — file system events for new file creation (Sysmon
+
+</code></pre>
+<p>EventID 11)</p>
+<pre><code>
+
+### Network Traffic: Network Connection Creation — network connection
+
+events (Sysmon EventID 3)
+
+
+### Windows Registry: Windows Registry Key Modification — registry change
+
+events (Sysmon EventID 13)
+
+
+### A detection engineer who builds rules without first verifying the required
+data sources are being collected is wasting effort. Before writing any
+</code></pre>
+<p>detection:</p>
+<pre><code>
+
+## 1. Check which data sources the technique requires
+
+
+## 2. Verify those sources are being collected in your environment at the right
+fidelity
+
+
+## 3. If not — fix the collection gap first; a rule without data is a rule that never
+fires
+
+A common and consequential example: T1003.001 (LSASS Credential
+Dumping) requires Process: Process Access — specifically, logs of processes
+reading LSASS memory. This requires Sysmon EventID 10, configured with
+an appropriate rule to capture lsass.exe as a target. If you haven't deployed
+Sysmon, or your Sysmon config doesn't include lsass access monitoring,
+every LSASS dumping detection you build will silently fail.
+
+
+## 10. Use Case 4: Threat Hunting with ATT&amp;CK
+
+
+### What Makes ATT&amp;CK-Driven Hunting Different
+Threat hunting is the proactive, human-led search for adversary activity that
+automated detection has failed to catch. The fundamental challenge of
+threat hunting is the blank page problem: where do you start? What are you
+looking for? How do you know when to stop?
+
+
+### ATT&amp;CK solves the blank page problem by providing a structured catalog of
+adversary behaviors, each with documented detection approaches. Instead
+of hunting based on intuition or random exploration, ATT&amp;CK-driven
+hunting is hypothesis-driven: you select a specific technique your threat
+actors are known to use, understand how it manifests in telemetry, and go
+looking for evidence of it.
+
+
+### This approach has three key advantages:
+
+
+## 1. Prioritization is objective — you hunt based on threat actor profiles, not
+gut feeling
+
+
+## 2. Scope is bounded — you know exactly what you are looking for and what
+data you need
+
+
+## 3. Outcomes feed the system — confirmed malicious findings become new
+detection rules; cleared hypotheses become documented baselines
+
+
+### The Complete ATT&amp;CK-Driven Hunt Process
+Step 1: Select a hunt hypothesis
+
+Start with your threat intelligence. Which techniques appear in your priority
+threat actors’ profiles? Cross-reference against your Navigator coverage
+layer. The intersection of “used by my threat actors” and “not well-covered
+by my detections” is your hunting queue.
+
+Example hypothesis: “APT29 and related clusters have been observed using
+T1098.001 (Additional Cloud Credentials) to establish persistent access to Azure
+environments by adding credentials to existing service principals. We do not have
+
+strong detection coverage for this technique in our Azure environment. Hypothesis:
+this technique has been or is being used in our tenant without triggering any
+alerts.”
+
+
+### A well-formed hunt hypothesis has three parts:
+
+
+### The technique being hunted (with ATT&amp;CK ID)
+
+
+### The evidence basis for why this technique is relevant (threat actor
+</code></pre>
+<p>profile, sector incidents)</p>
+<pre><code>
+</code></pre>
+<p>The coverage gap that motivates the hunt (automated detection doesn’t<br />
+cover this)</p>
+<pre><code>
+Step 2: Understand the technique’s observable artifacts
+
+Read the ATT&amp;CK technique page for your selected technique. Focus on:
+
+
+### What the behavior looks like in logs (Detection section)
+
+
+### What data sources are required
+
+
+### What procedure examples exist (to understand variations to look for)
+
+For T1078 (Valid Accounts) as an example, the observable artifacts include:
+
+
+### Logon events from accounts that authenticate infrequently or from new
+</code></pre>
+<p>locations</p>
+<pre><code>
+</code></pre>
+<p>Service accounts authenticating interactively (logon type 2 or 10) —<br />
+service accounts should never do this legitimately</p>
+<pre><code>
+
+### Accounts accessing resources they have no business reason to access
+
+
+### Authentication from unusual IP ranges or geographies
+
+
+### Multiple authentication failures followed by success (credential stuffing
+</code></pre>
+<p>pattern)</p>
+<pre><code>
+Step 3: Formulate hunt queries
+
+Translate the behavioral patterns into queries against your data. Write
+multiple queries — one for each observable variant — rather than trying to
+catch everything in a single query.
+
+</code></pre>
+<p>-- Hunt Query 1: Service accounts with interactive logons (T1078 — Valid Account<br />
+-- Target: Windows Security Event Log, EventID 4624<br />
+-- Hypothesis: compromised service accounts being used for interactive access<br />
+SELECT<br />
+AccountName,<br />
+AccountDomain,</p>
+<pre><code>
+</code></pre>
+<p>LogonType,<br />
+WorkstationName,<br />
+IpAddress,<br />
+IpPort,<br />
+COUNT(<em>) as event_count,<br />
+MIN(TimeCreated) as first_seen,<br />
+MAX(TimeCreated) as last_seen<br />
+FROM windows_security_events<br />
+WHERE EventID = 4624<br />
+AND LogonType IN (2, 10)           -- Interactive, RemoteInteractive<br />
+AND AccountName LIKE '%svc%'       -- Matches common service account naming<br />
+AND AccountName NOT LIKE '%MSOL%' -- Exclude known automated accounts<br />
+AND TimeCreated &gt; DATEADD(day, -30, GETDATE())<br />
+GROUP BY AccountName, AccountDomain, LogonType, WorkstationName, IpAddress, IpPo<br />
+HAVING COUNT(</em>) &lt; 5                  -- Low-frequency interactive logon = suspic<br />
+ORDER BY event_count ASC;<br />
+-- Hunt Query 2: Account authentication outside normal business hours (T1078)<br />
+-- Hypothesis: compromised legitimate accounts used during off-hours operations<br />
+SELECT<br />
+AccountName,<br />
+AccountDomain,<br />
+LogonType,<br />
+WorkstationName,<br />
+IpAddress,<br />
+HOUR(TimeCreated) as logon_hour,<br />
+COUNT(<em>) as event_count<br />
+FROM windows_security_events<br />
+WHERE EventID = 4624<br />
+AND LogonType IN (3, 10)           -- Network, RemoteInteractive<br />
+AND HOUR(TimeCreated) NOT BETWEEN 7 AND 20 -- Outside 7am-8pm local time<br />
+AND DAYOFWEEK(TimeCreated) IN (1, 7)        -- Weekend<br />
+AND TimeCreated &gt; DATEADD(day, -14, GETDATE())<br />
+GROUP BY AccountName, AccountDomain, LogonType, WorkstationName, IpAddress, logo<br />
+HAVING COUNT(</em>) &gt; 1<br />
+ORDER BY logon_hour ASC;</p>
+<pre><code>
+Step 4: Investigate anomalies
+
+For each result that looks anomalous, investigate the context:
+
+What was the account doing before and after this logon?
+
+Is this a known automation workflow? (Check with the account owner or
+
+### IT)
+
+Does the source IP belong to the organization?
+
+Are there other signals associated with the same account (failed logins,
+new process executions, file access)?
+
+Step 5: Close the loop
+
+
+### Every hunt concludes with a documented outcome:
+
+The documentation of “nothing found” is nearly as valuable as finding
+something — it tells the team that a human looked for this technique in this
+environment during this window, which prevents wasted duplicate hunting
+effort.
+
+
+### ATT&amp;CK Technique Prioritization for Hunting
+Not every technique is worth hunting with equal urgency. Use this
+prioritization model:
+
+Tier 1 — Hunt immediately:
+
+High-frequency techniques in your sector’s threat actor profiles
+
+High-impact techniques (T1485 Data Destruction, T1486 Ransomware,
+T1003 Credential Dumping)
+
+
+### Techniques with zero automated detection coverage in your environment
+
+
+### Techniques for which you have data sources but untested rules
+
+Tier 2 — Hunt in next 30 days:
+
+
+### Techniques used by secondary threat actors in your threat model
+
+
+### Techniques with weak or unvalidated detection coverage
+
+
+### Cloud and identity-based techniques if your environment is cloud-heavy
+
+Tier 3 — Hunt when capacity allows:
+
+
+### Techniques rarely observed in your sector
+
+Techniques your environment structurally cannot support (e.g., ICS
+techniques if you have no OT)
+
+Techniques well-covered by mature, validated detection rules
+
+
+## 11. Use Case 5: Adversary Emulation and Purple Teaming
+
+
+### The Problem That Purple Teaming Solves
+Traditional red team assessments produce a report of findings. Traditional
+blue team operations wait for alerts. These two activities happen in isolation,
+creating an organizational gap: the red team discovers what can be
+compromised, but the blue team doesn’t know which of their detections
+would have fired (or failed to fire) during the attack. By the time the red
+team report reaches the blue team, the context is gone.
+
+
+### Purple teaming collapses this gap by running red team attacks in real time
+while the blue team monitors. The red team executes a technique; the blue
+team immediately checks whether their detection fired. If it didn’t, both
+
+the data source configured correctly? Was the rule logic wrong? Was there a
+visibility gap in the infrastructure?
+
+ATT&amp;CK is the operational language that makes this collaboration work. The
+red team’s emulation plan is structured around ATT&amp;CK techniques. The
+blue team’s detection dashboard is tagged with ATT&amp;CK IDs. When the red
+team says “we just executed T1003.001,” the blue team knows exactly what
+alert to look for. There is no translation overhead.
+
+
+### Atomic Red Team: The Foundational Library
+
+https://www.atomicredteam.io/
+
+
+### Atomic Red Team (by Red Canary) is the most widely adopted ATT&amp;CK-
+aligned test library. It provides small, discrete, reproducible test cases —
+“atomic tests” — each of which emulates a specific ATT&amp;CK technique or
+sub-technique in isolation. The tests are designed to be safe to run in a test
+environment, produce realistic telemetry, and clean up after themselves.
+
+
+### The library is organized exactly like ATT&amp;CK: each technique has its own
+folder, containing one or more atomic tests that exercise different
+implementations or variations of that technique.
+
+</code></pre>
+<h1 id="installation">Installation</h1>
+<p>Install-Module -Name invoke-atomicredteam, powershell-yaml -Scope CurrentUser<br />
+Import-Module invoke-atomicredteam</p>
+<h1 id="list-all-available-atomic-tests-for-a-technique">List all available atomic tests for a technique</h1>
+<p>Invoke-AtomicTest T1003.001 -ShowDetailsBrief</p>
+<h1 id="view-full-details-of-a-specific-test-before-running">View full details of a specific test before running</h1>
+<p>Invoke-AtomicTest T1003.001 -TestNumbers 1 -ShowDetails</p>
+<h1 id="check-prerequisites-some-tests-require-specific-tools-installed">Check prerequisites (some tests require specific tools installed)</h1>
+<p>Invoke-AtomicTest T1003.001 -TestNumbers 1 -CheckPrereqs</p>
+<h1 id="install-prerequisites-if-needed">Install prerequisites if needed</h1>
+<p>Invoke-AtomicTest T1003.001 -TestNumbers 1 -GetPrereqs</p>
+<h1 id="execute-the-test">Execute the test</h1>
+<p>Invoke-AtomicTest T1003.001 -TestNumbers 1</p>
+<h1 id="clean-up-artifacts-after-the-test">Clean up artifacts after the test</h1>
+<pre><code>
+Invoke-AtomicTest T1003.001 -TestNumbers 1 -Cleanup
+# Run all tests for a technique
+Invoke-AtomicTest T1003.001
+# Run tests for multiple techniques in sequence
+Invoke-AtomicTest T1003.001, T1059.001, T1105
+
+
+### The -ShowDetails output tells you exactly what the test does before you run it
+— what commands execute, what artifacts it creates, what data sources it
+touches. Read this before running any test.
+
+
+### Purple Team Workflow: Step by Step
+
+
+### PRE-EXERCISE:
+
+## 1. CTI team provides actor TTP profile
+</code></pre>
+<p>→ ATT&amp;CK Navigator layer showing which techniques the actor uses<br />
+→ Priority ranked: high-impact, frequently-observed techniques first</p>
+<pre><code>
+## 2. Red team builds emulation plan
+</code></pre>
+<p>→ Select top 10-15 techniques from the actor profile for this exercise<br />
+→ Map each to one or more Atomic Red Team tests<br />
+→ Identify any gaps where Atomic tests don't cover the technique (custom scri<br />
+→ Write the execution runbook (order, timing, target systems)</p>
+<pre><code>
+## 3. Blue team prepares
+</code></pre>
+<p>→ Load the actor's ATT&amp;CK layer in Navigator<br />
+→ Identify which techniques have existing detection rules<br />
+→ Set up detection dashboard filtered to the exercise's technique IDs<br />
+→ Brief SOC analysts: "We are emulating this actor profile today; these T-cod</p>
+<pre><code>
+### DURING EXERCISE:
+
+## 4. Red team announces each technique before execution
+</code></pre>
+<p>→ "Executing T1003.001 - LSASS credential dump in 60 seconds"<br />
+→ Allows blue team to note the exact time for log correlation</p>
+<pre><code>
+## 5. Red executes atomic test
+</code></pre>
+<p>→ Documents: exact command/tool used, timestamp, target system</p>
+<pre><code>
+## 6. Blue team checks detection (within 5 minutes)
+</code></pre>
+<p>→ Did an alert fire? What was the alert content? How much time did it take?<br />
+→ If no alert: check raw logs - was the telemetry present but the rule missed</p>
+<pre><code>
+## 7. Document result immediately
+</code></pre>
+<p>✓ Detected - alert fired within X minutes with correct ATT&amp;CK tag<br />
+△ Detected (noisy) - alert fired but with excessive false positives or late<br />
+✗ Missed - no alert, investigate root cause<br />
+◌ Data gap - no telemetry present (data source not collected)</p>
+<pre><code>
+### POST-EXERCISE:
+
+## 8. Compile results by technique
+
+## 9. Update Navigator coverage layer with actual validated status
+
+## 10. Create detection engineering tickets for all ✗ and ◌ findings
+
+## 11. Document all △ findings for rule tuning backlog
+
+## 12. Write purple team report: what was emulated, what was detected, what was mis
+
+
+### VECTR for Tracking
+
+
+### VECTR (by Security Risk Advisors) is an open-source platform designed
+specifically for tracking adversary emulation and purple team exercise
+
+results. It stores campaigns, test cases, and outcomes organized by ATT&amp;CK
+technique, and generates coverage metrics and trend reports over time.
+
+
+### Key VECTR capabilities:
+
+
+### Track multiple campaigns (exercises) over time and compare coverage
+trends
+
+
+### Associate each test case with the ATT&amp;CK technique it exercises
+
+
+### Record outcome (Detected / Missed / Partial) and detection details
+
+
+### Generate ATT&amp;CK Navigator-compatible layers from exercise results
+
+
+### Export executive-level coverage reports
+
+The combination of Atomic Red Team (test execution) + VECTR (tracking) +
+Navigator (visualization) constitutes a complete, reproducible purple team
+program.
+
+
+### MITRE CALDERA: Automated Adversary Emulation
+https://caldera.mitre.org/
+
+CALDERA is MITRE’s own adversary emulation platform. Unlike Atomic Red
+Team (which runs discrete tests manually), CALDERA operates as a
+persistent C2 framework that autonomously chains techniques together,
+mimicking the behavior of an actual adversary making decisions in your
+environment.
+
+
+### CALDERA is more complex to operate than Atomic Red Team but enables
+scenario-based testing: “What would happen if an actor with these
+capabilities got a foothold on this endpoint?” rather than just “Does this
+specific technique fire an alert?”
+
+
+### CALDERA ships with pre-built adversary profiles aligned to real threat
+groups, each structured as chains of ATT&amp;CK techniques. Running a
+CALDERA operation produces a complete, ATT&amp;CK-mapped activity log
+showing every technique executed, every command run, and every artifact
+created — a realistic emulation of a full intrusion chain rather than isolated
+technique tests.
+
+
+## 12. Hands-On: Step-by-Step Worked Example
+
+
+### Scenario
+You are a CTI analyst at a regional bank. Your team received the following
+intelligence report from your ISAC (Information Sharing and Analysis
+
+### Center):
+
+“A ransomware operator, tracked internally as ALPHA CRYPT, has been observed
+targeting financial sector organizations in the EMEA region. Initial access is
+achieved via spear-phishing emails containing macro-enabled Word documents
+(.docm files). The macro executes cmd.exe, which launches PowerShell with an
+encoded command to download a Cobalt Strike beacon from a compromised
+legitimate website over HTTPS. The beacon is injected into a running explorer.exe
+process using reflective DLL injection. The actor then performs Active Directory
+reconnaissance using BloodHound (run as a compiled binary) and standard
+Windows utilities (net.exe, nltest). Domain credentials are extracted by dumping
+NTDS.dit: the actor creates a Volume Shadow Copy, accesses the shadow copy to
+copy NTDS.dit and the SYSTEM registry hive, then parses them offline using
+secretsdump. The actor moves laterally using PsExec over SMB, authenticating
+with Domain Admin credentials extracted from the credential dump. On all
+accessible systems, the actor executes a wiper payload that deletes all Volume
+Shadow Copies, encrypts files, and overwrites the Master Boot Record before
+rebooting.”
+
+Step 1: Extract Atomic Behaviors
+
+### Read through the scenario and list every discrete adversary action:
+
+
+## 1. Spear-phishing email sent to targets
+
+
+## 2. Email contains a .docm (macro-enabled Word document)
+
+
+## 3. User opens the document and enables macros (user execution)
+
+
+## 4. Macro executes cmd.exe
+
+5. cmd.exe spawns PowerShell with an encoded command
+
+
+## 6. PowerShell decodes and executes the command (encoded command =
+obfuscation)
+
+
+## 7. PowerShell connects to compromised legitimate website over HTTPS
+
+
+## 8. PowerShell downloads Cobalt Strike beacon
+
+
+## 9. Cobalt Strike beacon uses HTTPS for C2
+
+
+## 10. Beacon uses reflective DLL injection into explorer.exe
+
+
+## 11. BloodHound binary executed for AD recon
+
+12. net.exe and nltest used for network/domain discovery
+
+
+## 13. Volume Shadow Copy created via vssadmin or WMI
+
+
+## 14. NTDS.dit copied from shadow copy
+
+
+## 15. SYSTEM registry hive copied from shadow copy
+
+
+## 16. Offline credential parsing (secretsdump on attacker infra — not
+detectable on victim side)
+
+
+## 17. PsExec deployed to remote systems over SMB
+
+
+## 18. PsExec authenticates with stolen Domain Admin credentials
+
+
+## 19. Wiper payload deployed to all accessible systems
+
+20. wiper deletes all Volume Shadow Copies
+
+
+## 21. Wiper encrypts files
+
+
+## 22. Wiper overwrites Master Boot Record (MBR)
+
+
+## 23. Systems rebooted (to trigger MBR wipe rendering systems unbootable)
+
+Step 2: Map Each Behavior to ATT&amp;CK
+
+### You can use LLM to build NAVIGATOR Ready Json like this:
+
+[
+</code></pre>
+<p>{<br />
+"atomic_behavior": "Spear-phishing email sent to targets",<br />
+"attack_mapping": [<br />
+{<br />
+"id": "T1566.001",<br />
+"name": "Spearphishing Attachment"<br />
+}<br />
+],<br />
+"why": "Malicious attachment delivered by email."<br />
+},<br />
+{<br />
+"atomic_behavior": "Email contains a .docm macro-enabled Word document",<br />
+"attack_mapping": [<br />
+{<br />
+"id": "T1566.001",<br />
+"name": "Spearphishing Attachment"<br />
+}<br />
+],<br />
+"why": "The attachment is the delivery vehicle."<br />
+},<br />
+{<br />
+"atomic_behavior": "User opens the document and enables macros",<br />
+"attack_mapping": [<br />
+{</p>
+<pre><code>
+</code></pre>
+<p>"id": "T1204.002",<br />
+"name": "User Execution: Malicious File"<br />
+}</p>
+<pre><code>],
+&quot;why&quot;: &quot;Execution depends on the victim opening the file.&quot;
+},
+{
+&quot;atomic_behavior&quot;: &quot;Macro executes cmd.exe&quot;,
+&quot;attack_mapping&quot;: [
+</code></pre>
+<p>{<br />
+"id": "T1059.005",<br />
+"name": "Command and Scripting Interpreter: Visual Basic"<br />
+}</p>
+<pre><code>],
+&quot;why&quot;: &quot;Office VBA macro execution fits Visual Basic.&quot;
+},
+{
+&quot;atomic_behavior&quot;: &quot;cmd.exe spawns PowerShell with an encoded command&quot;,
+&quot;attack_mapping&quot;: [
+</code></pre>
+<p>{<br />
+"id": "T1059.003",<br />
+"name": "Command and Scripting Interpreter: Windows Command Shell"<br />
+},<br />
+{<br />
+"id": "T1059.001",<br />
+"name": "Command and Scripting Interpreter: PowerShell"<br />
+}</p>
+<pre><code>],
+&quot;why&quot;: &quot;cmd.exe is used as a launcher, and PowerShell is the interpreter tha
+},
+{
+&quot;atomic_behavior&quot;: &quot;PowerShell decodes and executes the command&quot;,
+&quot;attack_mapping&quot;: [
+</code></pre>
+<p>{<br />
+"id": "T1059.001",<br />
+"name": "Command and Scripting Interpreter: PowerShell"<br />
+},<br />
+{<br />
+"id": "T1027",<br />
+"name": "Obfuscated/Compressed Files and Information"<br />
+}</p>
+<pre><code>],
+&quot;why&quot;: &quot;Encoded PowerShell is both PowerShell execution and obfuscation.&quot;
+},
+{
+&quot;atomic_behavior&quot;: &quot;PowerShell connects to a compromised legitimate website
+&quot;attack_mapping&quot;: [
+</code></pre>
+<p>{<br />
+"id": "T1071.001",<br />
+"name": "Application Layer Protocol: Web Protocols"<br />
+}</p>
+<pre><code>],
+&quot;why&quot;: &quot;Web-based communications over HTTP/HTTPS.&quot;
+},
+{
+&quot;atomic_behavior&quot;: &quot;PowerShell downloads Cobalt Strike beacon&quot;,
+&quot;attack_mapping&quot;: [
+</code></pre>
+<p>{<br />
+"id": "T1105",<br />
+"name": "Ingress Tool Transfer"<br />
+}</p>
+<pre><code>],
+&quot;why&quot;: &quot;Pulling malware/tooling into the victim environment.&quot;
+},
+{
+&quot;atomic_behavior&quot;: &quot;Cobalt Strike beacon uses HTTPS for C2&quot;,
+&quot;attack_mapping&quot;: [
+</code></pre>
+<p>{<br />
+"id": "T1071.001",<br />
+"name": "Application Layer Protocol: Web Protocols"<br />
+}</p>
+<pre><code>],
+&quot;why&quot;: &quot;HTTPS-based C2 over web protocols.&quot;
+},
+{
+
+&quot;atomic_behavior&quot;: &quot;Beacon uses reflective DLL injection into explorer.exe&quot;,
+&quot;attack_mapping&quot;: [
+</code></pre>
+<p>{<br />
+"id": "T1055.001",<br />
+"name": "Process Injection: Dynamic-link Library Injection"<br />
+}</p>
+<pre><code>],
+&quot;why&quot;: &quot;Reflective DLL injection is best fit here.&quot;
+},
+{
+&quot;atomic_behavior&quot;: &quot;BloodHound binary executed for AD recon&quot;,
+&quot;attack_mapping&quot;: [
+</code></pre>
+<p>{<br />
+"id": "T1087.002",<br />
+"name": "Account Discovery: Domain Account"<br />
+},<br />
+{<br />
+"id": "T1069.002",<br />
+"name": "Permission Groups Discovery: Domain Groups"<br />
+},<br />
+{<br />
+"id": "T1482",<br />
+"name": "Domain Trust Discovery",<br />
+"condition": "depending on collection scope"<br />
+}</p>
+<pre><code>],
+&quot;why&quot;: &quot;BloodHound is an AD recon tool and commonly enumerates users, groups
+},
+{
+&quot;atomic_behavior&quot;: &quot;net.exe used for network/domain discovery&quot;,
+&quot;attack_mapping&quot;: [
+</code></pre>
+<p>{<br />
+"id": "T1018",<br />
+"name": "Remote System Discovery"<br />
+},<br />
+{<br />
+"id": "T1087.002",<br />
+"name": "Account Discovery: Domain Account"<br />
+},<br />
+{<br />
+"id": "T1069.002",<br />
+"name": "Permission Groups Discovery: Domain Groups"<br />
+},<br />
+{<br />
+"id": "T1135",<br />
+"name": "Network Share Discovery",<br />
+"condition": "depending on exact command"<br />
+}</p>
+<pre><code>],
+&quot;why&quot;: &quot;net view, net user /domain, net group /domain, etc. map differently.
+},
+{
+&quot;atomic_behavior&quot;: &quot;nltest used for network/domain discovery&quot;,
+&quot;attack_mapping&quot;: [
+</code></pre>
+<p>{<br />
+"id": "T1482",<br />
+"name": "Domain Trust Discovery"<br />
+},<br />
+{<br />
+"id": "T1018",<br />
+"name": "Remote System Discovery",<br />
+"condition": "depending on exact command"<br />
+}</p>
+<pre><code>],
+&quot;why&quot;: &quot;nltest /domain_trusts fits trust discovery; /dclist fits remote syst
+},
+{
+&quot;atomic_behavior&quot;: &quot;Volume Shadow Copy created via vssadmin or WMI&quot;,
+&quot;attack_mapping&quot;: [
+</code></pre>
+<p>{<br />
+"id": "T1003.003",<br />
+"name": "OS Credential Dumping: NTDS"<br />
+},<br />
+{<br />
+"id": "T1047",</p>
+<pre><code>
+</code></pre>
+<p>"name": "Windows Management Instrumentation",<br />
+"condition": "if WMI is used"<br />
+}</p>
+<pre><code>],
+&quot;why&quot;: &quot;Shadow copy creation is typically a means to access locked AD databa
+},
+{
+&quot;atomic_behavior&quot;: &quot;NTDS.dit copied from shadow copy&quot;,
+&quot;attack_mapping&quot;: [
+</code></pre>
+<p>{<br />
+"id": "T1003.003",<br />
+"name": "OS Credential Dumping: NTDS"<br />
+}</p>
+<pre><code>],
+&quot;why&quot;: &quot;Copying NTDS from snapshot is classic AD credential theft prep.&quot;
+},
+{
+&quot;atomic_behavior&quot;: &quot;SYSTEM registry hive copied from shadow copy&quot;,
+&quot;attack_mapping&quot;: [
+</code></pre>
+<p>{<br />
+"id": "T1003",<br />
+"name": "OS Credential Dumping"<br />
+}</p>
+<pre><code>],
+&quot;why&quot;: &quot;The SYSTEM hive is commonly taken with NTDS for offline extraction o
+},
+{
+&quot;atomic_behavior&quot;: &quot;Offline credential parsing with secretsdump on attacker
+&quot;attack_mapping&quot;: [],
+&quot;why&quot;: &quot;This occurs off-host, so it is usually not detectable on the victim
+&quot;note&quot;: &quot;No direct victim-side ATT&amp;CK event&quot;
+},
+{
+&quot;atomic_behavior&quot;: &quot;PsExec deployed to remote systems over SMB&quot;,
+&quot;attack_mapping&quot;: [
+</code></pre>
+<p>{<br />
+"id": "T1021.002",<br />
+"name": "Remote Services: SMB/Windows Admin Shares"<br />
+},<br />
+{<br />
+"id": "T1569.002",<br />
+"name": "Service Execution",<br />
+"condition": "often"<br />
+}</p>
+<pre><code>],
+&quot;why&quot;: &quot;PsExec commonly copies a binary over SMB and starts a service remote
+},
+{
+&quot;atomic_behavior&quot;: &quot;PsExec authenticates with stolen Domain Admin credential
+&quot;attack_mapping&quot;: [
+</code></pre>
+<p>{<br />
+"id": "T1078.002",<br />
+"name": "Valid Accounts: Domain Accounts"<br />
+}</p>
+<pre><code>],
+&quot;why&quot;: &quot;Abuse of legitimate stolen domain credentials.&quot;
+},
+{
+&quot;atomic_behavior&quot;: &quot;Wiper payload deployed to all accessible systems&quot;,
+&quot;attack_mapping&quot;: [
+</code></pre>
+<p>{<br />
+"id": "T1570",<br />
+"name": "Lateral Tool Transfer"<br />
+},<br />
+{<br />
+"id": "T1021.002",<br />
+"name": "Remote Services: SMB/Windows Admin Shares"<br />
+}</p>
+<pre><code>],
+&quot;why&quot;: &quot;The payload is pushed laterally, often via SMB shares before executi
+},
+{
+&quot;atomic_behavior&quot;: &quot;Wiper deletes all Volume Shadow Copies&quot;,
+&quot;attack_mapping&quot;: [
+</code></pre>
+<p>{</p>
+<pre><code>
+</code></pre>
+<p>"id": "T1490",<br />
+"name": "Inhibit System Recovery"<br />
+}<br />
+],<br />
+"why": "Deleting shadows is explicitly covered by ATT&amp;CK here."<br />
+},<br />
+{<br />
+"atomic_behavior": "Wiper encrypts files",<br />
+"attack_mapping": [<br />
+{<br />
+"id": "T1486",<br />
+"name": "Data Encrypted for Impact"<br />
+}<br />
+],<br />
+"why": "Straight ransomware/wiper-impact behavior."<br />
+},<br />
+{<br />
+"atomic_behavior": "Wiper overwrites Master Boot Record (MBR)",<br />
+"attack_mapping": [<br />
+{<br />
+"id": "T1561.001",<br />
+"name": "Disk Structure Wipe"<br />
+}<br />
+],<br />
+"why": "MBR overwrite affects disk structure and bootability."<br />
+},<br />
+{<br />
+"atomic_behavior": "Systems rebooted to trigger the wipe and render systems<br />
+"attack_mapping": [<br />
+{<br />
+"id": "T1529",<br />
+"name": "System Shutdown/Reboot"<br />
+}<br />
+],<br />
+"why": "Reboot used as the operational trigger for destructive impact."<br />
+}</p>
+<pre><code>]
+
+Step 3: Build the Navigator Layer
+
+## 1. Go to Navigator → New Layer → ATT&amp;CK Enterprise v16
+
+
+## 2. Select all techniques from the table above
+
+
+## 3. Color scheme:
+
+Red (#ff6666): High confidence observations
+
+Orange (#ffaa44): Medium confidence observations
+
+
+## 4. Add a note to each cell: brief description + confidence + source reference
+
+
+## 5. Name the layer: “ALPHA CRYPT — ISAC Report [DATE]”
+
+
+## 6. Export as:
+
+JSON → attach to report as appendix
+
+SVG → embed as figure in the report body;
+
+
+### Or upload Navigator ready JSON from the previous step:
+
+Step 4: Detection Priority Analysis
+Cross-reference the mapping against your current detection coverage. For
+each technique in the table:
+
+Green ✓ = detection rule exists and has been validated
+
+Yellow △ = rule exists but untested or high false-positive rate
+
+Red ✗ = no detection coverage
+
+For the ALPHA CRYPT profile, the most critical undetected techniques
+(assuming a typical mid-size financial sector SOC):
+
+
+### CRITICAL GAPS (detect now):
+✗ T1490 — Inhibit System Recovery (VSS deletion)
+</code></pre>
+<p>Why critical: Last line of defense before ransomware impact.<br />
+Detection: Monitor for 'vssadmin delete shadows', 'wmic shadowcopy delete',<br />
+'bcdedit /set recoveryenabled no'<br />
+Data source: Process creation (Sysmon EventID 1 / Windows 4688)</p>
+<pre><code>✗ T1055.001 - Reflective DLL Injection
+
+### Why critical: Allows beacon to operate hidden inside legitimate process
+</code></pre>
+<p>Detection: Sysmon EventID 8 (CreateRemoteThread into explorer.exe)<br />
+Sysmon EventID 10 (process access with read/write to explorer.exe<br />
+Data source: Process: Process Access (requires Sysmon)</p>
+<pre><code>✗ T1003.003 - NTDS Credential Dump
+
+### Why critical: Leads directly to full domain compromise
+</code></pre>
+<p>Detection: ntdsutil.exe execution, vssadmin create shadow /for=C:,<br />
+NTDS.dit file access outside of AD process<br />
+Data source: Process creation + File access monitoring</p>
+<pre><code>HIGH PRIORITY GAPS (address within 30 days):
+△ T1078.002 - Valid Accounts: Domain Admin credentials used for lateral movement
+
+### Existing: Alert on Domain Admin logons outside business hours
+
+### Gap: No baselining for legitimate Domain Admin access patterns
+</code></pre>
+<p>Fix: Build behavioral baseline for Domain Admin accounts; alert on deviation</p>
+<pre><code>△ T1021.002 - PsExec lateral movement
+</code></pre>
+<p>Existing: Alert on psexesvc.exe installation (Windows Event 7045)<br />
+Gap: Alert exists but generates too many false positives; needs tuning<br />
+Fix: Add correlation with domain admin credential use in same time window</p>
+<pre><code>
+Step 5: Threat Hunt Derived from Mapping
+
+### The mapping reveals immediately actionable hunt hypotheses:
+
+Hunt 1: Search for VSS shadow copy creation followed within 24 hours by
+vssadmin deletion — the combination pattern used by ALPHA CRYPT.
+
+Hunt 2: Search for BloodHound-specific file artifacts (BloodHound.exe,
+SharpHound.exe, bloodhound.zip, acls.csv) created in temp directories or
+user download folders in the last 90 days.
+
+Hunt 3: Search for ntdsutil.exe execution with “activate instance ntds”
+argument string — the specific invocation used to access the AD database.
+
+Each hunt hypothesis is directly derived from the ATT&amp;CK mapping,
+provides a specific data source to search, and a specific artifact or behavior
+to look for.
+
+
+## 13. Essential Tooling Reference
+
+
+### Core ATT&amp;CK Knowledge Base Tools
+
+
+### Detection Engineering
+
+
+### DeTT&amp;CT in more detail: Most Navigator coverage maps are aspirational —
+they show techniques where a rule exists, not techniques where a rule has
+been validated against real telemetry. DeTT&amp;CT forces you to score separately:
+
+Data source quality (0–4): Is this log source actually being collected? At
+what fidelity? From what percentage of systems?
+
+Detection quality (0–4): Does the rule actually fire? Has it been tested?
+Does it produce actionable alerts?
+
+# Install DeTT&amp;CT
+pip3 install dettect
+# Define your data sources with quality scores
+# (Edit data_sources.yaml to reflect your actual collection)
+dettect ds -fd data_sources.yaml -l
+# → Outputs a Navigator layer showing visibility based on real data collection
+# Define your detection rules with quality scores
+# (Edit detections.yaml to reflect your actual rule set and validation status)
+dettect d -fd detections.yaml -l
+# → Outputs a Navigator layer showing real detection coverage
+# Combine both for a visibility + detection view
+dettect v -fd data_sources.yaml -fd detections.yaml -l
+# → The most honest picture of your actual security posture you can build
+
+
+### Adversary Emulation
+
+
+### Threat Intelligence Platforms with ATT&amp;CK Integration
+
+
+## 14. Common Pitfalls and Analyst Mistakes
+
+### Understanding what goes wrong is as important as understanding what goes
+right. These seven pitfalls are consistently observed in real CTI and detection
+engineering teams.
+
+Pitfall 1: Technique Checkbox Theater
+
+### What it looks like: The security team builds a Navigator layer that is mostly
+green. The CISO is shown the heatmap and concludes that coverage is
+strong. In practice, many of those rules have never been validated — they
+were written, deployed, and never tested against actual adversary behavior.
+Alerts that should fire don’t.
+
+Why it happens: Coverage reporting is often tied to performance metrics.
+once a rule exists — regardless of whether that rule has ever been tested,
+whether the data source it relies on is actually being collected, or whether
+the false positive rate makes it operationally useless.
+
+
+### The fix: Institute a coverage validation policy: a technique is only marked
+covered (green) in Navigator if the corresponding detection has been tested
+against an Atomic Red Team test or equivalent within the last six months and
+confirmed to fire. Untested rules get yellow. Rules where the data source is
+not collected get gray. This creates an honest baseline from which to
+measure real improvement.
+
+Pitfall 2: Over-Specificity Without Evidence
+What it looks like: A report mentions “credential dumping was observed.”
+The analyst, knowing that Mimikatz is the most common tool, maps
+T1003.001 (LSASS Memory) instead of T1003 (parent). Downstream, this
+mapping is cited in threat actor profiles and detection recommendations —
+all of which assume LSASS-specific indicators.
+
+Why it happens: Specificity feels rigorous. Analysts want to provide
+actionable, precise intelligence, and a sub-technique mapping looks more
+informed than a parent mapping.
+
+The fix: Sub-technique specificity must be earned by evidence. The mapping
+decision tree is simple: if you have specific evidence of the implementation
+(tool name, command line, forensic artifact indicating the specific
+approach), use the sub-technique. If you have evidence of the behavior
+category only, use the parent. Write “T1003 — OS Credential Dumping
+(specific method unknown)” rather than speculating about Mimikatz.
+Epistemic humility in mappings is not weakness — it is accuracy.
+
+Pitfall 3: Mapping Actor Claims as Actor Behaviors
+What it looks like: A hacktivist group announces on Telegram: “We
+destroyed 50,000 systems belonging to Company X.” The analyst treats this as
+an intelligence finding and maps T1485 (Data Destruction) and T1561.002
+(Disk Structure Wipe) to the actor’s profile. No technical artifacts are
+examined.
+
+
+### Why it happens: Actor communications feel like primary source
+intelligence. The actors are claiming credit — why would they lie? (They
+often do, especially hacktivist groups that routinely exaggerate impact for
+psychological effect.)
+
+The fix: Actor claims are collection leads, not evidence. Apply the same
+evidence standard to actor claims as to any other intelligence source. The
+claim prompts you to go look for corroborating technical evidence — IR
+reports, vendor analysis, affected organization statements. If no
+corroboration exists, document the claim as “Claimed — awaiting technical
+corroboration” and do not map it to ATT&amp;CK. Map it only when evidence
+arrives.
+
+Pitfall 4: Using ATT&amp;CK as a Kill Chain
+
+### What it looks like: An analyst reviews a threat report and notices that
+techniques are mapped to tactics in a non-sequential order: Lateral
+Movement appears before Privilege Escalation in the timeline. The analyst
+flags this as an error or inconsistency in the mapping.
+
+Why it happens: The Kill Chain model (Reconnaissance → Weaponization →
+Delivery → Exploitation → Installation → C2 → Actions on Objectives) is deeply
+embedded in how the industry thinks about attacks. Seeing ATT&amp;CK tactics
+in “the wrong order” triggers pattern-matching against the Kill Chain.
+
+The fix: ATT&amp;CK tactics describe intent, not sequence. Adversaries operate
+non-linearly. It is entirely normal for an actor to establish lateral movement
+before privilege escalation — using valid domain credentials from a phishing
+compromise to move laterally, then escalating privileges on the target
+system once they arrive. Map tactics based on the purpose of each observed
+action, in the order they actually occurred. Never reorder or suppress
+observations to fit a theoretical kill chain sequence.
+
+Pitfall 5: Ignoring Sub-Technique Granularity in Detection Rules
+What it looks like: The detection team writes a single Sigma rule for T1059
+(Command and Scripting Interpreter) that broadly monitors for any scripting
+activity. This rule generates enormous volumes of alerts because almost
+every legitimate administrative task involves scripting. The rule becomes
+noise, gets ignored, and provides no real coverage.
+
+Why it happens: Starting with the parent technique and building “one rule to
+cover it” seems efficient. The detection engineer writes one rule instead of
+eight.
+
+
+### The fix: Detection rules need to match the specificity of the behaviors
+they’re designed to catch. T1059.001 (PowerShell), T1059.003 (Windows
+Command Shell), T1059.005 (Visual Basic), and T1059.007 (JavaScript) all
+generate different telemetry, have different false positive profiles, and
+require different rule logic. A PowerShell download cradle detection is
+completely different from a WScript execution detection. Build rules at the
+sub-technique level, with specific detection logic appropriate to that
+implementation. Accept that you need multiple rules — that is the correct
+outcome.
+
+Pitfall 6: Using ATT&amp;CK Coverage Percentage as a Security Metric
+What it looks like: Leadership is shown a metric: “We cover 52% of ATT&amp;CK
+Enterprise techniques.” This is presented as a meaningful measure of
+security program maturity. The team then sets a goal to increase coverage to
+70% by end of year.
+
+Why it happens: Percentages are easy to understand and easy to report. They
+fit naturally into management dashboards and program reviews.
+
+Why this is wrong: ATT&amp;CK has 600+ techniques across Enterprise. A team
+that detects every technique in the matrix that is never used by any actor
+
+targeting their sector has “high coverage” but zero improvement in their
+actual risk posture. Conversely, a team with 40% coverage that specifically
+covers the 25 techniques most frequently used by their top five adversaries
+has dramatically better security outcome per engineering hour invested.
+Coverage percentage without threat-model context is a vanity metric.
+
+The fix: Replace “what percentage of ATT&amp;CK do we cover?” with “what
+percentage of techniques used by our priority threat actors do we cover?”
+This metric directly measures threat-relevant coverage. A Navigator layer
+that highlights actor techniques and your coverage against them makes this
+calculation immediate and visual.
+
+Pitfall 7: Skipping Data Source Verification
+What it looks like: A detection engineer builds a Sigma rule for T1003.001
+(LSASS credential dumping) that triggers on Sysmon EventID 10 (process
+access). The rule is marked as deployed. Six months later, during a purple
+team exercise, the rule fails to fire. Investigation reveals that the Sysmon
+configuration deployed to production endpoints doesn’t include a rule to
+capture process access events targeting lsass.exe.
+
+
+### Why it happens: The rule was written against a test environment with a
+properly configured Sysmon. When deployed to production, nobody verified
+that production Sysmon configs matched the test environment
+configuration.
+
+The fix: Before writing any detection rule, explicitly verify that the required
+data source is being collected in production, at the required fidelity, from the
+required percentage of systems. Use DeTT&amp;CT to formalize this verification.
+Add data source checks to your detection rule development checklist. Make
+it impossible to mark a technique as “covered” without confirming the
+underlying telemetry is present and correctly configured.
+
+
+## 15. ATT&amp;CK in a CTI Workflow: Putting It All Together
+
+
+### The Intelligence Cycle with ATT&amp;CK Integration
+ATT&amp;CK does not exist in isolation. It is a structured language embedded in
+a broader intelligence production process. Understanding where ATT&amp;CK
+sits in the intelligence cycle — and what it enables at each stage — is what
+distinguishes a practitioner who uses ATT&amp;CK as a daily working tool from
+one who uses it as a report-formatting convention.
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                         THE INTELLIGENCE CYCLE                               │
+│                                                                              │
+│ 1. DIRECTION                                                                 │
+│     The question: &quot;Which threat actors are relevant to us right now?&quot;        │
+│     ATT&amp;CK role: Use Groups pages to identify actors by sector, region,      │
+│     motivation. Filter by techniques to find actors who use methods          │
+│     your environment is structurally exposed to.                             │
+│                                                                              │
+│ 2. COLLECTION                                                                │
+│     The question: &quot;Where do we get intelligence about those actors?&quot;         │
+│     ATT&amp;CK role: ATT&amp;CK references point to primary sources. TAXII           │
+│     endpoint enables automated ingestion of ATT&amp;CK data into MISP/OpenCTI. │
+│     ATT&amp;CK-tagged ISAC sharing enables normalized intelligence consumption. │
+│                                                                              │
+│ 3. PROCESSING                                                                │
+│     The question: &quot;How do we turn raw reports into structured data?&quot;         │
+│     ATT&amp;CK role: Mapping is the core processing step. Raw behavioral         │
+│     descriptions become T-codes with evidence labels and confidence tiers.   │
+│     This is where ATT&amp;CK discipline matters most.                            │
+│                                                                              │
+│ 4. ANALYSIS                                                                  │
+│     The question: &quot;What does this mean for our specific situation?&quot;          │
+│     ATT&amp;CK role: Build actor TTP profiles in Navigator. Overlay against      │
+│     your detection coverage. Identify critical gaps. Prioritize.             │
+│     Answer: &quot;This actor would likely not be detected at steps X, Y, Z.&quot;     │
+│                                                                              │
+│ 5. PRODUCTION                                                                │
+│     The question: &quot;How do we document and package this analysis?&quot;            │
+│     ATT&amp;CK role: The ATT&amp;CK mapping table is a standard report section.     │
+│     Navigator layer is a standard report appendix. Both enable immediate     │
+│     action by downstream consumers without additional translation.           │
+│                                                                              │
+│ 6. DISSEMINATION                                                             │
+│     The question: &quot;Who needs this and how do we deliver it?&quot;                 │
+│     ATT&amp;CK role: Technique IDs create a direct handoff. Detection engineer │
+│     receives T1003.003 → knows exactly what rule to build. Red team         │
+│     receives the same → knows exactly which atomic test to run. CISO        │
+│     receives the Navigator layer → sees the risk picture without needing    │
+
+│     technical translation. ATT&amp;CK is the common language of dissemination. │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### From Report to Action: The ATT&amp;CK Handoff Chain
+
+### The full downstream value of a well-mapped CTI report becomes visible
+when you trace a single mapping through the entire security organization:
+
+SCENARIO: CTI report documents T1003.003 (NTDS Credential Dump) — High Confidenc
+
+### CTI Analyst publishes:
+</code></pre>
+<p>"Actor observed creating VSS snapshot and copying NTDS.dit.<br />
+Mapped to T1003.003. Data source required: Process Creation.<br />
+High confidence based on [vendor report with command-line evidence]."<br />
+↓ HANDOFF TO DETECTION ENGINEERING ↓</p>
+<pre><code>
+### Detection Engineer receives:
+</code></pre>
+<p>"T1003.003. I need to detect: ntdsutil.exe, vssadmin create shadow /for=C:,<br />
+and NTDS.dit file access outside of lsass.exe. Data source: Process creation.<br />
+Check if I'm collecting that."<br />
+→ Verifies Sysmon EventID 1 is being collected<br />
+→ Writes Sigma rule: monitors ntdsutil.exe + VSS creation + NTDS.dit access<br />
+→ Tags rule: attack.credential_access, attack.t1003.003<br />
+→ Deploys to SIEM, validates against Atomic test T1003.003<br />
+↓ HANDOFF TO THREAT HUNTING ↓</p>
+<pre><code>
+### Threat Hunter receives:
+</code></pre>
+<p>"T1003.003. No current detection for this. Hunt backwards 90 days.<br />
+Looking for: vssadmin.exe create shadow, ntdsutil 'activate instance ntds',<br />
+any file access to paths containing 'ntds.dit' from non-AD processes."<br />
+→ Runs hunt queries against historical SIEM data<br />
+→ Either finds past compromise evidence (escalate to IR) or establishes baseli<br />
+↓ HANDOFF TO RED TEAM ↓</p>
+<pre><code>
+### Red Team receives:
+</code></pre>
+<p>"T1003.003 is in the actor's profile and we have no current detection.<br />
+Add to next purple team exercise. Use Atomic T1003.003."<br />
+→ Schedules emulation test<br />
+→ Executes: copies NTDS.dit via VSS in test environment<br />
+→ Blue confirms whether new detection rule fires<br />
+↓ HANDOFF TO MANAGEMENT ↓</p>
+<pre><code>
+### SOC Lead / CISO receives:
+</code></pre>
+<p>"An actor targeting our sector uses domain credential theft via T1003.003.<br />
+We previously had no detection. Detection has been built and validated.<br />
+Coverage for this technique: CONFIRMED."<br />
+→ Updated Navigator layer shows green for T1003.003<br />
+→ Risk of undetected domain-wide credential compromise reduced</p>
+<pre><code>
+
+### This handoff chain — from CTI report to validated detection to confirmed
+hunt baseline — is only possible when the intelligence is structured with
+ATT&amp;CK. A narrative report without T-codes creates friction at every handoff
+point. An ATT&amp;CK-mapped report eliminates that friction.
+
+
+### Measuring Program Maturity with ATT&amp;CK
+
+### ATT&amp;CK enables objective measurement of security program maturity over
+time. The metrics that matter:
+
+
+### Detection Coverage Metrics (tracked quarterly):
+
+% of priority actor techniques with validated detection coverage (target:
+&gt;75% within 12 months)
+
+% of priority actor techniques with no detection (the gap that drives
+engineering backlog)
+
+
+### Mean time from new technique identified to validated detection rule
+deployed
+
+
+### Intelligence Quality Metrics (tracked per report):
+
+
+### Ratio of High-confidence to Low-confidence ATT&amp;CK mappings (higher
+= better evidence discipline)
+
+Number of techniques mapped per actor per quarter (trending up =
+improving collection)
+
+
+### Time from intelligence publication to detection engineering action
+
+
+### Purple Team Metrics (tracked per exercise):
+
+% of emulated techniques detected (baseline + trend)
+
+
+### Mean time to alert after technique execution
+
+
+### False negative rate (techniques executed but not detected)
+
+These metrics, anchored to ATT&amp;CK, give security leadership a concrete,
+evidence-based picture of program maturity — not anecdote, not compliance
+scores, but actual measured capability against actual threat behavior.
+
+
+## 16. Quick Reference Cheatsheet
+
+
+### ATT&amp;CK ID Format
+
+TA0001       → Tactic ID                   (Initial Access)
+T1566        → Technique ID                (Phishing)
+T1566.001    → Sub-technique ID            (Spearphishing Attachment)
+G0016        → Group ID                    (APT29)
+G0034        → Group ID                    (Sandworm Team)
+S0002        → Software ID                 (Mimikatz)
+S0154        → Software ID                 (Cobalt Strike)
+C0010        → Campaign ID
+M1049        → Mitigation ID               (Antivirus/Antimalware)
+DS0009       → Data Source ID              (Process)
+
+All 14 Enterprise Tactics
+
+TA0043   Reconnaissance         — Pre-attack info gathering
+TA0042   Resource Development   — Pre-attack infrastructure/tool setup
+TA0001   Initial Access         — Getting the first foothold
+TA0002   Execution              — Running malicious code
+TA0003   Persistence            — Maintaining access across disruptions
+TA0004   Privilege Escalation   — Gaining higher permissions
+TA0005   Defense Evasion        — Avoiding detection
+TA0006   Credential Access      — Stealing credentials
+TA0007   Discovery              — Mapping the environment
+TA0008   Lateral Movement       — Moving between systems
+TA0009   Collection             — Gathering target data
+TA0011   Command and Control    — Communicating with implants
+TA0010   Exfiltration           — Getting data out
+TA0040   Impact                 — Achieving final objectives
+
+
+### High-Priority Detection Techniques (Most Frequently Used in Observed
+
+### Campaigns)
+
+
+### INITIAL ACCESS
+</code></pre>
+<p>T1566.001   Spearphishing Attachment<br />
+T1566.002   Spearphishing Link<br />
+T1190       Exploit Public-Facing Application<br />
+T1078       Valid Accounts</p>
+<pre><code>
+### EXECUTION
+</code></pre>
+<p>T1059.001   PowerShell<br />
+T1059.003   Windows Command Shell<br />
+T1047       Windows Management Instrumentation<br />
+T1053.005   Scheduled Task/Job: Scheduled Task</p>
+<pre><code>
+### PERSISTENCE
+</code></pre>
+<p>T1547.001   Registry Run Keys / Startup Folder<br />
+T1053.005   Scheduled Task<br />
+T1136.001   Create Local Account<br />
+T1505.003   Web Shell</p>
+<pre><code>
+### DEFENSE EVASION
+</code></pre>
+<p>T1027       Obfuscated Files or Information<br />
+T1055       Process Injection<br />
+T1070.001   Clear Windows Event Logs<br />
+T1553.005   Mark-of-the-Web Bypass</p>
+<pre><code>
+### CREDENTIAL ACCESS
+</code></pre>
+<p>T1003.001   LSASS Memory Dumping<br />
+T1003.003   NTDS<br />
+T1003.006   DCSync<br />
+T1110       Brute Force</p>
+<pre><code>
+### DISCOVERY
+</code></pre>
+<p>T1087.002   Domain Account Discovery<br />
+T1018       Remote System Discovery<br />
+T1083       File and Directory Discovery<br />
+T1069.002   Domain Groups</p>
+<pre><code>
+### LATERAL MOVEMENT
+</code></pre>
+<p>T1021.001   Remote Desktop Protocol<br />
+T1021.002   SMB/Windows Admin Shares<br />
+T1078.002   Valid Accounts: Domain Accounts</p>
+<pre><code>
+### IMPACT
+</code></pre>
+<p>T1485       Data Destruction<br />
+T1486       Data Encrypted for Impact<br />
+T1490       Inhibit System Recovery<br />
+T1561.002   Disk Structure Wipe</p>
+<pre><code>
+
+### Analyst Decision Tree: Mapping Confidence
+
+OBSERVED BEHAVIOR → what ATT&amp;CK level to assign?
+Step 1: Is there direct technical evidence?
+
+</code></pre>
+<p>(command line, binary hash, PCAP, forensic artifact, log entry)<br />
+YES → Use the most specific sub-technique the evidence supports → CONFIDENCE:</p>
+<pre><code>Step 2: Is there credible secondary source reporting with artifacts?
+</code></pre>
+<p>(vendor report with artifact-level detail, government advisory with technical<br />
+YES → Use technique or sub-technique per report detail → CONFIDENCE: MEDIUM</p>
+<pre><code>Step 3: Is this an actor claim without corroborating evidence?
+</code></pre>
+<p>(Telegram post, actor press release, claimed operation)<br />
+YES → DO NOT map to ATT&amp;CK. Document as "Claimed - pending corroboration"</p>
+<pre><code>Step 4: Is this analytically inferred from other confirmed behaviors?
+</code></pre>
+<p>(pattern consistent with known TTPs, implied by other evidence)<br />
+YES → Use parent technique → CONFIDENCE: LOW/ASSESSED<br />
+Label explicitly: "[ASSESSED] Likely T1003 based on credential access pa</p>
+<pre><code>
+
+### Sigma Tag Format
+
+tags:
+</code></pre>
+<ul>
+<li>attack.<tactic-name>        # e.g., attack.execution</li>
+<li>attack.t&lt;####&gt;              # e.g., attack.t1059</li>
+<li>attack.t&lt;####&gt;.&lt;###&gt;        # e.g., attack.t1059.001</li>
+</ul>
+<pre><code>
+Tactic names for tags (lowercase, underscores):
+
+attack.reconnaissance         attack.resource_development
+attack.initial_access         attack.execution
+attack.persistence            attack.privilege_escalation
+attack.defense_evasion        attack.credential_access
+attack.discovery              attack.lateral_movement
+attack.collection             attack.command_and_control
+attack.exfiltration           attack.impact
+
+
+### Essential URLs
+
+
+### KNOWLEDGE BASE
+</code></pre>
+<p>https://attack.mitre.org                          Main ATT&amp;CK knowledge base<br />
+https://attack.mitre.org/groups/                  Threat actor profiles<br />
+https://attack.mitre.org/software/                Malware and tool profiles<br />
+https://attack.mitre.org/campaigns/               Campaign tracking</p>
+<pre><code>
+### VISUALIZATION
+</code></pre>
+<p>https://mitre-attack.github.io/attack-navigator   ATT&amp;CK Navigator (hosted)</p>
+<pre><code>
+### DETECTION RULES
+</code></pre>
+<p>https://github.com/SigmaHQ/sigma                  Sigma rule library<br />
+https://github.com/elastic/detection-rules         Elastic detection rules<br />
+https://uncoder.io                                Sigma converter (web)</p>
+<pre><code>
+### ADVERSARY EMULATION
+</code></pre>
+<p>https://github.com/redcanaryco/atomic-red-team    Atomic Red Team tests<br />
+https://github.com/mitre/caldera                  CALDERA emulation platform<br />
+https://github.com/SecurityRiskAdvisors/VECTR     Purple team tracking</p>
+<pre><code>
+### COVERAGE ANALYSIS
+</code></pre>
+<p>https://github.com/rabobank-cdc/DeTTECT           DeTT&amp;CT data source scoring</p>
+<pre><code>
+### THREAT INTELLIGENCE PLATFORMS
+</code></pre>
+<p>https://github.com/MISP/MISP                      MISP (ATT&amp;CK galaxy integrati<br />
+https://github.com/OpenCTI-Platform/opencti       OpenCTI (native ATT&amp;CK)</p>
+<pre><code>
+
+### Conclusion
+ATT&amp;CK is not a framework you learn once and apply mechanically. It is a
+working language — and like any language, fluency comes from daily use,
+consistent practice, and disciplined application of its grammar.
+
+
+### The practitioners who get the most value from ATT&amp;CK share specific
+habits: they map with evidence discipline rather than inference, they use
+Navigator to drive real decisions rather than produce status theater, they
+connect their CTI reports to detection engineering backlogs through precise
+technique mappings, and they treat coverage as something to be validated —
+not assumed.
+
+The goal is never to “cover ATT&amp;CK.” ATT&amp;CK has hundreds of techniques.
+Chasing comprehensive coverage is both impossible and misdirected. The
+goal is to understand your adversaries better than they understand your
+defenses — and ATT&amp;CK is the shared map that makes that understanding
+precise, communicable, and actionable.
+
+Every entry in this guide traces back to that goal. The mapping rigor ensures
+your intelligence is accurate. The Navigator gap analysis ensures your
+defenses address real threats. The detection engineering workflow ensures
+your rules catch what matters. The threat hunting process ensures you catch
+what your rules don’t. The purple team exercises ensure everything actually
+works.
+
+Together, these practices constitute threat-informed defense: security built
+around what adversaries actually do, not what compliance frameworks say
+you should be able to detect.
+
+
+### Andrey Pautov
+
+If you like this research, buy me a coffee (PayPal) — Keep the lab running
+
+Mitre Attack      Cybersecurity       AI   Cyber Threat Intelligence   Information Security
+
+</code></pre>
+<p>Written by Andrey Pautov                                                   Edit profile<br />
+1K followers · 54 following</p>
+<pre><code>
+</code></pre>
+<p>Red Team-minded security researcher. AI-driven pentesting workflows, real tool<br />
+output, troubleshooting, and a defender’s perspective on what to log and detect.</p>
+<pre><code>
+
+### No responses yet
+
+
+### Andrey Pautov
+
+What are your thoughts?
+
+</code></pre>
+<p>Andrey Pautov                                             In InfoSec Write-ups by Jatin Banga</p>
+<pre><code>
+AI-Driven Pentesting at Home:                             I Reverse-Engineered Zomato’s
+Using HexStrike-AI for Full Netwo…                        Food Rescue Feature — Here’s…
+How I Used Gemini + HexStrike-AI on Kali                  Zomato’s “Food Rescue” is essentially a race
+Linux to Scan, Enumerate, and Exploit My…                 condition. Here’s how I built a headless…
+
+</code></pre>
+<p>Dec 21, 2025        82     1                         Feb 18      219        4</p>
+<pre><code>
+</code></pre>
+<p>In InfoSec Write-ups by Vito Rallo                        In InfoSec Write-ups by Sandeep Vishwakarma</p>
+<pre><code>
+I Let AI Pentest my lab for 45                            Step-by-Step Complete Beginners
+Minutes. HexStrike AI and KALI…                           guide of Wi-Fi Hacking
+What you see in the screenshots below?                    Greetings, fellow security professionals! I’m
+You’re sitting in front of your terminal, and…            Sandy, a Security Analyst and Bug Bounty…
+
+Jan 29       3                                            Jan 30, 2025      70       1
+
+
+### See all from Andrey Pautov
+
+
+### Recommended from Medium
+
+</code></pre>
+<p>SOCFortress                                       Damag3dRoot</p>
+<pre><code>
+CrowdStrike 2026 Global Threat                    How To? Malicious IP Investigation
+Report                                            Complete Methodology — Part2
+The New Reality of Cyber Warfare                  In the previous article, we saw how to
+</code></pre>
+<p>establish the nature and infrastructure of an…</p>
+<pre><code>
+Feb 26     9                                      Feb 23
+
+</code></pre>
+<p>Oluwatosin Ogunjimi                               In System Weakness by Manish Rawat</p>
+<pre><code>
+SIEM Rules: What They Are, How                    37 Sysmon Events. One Complete
+They’re Built, and Why They’re…                   DLL Hijacking Attack. Here’s Wha…
+Two years ago, if you asked me what a SIEM        I analyzed real malware logs and discovered
+rule was, I would have told you it was a prese…   why non-admin users can execute code…
+
+Mar 2      2                                      Jan 25     2       1
+
+</code></pre>
+<p>Dean                                              In Detect FYI by Alex Teixeira</p>
+<pre><code>
+</code></pre>
+<p>Whose endpoint is this… kali?!<br />
+```</p>
+<h3 id="detecting-openclawclawbot-with-the-thought-process-to-uncover-post-">Detecting OpenClaw/Clawbot with           The thought process to uncover post-</h3>
+<p>SentinelOne: The Challenge of…            exploitation activity and rogue devices in…</p>
+<h3 id="a-huge-thank-you-to-my-dearest-friend">A huge thank you to my dearest friend</h3>
+<p>Jeremy, who created this comprehensive…   Feb 23    21</p>
+<p>Feb 12   51     1</p>
+<h3 id="see-more-recommendations">See more recommendations</h3>
   <p class="back-top"><a href="#top">↑ Back to top</a></p>
 </body>
 </html>

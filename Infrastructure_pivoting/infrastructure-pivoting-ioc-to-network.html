@@ -63,118 +63,1267 @@
     <p>Author: <a href="https://medium.com/@1200km">Andrey Pautov</a>. <a href="https://medium.com/@1200km/infrastructure-pivoting-how-cti-analysts-expand-from-a-single-ioc-to-a-full-attacker-network-1295d50ec29c">Published on Medium</a></p>
   </header>
   <h1 id="infrastructure-pivoting-how-cti-analysts-expand-from-a-single-ioc-to-a-full-attacker-network">Infrastructure Pivoting: How CTI Analysts Expand From a Single IOC to a Full Attacker Network</h1>
-<p><strong>The field manual for tracing attacker infrastructure — from one domain to dozens.</strong><br />
-By <a href="https://medium.com/@1200km">Andrey Pautov</a> — March 2026 · 32 min read</p>
+<p>By <a href="https://medium.com/@1200km">Andrey Pautov</a> · <a href="https://medium.com/@1200km/infrastructure-pivoting-how-cti-analysts-expand-from-a-single-ioc-to-a-full-attacker-network-1295d50ec29c">Published on Medium</a></p>
 <hr />
-<h2 id="contents">Contents</h2>
-<table>
-<thead>
-<tr>
-<th>File</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Infrastructure Pivoting_...Medium.pdf</strong></td>
-<td>Full article PDF saved from Medium.</td>
-</tr>
-<tr>
-<td><strong><a href="autoWF.py">autoWF.py</a></strong></td>
-<td>Automated pivoting tool: seed domain → full infrastructure map via VirusTotal, SecurityTrails, and crt.sh.</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="about-this-guide">About This Guide</h2>
-<p>A junior analyst receives a phishing domain and adds it to a blocklist. A senior CTI analyst treats that same domain as a starting point — a thread that, when pulled correctly, unravels an entire attacker infrastructure.</p>
-<p>This guide teaches <strong>infrastructure pivoting</strong>: the systematic process of using one known indicator to discover related, previously-unknown attacker infrastructure. Done well, it transforms a single domain into a map of dozens of C2 servers, staging hosts, and supporting infrastructure — most of which the attacker believes is still unknown.</p>
-<p><strong>Why pivoting works:</strong> Attacker infrastructure is expensive to build. Adversaries reuse hosting providers, registration habits, certificate patterns, and naming conventions across campaigns. These reuse patterns are the analyst's most powerful tool.</p>
-<p><strong>Audience:</strong> CTI analysts, threat hunters, incident responders, and detection engineers.</p>
-<hr />
-<h2 id="table-of-contents">Table of Contents</h2>
+<h3 id="the-field-manual-for-tracing-attacker-infrastructure-from-one">The field manual for tracing attacker infrastructure — from one</h3>
+<p>domain to dozens</p>
+<pre><code>Andrey Pautov 32 min read · Just now
+</code></pre>
+<h3 id="table-of-contents">Table of Contents</h3>
+<h2 id="1-introduction-why-infrastructure-pivoting-is-a-core-cti-skill">1. Introduction: Why Infrastructure Pivoting Is a Core CTI Skill</h2>
+<h2 id="2-the-mental-model-why-attackers-leave-trails">2. The Mental Model: Why Attackers Leave Trails</h2>
+<h2 id="3-the-pivoting-workflow-domain-ip-asn-certificates-expanded">3. The Pivoting Workflow: Domain → IP → ASN → Certificates → Expanded</h2>
+<h3 id="infrastructure">Infrastructure</h3>
+<h2 id="4-pivot-type-1-domain-ip-resolution">4. Pivot Type 1: Domain → IP Resolution</h2>
+<h2 id="5-pivot-type-2-passive-dns-the-history-book-of-the-internet">5. Pivot Type 2: Passive DNS — The History Book of the Internet</h2>
+<h2 id="6-pivot-type-3-ip-asn-hosting-reuse">6. Pivot Type 3: IP → ASN / Hosting Reuse</h2>
+<h2 id="7-pivot-type-4-tls-certificates-the-most-underused-pivot">7. Pivot Type 4: TLS Certificates — The Most Underused Pivot</h2>
+<h2 id="8-pivot-type-5-subdomain-patterns-and-enumeration">8. Pivot Type 5: Subdomain Patterns and Enumeration</h2>
+<h2 id="9-pivot-type-6-shodan-censys-fofa-fingerprinting-infrastructure">9. Pivot Type 6: Shodan / Censys / FOFA — Fingerprinting Infrastructure</h2>
+<h2 id="10-pivot-type-7-whois-and-registration-pattern-analysis">10. Pivot Type 7: WHOIS and Registration Pattern Analysis</h2>
+<h2 id="11-the-complete-tooling-stack">11. The Complete Tooling Stack</h2>
+<h2 id="12-full-worked-example-tracing-a-c2-network-end-to-end">12. Full Worked Example: Tracing a C2 Network End-to-End</h2>
+<h2 id="13-automating-the-workflow-with-python">13. Automating the Workflow with Python</h2>
+<h2 id="14-common-pivoting-mistakes-and-dead-ends">14. Common Pivoting Mistakes and Dead Ends</h2>
+<h2 id="15-interview-ready-answering-how-do-you-discover-attacker">15. Interview-Ready: Answering “How Do You Discover Attacker</h2>
+<p>Infrastructure?”</p>
+<h2 id="16-quick-reference-cheatsheet">16. Quick Reference Cheatsheet</h2>
+<h2 id="17-conclusion">17. Conclusion</h2>
+<h2 id="18-references-and-further-reading">18. References and Further Reading</h2>
+<h3 id="introduction-why-infrastructure-pivoting-is-a-core-cti-skill">Introduction: Why Infrastructure Pivoting Is a Core CTI Skill</h3>
+<h3 id="every-threat-actor-starts-with-a-single-observable-artifact-that-gets-reported">Every threat actor starts with a single observable artifact that gets reported:</h3>
+<p>a phishing domain, a C2 IP, a malware hash. A junior analyst treats this as a<br />
+list of IOCs to block. A senior CTI analyst treats it as a starting point — a<br />
+thread that, when pulled correctly, unravels an entire attacker<br />
+infrastructure.</p>
+<h3 id="this-discipline-is-called-infrastructure-pivoting-the-systematic-process-of">This discipline is called infrastructure pivoting: the systematic process of</h3>
+<p>using one known indicator to discover related, previously-unknown attacker<br />
+infrastructure. Done well, it transforms a single domain into a map of<br />
+dozens of C2 servers, staging hosts, and supporting infrastructure — most of<br />
+which the attacker believes is still unknown.</p>
+<h3 id="infrastructure-pivoting-matters-because">Infrastructure pivoting matters because:</h3>
+<p>Blocking known IOCs is reactive. By the time an IOC is published, the<br />
+attacker has likely already rotated that infrastructure. Adding a domain to a<br />
+blocklist after it has been used is closing the barn door after the horse has<br />
+left.</p>
+<p>Attacker infrastructure is expensive to build. Registering domains,<br />
+acquiring servers, configuring C2 frameworks, and establishing<br />
+anonymization chains takes time, money, and operational effort. Attackers<br />
+do not reinvent their infrastructure pattern for every campaign — they reuse<br />
+hosting providers, registration habits, certificate patterns, and naming<br />
+conventions. These reuse patterns are the analyst’s most powerful tool.</p>
+<h3 id="known-infrastructure-expands-to-unknown-infrastructure-through-shared">Known infrastructure expands to unknown infrastructure through shared</h3>
+<p>patterns. A single confirmed C2 IP leads to the ASN it is hosted on → other<br />
+IPs in the same block with similar fingerprints → domains that resolved to<br />
+those IPs → TLS certificates shared across domains → a network of related<br />
+infrastructure that the attacker did not intend to expose.</p>
+<p>By the end of this guide, you will be able to start from any single IOC and<br />
+systematically expand it into a comprehensive infrastructure picture.</p>
+<h3 id="the-mental-model-why-attackers-leave-trails">The Mental Model: Why Attackers Leave Trails</h3>
+<p>Before learning the pivot techniques, understand why they work. Attackers<br />
+leave infrastructure trails for three structural reasons:</p>
+<p>Reason 1: Operational Consistency (Habit)</p>
+<p>Every attacker has a provisioning workflow. When building infrastructure,<br />
+they make choices:</p>
+<p>Which hosting provider? (OVH, Vultr, DigitalOcean, Frantech, Leaseweb<br />
+— each has a different risk profile for the attacker)</p>
+<p>Which domain registrar? (Namecheap, Porkbun, GoDaddy, EPAG — often<br />
+chosen for privacy protection or payment method acceptance)</p>
+<p>Which payment method? (Cryptocurrency type, prepaid cards, stolen<br />
+payment data — each leaves financial traces)</p>
+<p>Which certificate authority? (Let’s Encrypt, ZeroSSL, Sectigo — and how<br />
+the certificates are configured)</p>
+<p>How are domains named? (Mimicking legitimate vendor names, using<br />
+common words, following a specific pattern)</p>
+<h3 id="these-choices-tend-to-be-consistent-across-campaigns-because-changing">These choices tend to be consistent across campaigns because changing</h3>
+<p>them is operationally disruptive. An analyst who knows an actor’s<br />
+provisioning preferences can find new infrastructure before it is used in an<br />
+attack.</p>
+<p>Reason 2: Resource Constraints (Budget and Time)<br />
+Sophisticated actors budget their infrastructure investment. They do not<br />
+acquire hundreds of unique IPs from hundreds of unique ASNs for every<br />
+campaign — that would be prohibitively expensive and operationally<br />
+complex. Instead, they:</p>
+<h3 id="cluster-operations-on-a-small-number-of-preferred-hosting-providers">Cluster operations on a small number of preferred hosting providers</h3>
+<p>Reuse certificate templates, configuration files, and server setups</p>
+<h3 id="register-multiple-campaign-domains-simultaneously-creating">Register multiple campaign domains simultaneously (creating</h3>
+<p>registration timestamp clusters)</p>
+<p>Reuse C2 framework configurations across operations (creating<br />
+consistent fingerprints)</p>
+<p>Reason 3: Technical Fingerprinting (Configuration Leakage)<br />
+Every server configured with a C2 framework leaves technical fingerprints:</p>
+<p>The HTTP response headers a C2 server returns</p>
+<h3 id="the-tls-configuration-parameters-it-presents">The TLS configuration parameters it presents</h3>
+<h3 id="the-ports-it-listens-on-and-the-service-banners-it-returns">The ports it listens on and the service banners it returns</h3>
+<p>The SSL certificate’s Common Name, Subject Alternative Names, and<br />
+issuance timing</p>
+<p>These fingerprints are indexed continuously by Shodan, Censys, and FOFA —<br />
+meaning that an attacker’s C2 server is often findable from its technical<br />
+fingerprint alone, before any victim has connected to it.</p>
+<p>The Analyst’s Advantage<br />
+An attacker who has compromised 100 targets has used the same C2<br />
+infrastructure to communicate with all 100 victims. The analyst who<br />
+discovers that infrastructure is not finding 1/100 of the attack — they are<br />
+finding all of it at once.</p>
+<p>The Pivoting Workflow: Domain → IP → ASN → Certificates →</p>
+<h3 id="expanded-infrastructure">Expanded Infrastructure</h3>
+<p>The core workflow is a branching chain. Each pivot point generates new<br />
+observables, each of which opens new pivot paths. The goal is to follow every<br />
+thread until you reach diminishing returns — infrastructure that is shared<br />
+with too many unrelated actors to be attributable.</p>
+<p>Each step generates artifacts that feed the next step. The workflow<br />
+terminates when:</p>
+<h3 id="all-threads-lead-to-infrastructure-shared-with-unrelated-actors-common">All threads lead to infrastructure shared with unrelated actors (common</h3>
+<p>hosting, shared IP blocks)</p>
+<h3 id="all-threads-are-confirmed-exhausted">All threads are confirmed exhausted</h3>
+<h3 id="you-have-reached-infrastructure-that-was-not-known-before-and-can-be">You have reached infrastructure that was not known before and can be</h3>
+<p>attributed to the same actor cluster</p>
+<h3 id="tools-by-workflow-stage">Tools by Workflow Stage</h3>
+<p>Pivot Type 1: Domain → IP Resolution</p>
+<p>Tools: dig · host · nslookup · dnsx · MXToolbox · VirusTotal · SecurityTrails ·<br />
+DNSlytics · ViewDNS</p>
+<h3 id="current-resolution">Current Resolution</h3>
+<p>The most basic pivot: what IP address does this domain currently resolve to?</p>
+<h1 id="basic-resolution">Basic resolution</h1>
+<p>dig example.com A +short</p>
+<h1 id="all-record-types">All record types</h1>
+<p>dig example.com ANY</p>
+<h1 id="mx-records-mail-infrastructure-attackers-use-for-phishing">MX records (mail infrastructure - attackers use for phishing)</h1>
+<p>dig example.com MX</p>
+<h1 id="check-ttl-short-ttl-fast-flux-attacker-is-rotating-ips-frequently">Check TTL (short TTL = fast-flux; attacker is rotating IPs frequently)</h1>
+<p>dig example.com A | grep -E "IN\s+A"</p>
+<h1 id="dnsx-fast-bulk-resolution-projectdiscovery">dnsx - fast bulk resolution (ProjectDiscovery)</h1>
+<p>echo "example.com" | dnsx -a -resp -silent</p>
+<h1 id="host-simpler-alternative-to-dig">host - simpler alternative to dig</h1>
+<p>host example.com</p>
+<p>MXToolbox online (no install): https://mxtoolbox.com/SuperTool.aspx</p>
+<p>DNSlytics full DNS record view: https://dnslytics.com/domain/example.com</p>
+<h3 id="virustotal-dns-tab">VirusTotal DNS tab:</h3>
+<p>https://www.virustotal.com/gui/domain/example.com/details</p>
+<h3 id="what-ttl-tells-you">What TTL tells you:</h3>
+<p>TTL 60–300 seconds = likely fast-flux rotation, attacker is actively cycling</p>
+<h3 id="ips">IPs</h3>
+<p>TTL 3600+ = stable infrastructure, more likely to persist for investigation</p>
+<p>Consistent TTL across multiple actor domains = infrastructure<br />
+provisioning fingerprint</p>
+<h3 id="nameserver-analysis">Nameserver Analysis</h3>
+<p>The nameserver a domain uses is often an overlooked pivot point. Actors<br />
+who register multiple domains for a campaign often configure them all with<br />
+the same custom nameserver — a distinctive fingerprint.</p>
+<h1 id="check-nameserver">Check nameserver</h1>
+<p>dig example.com NS +short</p>
+<p>elliott.ns.cloudflare.com.<br />
+hera.ns.cloudflare.com.</p>
+<p>Lookup: who else uses this nameserver?<br />
+→ SecurityTrails: https://securitytrails.com/list/ns/elliott.ns.cloudflare.com</p>
+<p>→ PassiveTotal: Subdomains/Infrastructure query on the NS record<br />
+→ DNSlytics reverse NS: https://dnslytics.com/reverse-<br />
+ns/elliott.ns.cloudflare.com</p>
+<p>→ ViewDNS reverse NS: https://viewdns.info/reversens/?<br />
+ns=hera.ns.cloudflare.com</p>
+<p>SpyOnWeb: https://spyonweb.com/elliott.ns.cloudflare.com</p>
+<p>If a threat actor registers their own nameserver (e.g., ns1.actorns[.]com ),<br />
+every domain pointing to that nameserver is part of their infrastructure —<br />
+regardless of other pivot relationships.</p>
+<p>Pivot Type 2: Passive DNS — The History Book of the Internet</p>
+<p>Tools: SecurityTrails · PassiveTotal / RiskIQ · VirusTotal · Farsight DNSDB ·<br />
+CIRCL pDNS · Validin · Shodan · Cisco Umbrella Investigate</p>
+<h3 id="what-passive-dns-is">What Passive DNS Is</h3>
+<p>Passive DNS is a collection of historical DNS resolution records. When a<br />
+recursive DNS resolver answers a query, passive DNS sensors log the<br />
+question and answer: “Domain X resolved to IP Y at timestamp Z.” These logs<br />
+accumulate over months and years, creating a historical record of who<br />
+pointed where, when.</p>
+<p>This is the analyst’s most powerful basic pivot tool, because:</p>
+<h3 id="attackers-rotate-infrastructure-after-detection-but-passive-dns">Attackers rotate infrastructure after detection — but passive DNS</h3>
+<p>captures what the domain pointed to before rotation</p>
+<h3 id="multiple-domains-pointing-to-the-same-ip-reveals-clustering-even-if">Multiple domains pointing to the same IP reveals clustering — even if</h3>
+<p>the domains are named differently, passive DNS shows they were co-</p>
+<p>hosted</p>
+<h3 id="timing-reveals-registration-campaigns-domains-registered-and">Timing reveals registration campaigns — domains registered and</h3>
+<p>resolved within hours of each other are likely the same operation</p>
+<h3 id="primary-passive-dns-sources">Primary Passive DNS Sources</h3>
+<h3 id="practical-passive-dns-queries">Practical Passive DNS Queries</h3>
+<p>Query 1: What IPs has this domain resolved to historically?</p>
+<p>SecurityTrails: https://securitytrails.com/domain/DOMAIN/history/a</p>
+<h3 id="passivetotal-api">PassiveTotal API:</h3>
+<pre><code>GET /v2/dns/passive?query=DOMAIN
+→ Returns all historical A record resolutions with timestamps
+</code></pre>
+<p>VirusTotal:      https://www.virustotal.com/gui/domain/DOMAIN/details (DNS tab)<br />
+CIRCL pDNS:      https://www.circl.lu/pdns/query/DOMAIN (free, no login)<br />
+Validin:         https://app.validin.com/detail?s=DOMAIN<br />
+Farsight DNSDB: https://www.dnsdb.info (community: 1000 free lookups/day)</p>
+<p>Query 2: What other domains have resolved to this IP?</p>
+<p>This is the critical reverse pivot: given a known C2 IP, what other domains<br />
+have pointed to it?</p>
+<p>SecurityTrails: https://securitytrails.com/list/ip/IP_ADDRESS</p>
+<h3 id="passivetotal">PassiveTotal:</h3>
+<pre><code>GET /v2/dns/passive?query=IP_ADDRESS
+→ Returns all domains that have historically resolved to this IP
+</code></pre>
+<p>VirusTotal:      https://www.virustotal.com/gui/ip-address/IP/relations</p>
+<pre><code>→ &quot;Resolutions&quot; tab
+</code></pre>
+<p>CIRCL pDNS:      https://www.circl.lu/pdns/query/IP_ADDRESS<br />
+Validin:         https://app.validin.com/detail?s=IP_ADDRESS</p>
+<p>DNSlytics:       https://dnslytics.com/reverse-ip/IP_ADDRESS<br />
+ViewDNS:         https://viewdns.info/reverseip/?host=IP_ADDRESS<br />
+Shodan:          shodan search "ip:IP_ADDRESS" → Hostnames section</p>
+<p>Output interpretation: If a known C2 IP shows 12 domains historically<br />
+resolving to it, and you confirmed 3 as actor infrastructure, examine the<br />
+remaining 9 — they are likely the same actor’s other campaign domains.</p>
+<p>Query 3: What other IPs has this domain resolved to over time?</p>
+<p>SecurityTrails DNS History → A Record History</p>
+<h3 id="passivetotal-domain-query-with-date-range">PassiveTotal: domain query with date range</h3>
+<h3 id="an-actor-who-migrates-a-campaign-domain-from-ip-a-to-ip-b-reveals-both-ips">An actor who migrates a campaign domain from IP A to IP B reveals both IPs</h3>
+<p>as their infrastructure. Examine IP B for all other domains — the actor may<br />
+have moved other campaign domains to the same new server.</p>
+<h3 id="reading-passive-dns-timestamps">Reading Passive DNS Timestamps</h3>
+<h3 id="the-timing-of-dns-resolutions-is-itself-a-pivot-signal">The timing of DNS resolutions is itself a pivot signal:</h3>
+<p>SCENARIO: Three domains registered on the same day, all resolving<br />
+to the same IP within a 4-hour window.<br />
+domain-alpha[.]com    → 185.220.100.x (registered 2024-03-15 08:22 UTC)<br />
+document-update[.]net → 185.220.100.x (registered 2024-03-15 09:47 UTC)<br />
+security-patch[.]org → 185.220.100.x (registered 2024-03-15 11:03 UTC)<br />
+INTERPRETATION: This is an infrastructure deployment event. All three domains<br />
+are likely the same actor, same campaign, same C2 server. Even if only one<br />
+was confirmed malicious, the other two are high-confidence actor infrastructure.</p>
+<p>Pivot Type 3: IP → ASN / Hosting Reuse</p>
+<p>Tools: bgp.he.net · ipinfo.io · RIPE Stat · ARIN · ipapi.co · Shodan · Censys ·<br />
+FOFA · Greynoise · BinaryEdge · Team Cymru</p>
+<h3 id="why-asn-analysis-matters">Why ASN Analysis Matters</h3>
+<h3 id="an-asn-autonomous-system-number-identifies-a-network-under-a-single">An ASN (Autonomous System Number) identifies a network under a single</h3>
+<p>administrative entity — typically a hosting provider, ISP, or organization.<br />
+When an actor consistently uses infrastructure in a specific ASN, that ASN<br />
+becomes an attribution signal.</p>
+<p>But the real value is not blocking a single IP — it is identifying all IPs in the<br />
+same /24 or /16 subnet that share the actor’s fingerprint, and finding other<br />
+actor infrastructure that has not yet been used in an observed attack.</p>
+<h3 id="ip-range-and-asn-lookups">IP Range and ASN Lookups</h3>
+<pre><code># Get ASN for an IP
+whois IP_ADDRESS | grep -E &quot;origin:|AS[0-9]+&quot;
+# BGP.he.net - best free UI for ASN investigation + routing history
+https://bgp.he.net/ip/IP_ADDRESS
+# IPinfo.io - fast API-accessible lookup, geolocation + org
+curl https://ipinfo.io/IP_ADDRESS/json
+# ipapi.co - ASN + org name, free REST API
+curl https://ipapi.co/IP_ADDRESS/json/
+# RIPE Stat (authoritative for RIPE region / European IPs)
+https://stat.ripe.net/IP_ADDRESS
+# ARIN (authoritative for ARIN region / North American IPs)
+https://search.arin.net/rdap/?query=IP_ADDRESS
+# Team Cymru IP-to-ASN mapping (free, extremely fast, bulk-capable)
+whois -h whois.cymru.com &quot; -v IP_ADDRESS&quot;
+# Or bulk file: https://team-cymru.com/community-services/ip-asn-mapping/
+# Greynoise - is this IP a scanner/noise source or targeted infrastructure?
+</code></pre>
+<h1 id="important-confirm-actor-owned-ips-before-pivoting-on-them">Important: confirm actor-owned IPs before pivoting on them</h1>
+<p>https://viz.greynoise.io/ip/IP_ADDRESS</p>
+<h1 id="get-all-ips-in-the-same-24-with-shodan">Get all IPs in the same /24 with Shodan</h1>
+<p>shodan search "net:185.220.100.0/24"</p>
+<h1 id="binaryedge-alternative-to-shodan-sometimes-better-data-on-specific-asns">BinaryEdge - alternative to Shodan, sometimes better data on specific ASNs</h1>
+<p>https://app.binaryedge.io/services/query?query=asn:ASXXXXX</p>
+<p>AS13335</p>
+<h3 id="shodan-asn-based-pivoting">Shodan ASN-Based Pivoting</h3>
+<p>Once you have the ASN, search for all IPs in that ASN that match the<br />
+technical fingerprint of the known C2:</p>
+<h1 id="shodan-all-ips-in-an-asn-with-specific-port-open-eg-8443-common-c2">Shodan: all IPs in an ASN with specific port open (e.g., 8443 — common C2)</h1>
+<p>shodan search "asn:AS13335 port:8443"</p>
+<h1 id="combined-asn-specific-http-header-pattern">Combined: ASN + specific HTTP header pattern</h1>
+<p>shodan search "asn:AS12345 http.title:'Index of /'"</p>
+<h1 id="combined-asn-tls-certificate-pattern">Combined: ASN + TLS certificate pattern</h1>
+<p>shodan search "asn:AS12345 ssl.cert.subject.cn:*.evil-domain.com"</p>
+<h1 id="shodan-find-all-ips-with-same-cobalt-strike-fingerprint-in-specific-asn">Shodan: find all IPs with same Cobalt Strike fingerprint in specific ASN</h1>
+<p>shodan search "asn:AS12345 product:Cobalt Strike Beacon"</p>
+<h3 id="hosting-provider-pattern-analysis">Hosting Provider Pattern Analysis</h3>
+<p>Different types of actors prefer different hosting providers. Understanding<br />
+why helps you predict where to look:</p>
+<p>An actor who consistently uses Frantech (AS9009) is making a deliberate<br />
+choice — document it and look for other Frantech IPs with similar<br />
+fingerprints.</p>
+<h3 id="subnet-clustering">Subnet Clustering</h3>
+<p>When an actor acquires multiple IPs for a campaign, they often come from<br />
+the same /24 subnet — either because they purchased a block, or because the<br />
+hosting provider allocates IPs sequentially and they ordered multiple VPS<br />
+instances in rapid succession.</p>
+<h1 id="given-confirmed-c2-18522010052">Given confirmed C2: 185.220.100.52</h1>
+<h1 id="check-the-24-for-similar-fingerprints">Check the /24 for similar fingerprints</h1>
+<p>shodan search "net:185.220.100.0/24 port:443"</p>
+<h1 id="then-examine-each-live-host-in-the-subnet-for-c2-framework-fingerprints">Then examine each live host in the subnet for C2 framework fingerprints</h1>
+<h1 id="many-will-be-unrelated-focus-on-matching-technical-fingerprints">Many will be unrelated - focus on matching technical fingerprints</h1>
+<p>Pivot Type 4: TLS Certificates — The Most Underused Pivot</p>
+<p>Tools: crt.sh · Censys · Shodan · openssl CLI · certstream · Facebook CT<br />
+Monitor · Google CT log · Entrust CT search</p>
+<h3 id="why-tls-certificates-are-goldmines">Why TLS Certificates Are Goldmines</h3>
+<h3 id="a-tls-certificate-contains-structured-metadata-who-it-was-issued-to">A TLS certificate contains structured metadata: who it was issued to</h3>
+<p>(Common Name, Subject Alternative Names), when it was issued, and by<br />
+which CA. Certificate Transparency logs record every publicly issued<br />
+certificate. This creates a comprehensive, searchable index of every<br />
+certificate ever issued — including certificates for attacker infrastructure.</p>
+<h3 id="the-pivot-opportunities">The pivot opportunities:</h3>
+<h2 id="1-subject-alternative-names-sans-a-certificate-issued-for-evil-">1. Subject Alternative Names (SANs): A certificate issued for evil-</h2>
+<p>domain.com may list admin.evil-domain.com and c2.evil-domain.com in its</p>
+<p>SANs, revealing infrastructure the analyst had no other way to find.</p>
+<h2 id="2-certificate-fingerprint-sha-1sha-256-two-different-ips-presenting">2. Certificate fingerprint (SHA-1/SHA-256): Two different IPs presenting</h2>
+<p>the same certificate means the operator moved the server but forgot to<br />
+rotate the certificate. One confirmed C2 IP → find the certificate → find all<br />
+IPs serving that certificate.</p>
+<h2 id="3-issuance-timing-clusters-an-attacker-who-sets-up-a-campaign-registers">3. Issuance timing clusters: An attacker who sets up a campaign registers</h2>
+<p>multiple domains and then issues certificates for them, often within a</p>
+<p>short window. Searching for certificates issued to domains with similar<br />
+naming patterns in a short time window reveals the full campaign scope.</p>
+<h2 id="4-certificate-subject-organization-self-signed-certificates-and-certificates">4. Certificate subject organization: Self-signed certificates and certificates</h2>
+<p>from specific CAs with specific organization names are actor<br />
+fingerprints.</p>
+<h3 id="certificate-transparency-primary-tools">Certificate Transparency — Primary Tools</h3>
+<p>crt.sh — Free, comprehensive CT log search (no account needed):</p>
+<h1 id="find-all-certificates-for-a-domain-and-its-subdomains">Find all certificates for a domain and its subdomains</h1>
+<p>https://crt.sh/?q=%.evil-domain.com</p>
+<h1 id="find-certificates-issued-to-a-specific-organization">Find certificates issued to a specific organization</h1>
+<p>https://crt.sh/?q=Acme+Corp&amp;match=LIKE</p>
+<h1 id="find-by-sha-1-or-sha-256-fingerprint">Find by SHA-1 or SHA-256 fingerprint</h1>
+<p>https://crt.sh/?q=SHA256_FINGERPRINT</p>
+<h1 id="api-access-returns-json-array-of-all-matching-certs">API access - returns JSON array of all matching certs</h1>
+<p>curl "https://crt.sh/?q=%.evil-domain.com&amp;output=json" | jq '.[].common_name'</p>
+<h1 id="extract-all-unique-names-cn-sans-from-ct-results">Extract all unique names (CN + SANs) from CT results</h1>
+<p>curl "https://crt.sh/?q=%.evil-domain.com&amp;output=json" \</p>
+<pre><code>| jq -r '.[].name_value' | tr ',' '\n' | sort -u
+</code></pre>
+<p>certstream — Real-time CT log streaming (catch new actor certs as they are<br />
+issued):</p>
+<h1 id="watch-for-new-certificates-matching-a-pattern-catches-infrastructure-at-setu">Watch for new certificates matching a pattern — catches infrastructure at setu</h1>
+<p>import certstream<br />
+def callback(message, context):</p>
+<pre><code>if message['message_type'] == &quot;certificate_update&quot;:
+domains = message['data']['leaf_cert']['all_domains']
+for d in domains:
+if 'banklogin' in d or 'secure-update' in d:
+print(f&quot;[CERT STREAM] {d}&quot;)
+</code></pre>
+<p>certstream.listen_for_events(callback, url="wss://certstream.calidog.io/")</p>
+<p>Entrust CT Search — good alternative to crt.sh for cross-CA searches:</p>
+<p>https://ui.ctsearch.entrust.com/ui/ctsearchui</p>
+<h1 id="supports-domain-organization-fingerprint-serial-number-search">Supports: domain, organization, fingerprint, serial number search</h1>
+<h3 id="censys-certificate-search-most-powerful-for-analyst-workflows">Censys Certificate Search — Most powerful for analyst workflows:</h3>
+<h1 id="find-all-ips-presenting-a-specific-certificate">Find all IPs presenting a specific certificate</h1>
+<p>services.tls.certificates.leaf_data.subject.common_name: "evil-domain.com"</p>
+<h1 id="find-certificates-with-specific-sans">Find certificates with specific SANs</h1>
+<p>services.tls.certificates.leaf_data.names: "evil-domain.com"</p>
+<h1 id="find-certificates-issued-in-a-specific-time-window-with-a-naming-pattern">Find certificates issued in a specific time window with a naming pattern</h1>
+<p>services.tls.certificates.leaf_data.subject.common_name: /.<em>update.</em>/<br />
+AND services.tls.certificates.leaf_data.issuer.common_name: "Let's Encrypt"</p>
+<h1 id="find-ips-with-self-signed-certificates-using-actors-naming-convention">Find IPs with self-signed certificates using actor's naming convention</h1>
+<p>services.tls.certificates.leaf_data.issuer_dn = services.tls.certificates.leaf_d<br />
+AND services.tls.certificates.leaf_data.subject.common_name: "evil-domain.com"</p>
+<h3 id="shodan-tls-pivoting">Shodan TLS pivoting:</h3>
+<h1 id="find-all-hosts-with-a-specific-certificate-sha-256-fingerprint">Find all hosts with a specific certificate SHA-256 fingerprint</h1>
+<p>shodan search "ssl.cert.fingerprint:SHA256_HERE"</p>
+<h1 id="find-all-hosts-with-certificate-issued-to-same-domain-pattern">Find all hosts with certificate issued to same domain pattern</h1>
+<p>shodan search "ssl.cert.subject.cn:*.evil-domain.com"</p>
+<h1 id="find-certificates-from-the-same-actor-based-on-organization-field">Find certificates from the same actor based on organization field</h1>
+<p>shodan search "ssl.cert.subject.organization:\"Acme Corp\""</p>
+<h3 id="the-certificate-pivot-workflow">The Certificate Pivot Workflow</h3>
+<p>STEP 1: Get the certificate from the known C2 domain</p>
+<pre><code>openssl s_client -connect DOMAIN:443 &lt;/dev/null 2&gt;/dev/null \
+| openssl x509 -noout -text | grep -E &quot;Subject:|SAN:|Not Before:&quot;
+</code></pre>
+<p>STEP 2: Extract SANs - these are additional domains on the certificate</p>
+<h3 id="every-san-is-a-new-domain-to-investigate">Every SAN is a new domain to investigate</h3>
+<p>STEP 3: Get the certificate fingerprint</p>
+<pre><code>openssl s_client -connect DOMAIN:443 &lt;/dev/null 2&gt;/dev/null \
+| openssl x509 -noout -fingerprint -sha256
+</code></pre>
+<p>STEP 4: Search for all IPs presenting this certificate</p>
+<pre><code>shodan search &quot;ssl.cert.fingerprint:SHA256_HERE&quot;
+→ Any IP presenting the same certificate = same actor infrastructure
+</code></pre>
+<p>STEP 5: Search crt.sh for related certificates</p>
+<pre><code>Query: %.actor-pattern.com
+→ Look for certificates issued in the same time window
+→ Certificates with similar CN/O/OU fields
+→ Certificates with overlapping SANs
+</code></pre>
+<p>STEP 6: For each new domain found, repeat from STEP 1</p>
+<p>Let’s Encrypt as an Attacker Fingerprint<br />
+The majority of modern attacker infrastructure uses Let’s Encrypt<br />
+certificates — they are free, automated, and require no identity verification.<br />
+But the combination of Let’s Encrypt issuance + specific domain naming<br />
+pattern + specific hosting ASN can be a distinctive actor fingerprint when all<br />
+three are consistent.</p>
+<p>Additionally, Let’s Encrypt certificates are valid for 90 days. An actor who<br />
+auto-renews will generate a new CT log entry every 90 days, providing<br />
+ongoing visibility into infrastructure that is still active.</p>
+<p>Pivot Type 5: Subdomain Patterns and Enumeration</p>
+<p>Tools: Subfinder · Amass · dnsx · httpx · Assetfinder · crt.sh · SecurityTrails ·<br />
+VirusTotal · PassiveTotal · Shosubgo · theHarvester</p>
+<h3 id="why-subdomains-reveal-infrastructure-architecture">Why Subdomains Reveal Infrastructure Architecture</h3>
+<h3 id="threat-actors-structure-their-infrastructure-with-subdomains-that-reflect">Threat actors structure their infrastructure with subdomains that reflect</h3>
+<p>operational function:</p>
+<p>c2.evil-domain.com — C2 server</p>
+<p>dl.evil-domain.com — Payload download server</p>
+<p>mail.evil-domain.com — Phishing mail server</p>
+<p>admin.evil-domain.com — Actor's own management interface</p>
+<p>cdn.evil-domain.com — Staging/delivery server mimicking a CDN</p>
+<h3 id="discovering-subdomains-of-a-known-actor-domain-expands-the">Discovering subdomains of a known actor domain expands the</h3>
+<p>infrastructure picture beyond the initial C2 and reveals the full operational<br />
+architecture.</p>
+<h3 id="subdomain-discovery-techniques">Subdomain Discovery Techniques</h3>
+<h3 id="passive-discovery-no-active-probing-of-actor-infrastructure">Passive discovery (no active probing of actor infrastructure):</h3>
+<h1 id="securitytrails-best-passive-subdomain-data">SecurityTrails — best passive subdomain data</h1>
+<p>https://securitytrails.com/domain/evil-domain.com/subdomains</p>
+<h1 id="api">API:</h1>
+<p>curl "https://api.securitytrails.com/v1/domain/evil-domain.com/subdomains" \</p>
+<pre><code>-H &quot;apikey: YOUR_KEY&quot; | jq '.subdomains[]'
+</code></pre>
+<h1 id="virustotal-subdomain-search">VirusTotal subdomain search</h1>
+<p>https://www.virustotal.com/gui/domain/evil-domain.com/relations</p>
+<h1 id="look-under-subdomains">Look under "Subdomains"</h1>
+<h1 id="crtsh-wildcard-reveals-all-subdomains-that-have-ever-had-a-certificate-issu">crt.sh wildcard - reveals all subdomains that have ever had a certificate issu</h1>
+<p>curl "https://crt.sh/?q=%.evil-domain.com&amp;output=json" \</p>
+<pre><code>| jq -r '.[].name_value' | tr ',' '\n' | sed 's/^\*\.//' | sort -u
+</code></pre>
+<h1 id="passivetotal-subdomain-search">PassiveTotal subdomain search</h1>
+<p>https://community.riskiq.com/search/evil-domain.com/subdomains</p>
+<h1 id="assetfinder-tom-hudson-lightweight-fast-passive-source-aggregation">Assetfinder (Tom Hudson) - lightweight, fast passive source aggregation</h1>
+<p>assetfinder --subs-only evil-domain.com</p>
+<h1 id="theharvester-broader-osint-including-emails-subdomains-ips-from-multiple-s">theHarvester - broader OSINT including emails, subdomains, IPs from multiple s</h1>
+<p>theHarvester -d evil-domain.com -b all</p>
+<h1 id="shosubgo-uses-shodan-api-to-find-subdomains-from-ssl-certificates">Shosubgo - uses Shodan API to find subdomains from SSL certificates</h1>
+<p>shosubgo -d evil-domain.com -s YOUR_SHODAN_KEY</p>
+<p>theHarvester: Your Essential Tool for OSINT and Reconnaissance<br />
+in Cybersecurity<br />
+Learn how to leverage theHarvester to gather emails, subdomains,<br />
+IPs, and more from open sources<br />
+medium.com</p>
+<h3 id="dns-brute-forcing-only-on-confirmed-attacker-infrastructure-not-on">DNS brute-forcing (only on confirmed attacker infrastructure — not on</h3>
+<p>victim domains):</p>
+<h1 id="subfinder-passive-subdomain-enumeration-aggregator-50-sources">Subfinder — passive subdomain enumeration aggregator (50+ sources)</h1>
+<p>subfinder -d evil-domain.com -all -recursive -o subs.txt</p>
+<h1 id="amass-active-passive-with-extensive-source-integration">Amass - active + passive with extensive source integration</h1>
+<p>amass enum -passive -d evil-domain.com<br />
+amass enum -active -d evil-domain.com # Only on actor infrastructure</p>
+<h1 id="dnsx-fast-resolution-of-discovered-subdomains-a-record-extraction">dnsx - fast resolution of discovered subdomains + A record extraction</h1>
+<p>cat subs.txt | dnsx -a -resp -silent</p>
+<h1 id="httpx-probe-which-discovered-subdomains-are-live-web-servers">httpx - probe which discovered subdomains are live web servers</h1>
+<p>cat subs.txt | httpx -silent -status-code -title -tech-detect</p>
+<h1 id="combine-passive-enumeration-sources-and-resolve-in-one-pipeline">Combine passive enumeration sources and resolve in one pipeline:</h1>
+<p>subfinder -d evil-domain.com -silent | \</p>
+<pre><code>cat - &lt;(curl -s &quot;https://crt.sh/?q=%.evil-domain.com&amp;output=json&quot; | \
+jq -r '.[].name_value' | tr ',' '\n' | sed 's/^\*\.//') | \
+sort -u | dnsx -a -resp -silent
+</code></pre>
+<h3 id="owasp-amass-project-guide">OWASP Amass Project guide</h3>
+<p>In-depth Attack Surface Mapping and Asset Discovery.<br />
+medium.com</p>
+<h3 id="naming-pattern-analysis">Naming Pattern Analysis</h3>
+<p>Subdomain naming patterns reveal actor conventions. If you observe:</p>
+<pre><code>login.evil-domain.com
+</code></pre>
+<pre><code>portal.evil-domain.com
+</code></pre>
+<pre><code>secure.evil-domain.com
+</code></pre>
+<pre><code>webmail.evil-domain.com
+</code></pre>
+<p>…you can predict that vpn.evil-domain.com , remote.evil-domain.com , and<br />
+admin.evil-domain.com may also exist — and more importantly, you can apply</p>
+<p>this naming pattern when searching for other actor domains:</p>
+<p>“Find me all domains registered on the same ASN, with the same nameserver, that<br />
+have subdomains following this login/portal/secure pattern.”</p>
+<h3 id="naming-convention-pivoting-to-new-domains">Naming Convention Pivoting to New Domains</h3>
+<h3 id="if-an-actor-uses-domains-like">If an actor uses domains like:</h3>
+<pre><code>microsoft-update[.]net
+</code></pre>
+<pre><code>windows-security[.]org
+</code></pre>
+<pre><code>office365-login[.]com
+</code></pre>
+<p>The pattern is: [legitimate-brand]-[IT-function].[common-TLD]</p>
+<h3 id="you-can-search-for-undiscovered-actor-domains-using-this-pattern">You can search for undiscovered actor domains using this pattern:</h3>
+<h3 id="securitytrails-dns-search">SecurityTrails DNS Search:</h3>
+<pre><code>Domain contains: &quot;microsoft&quot; AND &quot;update&quot;
+Registered: last 90 days
+Resolves to: ASN matching known actor hosting preference
+</code></pre>
+<p>Pivot Type 6: Shodan / Censys / FOFA — Fingerprinting C2</p>
+<h3 id="infrastructure_1">Infrastructure</h3>
+<p>Tools: Shodan · Censys · FOFA · ZoomEye · BinaryEdge · Onyphe · Greynoise<br />
+- JARM · ja3er.com · LeakIX</p>
+<p>The Most Powerful Pivot: Finding C2 Before It’s Used<br />
+Shodan, Censys, and FOFA continuously scan the entire internet and index<br />
+every exposed service. They record HTTP response headers, TLS certificate<br />
+details, port availability, and service banners for every accessible host.</p>
+<p>When a threat actor sets up a new C2 server, it gets scanned by these services<br />
+before it is ever used in an attack. An analyst with the right queries can find<br />
+attacker infrastructure at the time of setup — not after the first victim is<br />
+compromised.</p>
+<h3 id="cobalt-strike-fingerprinting">Cobalt Strike Fingerprinting</h3>
+<p>Cobalt Strike is one of the most widely used C2 frameworks. Even when<br />
+configured with custom Malleable C2 profiles, it leaves fingerprints that can<br />
+be identified:</p>
+<h1 id="default-cobalt-strike-https-listener-fingerprint">Default Cobalt Strike HTTPS listener fingerprint</h1>
+<h1 id="cs-serves-a-specific-certificate-format-and-responds-with-specific-headers">CS serves a specific certificate format and responds with specific headers</h1>
+<p>shodan search "product:\"Cobalt Strike Beacon\""</p>
+<h1 id="cobalt-strike-with-specific-malleable-profile-based-on-known-http-response">Cobalt Strike with specific malleable profile (based on known HTTP response)</h1>
+<p>shodan search "http.html:\"<title>404 Not Found</title>\" port:443 ssl"</p>
+<h1 id="cobalt-strike-ja3-fingerprint-more-reliable-than-header-based">Cobalt Strike JA3 fingerprint (more reliable than header-based)</h1>
+<h1 id="ja3-72a7c4bb3e61c2b01aef3f76ae7d50c2-is-a-known-cs-fingerprint">JA3: 72a7c4bb3e61c2b01aef3f76ae7d50c2 is a known CS fingerprint</h1>
+<p>shodan search "ssl.jarm:07d14d16d21d21d07c42d41d00041d24a458a375eef0c576d23a7bab</p>
+<h1 id="censys-cobalt-strike-beacon-detection">Censys: Cobalt Strike beacon detection</h1>
+<p>services.tls.certificates.leaf_data.subject.common_name: "Major Cobalt Strike"</p>
+<h1 id="or-based-on-default-certificate-organization">OR based on default certificate organization</h1>
+<p>services.tls.certificates.leaf_data.subject.organization: "cobaltstrike"</p>
+<h3 id="jarm-fingerprinting">JARM Fingerprinting</h3>
+<h3 id="jarm-is-an-active-tls-fingerprinting-tool-developed-by-salesforce-that">JARM is an active TLS fingerprinting tool developed by Salesforce that</h3>
+<p>generates a unique fingerprint for a TLS server based on its specific<br />
+implementation and configuration. C2 frameworks running on default or<br />
+near-default configurations produce consistent JARM hashes.</p>
+<h1 id="install-jarm">Install JARM</h1>
+<p>git clone https://github.com/salesforce/jarm</p>
+<h1 id="fingerprint-a-server">Fingerprint a server</h1>
+<p>python3 jarm.py TARGET_DOMAIN 443</p>
+<h1 id="known-jarm-hashes-for-common-c2-frameworks">Known JARM hashes for common C2 frameworks:</h1>
+<h1 id="cobalt-strike-07d14d16d21d21d07c42d41d00041d24a458a375eef0c576d23a7bab9a9fb1">Cobalt Strike: 07d14d16d21d21d07c42d41d00041d24a458a375eef0c576d23a7bab9a9fb1</h1>
+<h1 id="metasploit-07d19d1ad21d21d00042d43d000000300c68d0a09e4253b6c3e8ad2928bfdc3">Metasploit:    07d19d1ad21d21d00042d43d000000300c68d0a09e4253b6c3e8ad2928bfdc3</h1>
+<h1 id="sliver-29d29d15d29d29d00029d29d29d29dea7c4eb8f7f2ef42d7b01f8f6e2a2c82d">Sliver:        29d29d15d29d29d00029d29d29d29dea7c4eb8f7f2ef42d7b01f8f6e2a2c82d</h1>
+<h1 id="shodan-search-by-jarm-hash">Shodan search by JARM hash</h1>
+<p>shodan search "ssl.jarm:JARM_HASH_HERE"</p>
+<h1 id="returns-all-ips-currently-presenting-this-exact-tls-configuration">→ Returns all IPs currently presenting this exact TLS configuration</h1>
+<h3 id="http-response-header-fingerprinting">HTTP Response Header Fingerprinting</h3>
+<p>C2 frameworks and attacker-operated servers often respond with distinctive</p>
+<h3 id="http-headers-especially-on-non-standard-ports-or-when-using">HTTP headers — especially on non-standard ports or when using</h3>
+<p>default/near-default configurations.</p>
+<h1 id="find-servers-with-specific-custom-header-pattern">Find servers with specific custom header pattern</h1>
+<p>shodan search "http.headers.x-custom-header: specific-value"</p>
+<h1 id="find-servers-with-no-server-header-unusual-worth-investigating-on-specific">Find servers with no Server header (unusual - worth investigating on specific</h1>
+<p>shodan search "asn:AS12345 -http.server"</p>
+<h1 id="find-servers-responding-with-default-cobalt-strike-404-page">Find servers responding with default Cobalt Strike 404 page</h1>
+<p>shodan search "http.html_hash:-2032435768"</p>
+<h1 id="censys-servers-with-specific-http-response">Censys: servers with specific HTTP response</h1>
+<p>services.http.response.headers.server: "nginx"<br />
+AND services.port: 8443<br />
+AND services.tls.certificates.leaf_data.issuer.common_name: "Let's Encrypt"<br />
+AND autonomous_system.asn: 12345</p>
+<h3 id="fofa-chinese-internet-intelligence-platform">FOFA (Chinese Internet Intelligence Platform)</h3>
+<h3 id="fofa-indexes-a-significant-portion-of-the-chinese-reachable-internet-and">FOFA indexes a significant portion of the Chinese-reachable internet and</h3>
+<p>provides search syntax particularly useful for finding C2 infrastructure<br />
+popular with APT actors:</p>
+<h1 id="fofa-query-syntax-examples">FOFA query syntax examples:</h1>
+<h1 id="find-servers-with-specific-header">Find servers with specific header</h1>
+<p>header="X-Custom-Header: value"</p>
+<h1 id="find-cobalt-strike-based-on-response">Find Cobalt Strike based on response</h1>
+<p>app="Cobalt-Strike-Beacon"</p>
+<h1 id="combined-specific-asn-port-header">Combined: specific ASN + port + header</h1>
+<p>asn="AS12345" &amp;&amp; port="8443" &amp;&amp; header="Server: Microsoft-IIS/8.5"</p>
+<h1 id="ip-range-certificate-subject">IP range + certificate subject</h1>
+<p>cert="evil-domain.com" &amp;&amp; country="US"</p>
+<h3 id="zoomeye-chinese-internet-intelligence-broader-asian-coverage">ZoomEye — Chinese Internet Intelligence (Broader Asian Coverage)</h3>
+<p>ZoomEye is FOFA’s main competitor — often surfaces infrastructure in Asian<br />
+hosting providers and CDNs that FOFA misses:</p>
+<h1 id="zoomeye-query-syntax">ZoomEye query syntax:</h1>
+<p>app:"Cobalt Strike Beacon"<br />
+port:8443 ssl:"evil-domain.com"<br />
+hostname:"evil-domain.com"<br />
+ip:"185.220.101.0/24" + port:443</p>
+<h3 id="binaryedge-alternative-port-scanning-database">BinaryEdge — Alternative Port Scanning Database</h3>
+<h3 id="binaryedge-independently-scans-the-internet-and-often-captures-services-at">BinaryEdge independently scans the internet and often captures services at</h3>
+<p>different timestamps than Shodan — useful for confirming infrastructure<br />
+presence or finding short-lived hosts:</p>
+<h1 id="binaryedge-search">BinaryEdge search:</h1>
+<p>https://app.binaryedge.io/services/query?query=ip:185.220.101.0/24+port:8443<br />
+https://app.binaryedge.io/services/query?query=ssl_subject_cn:evil-domain.com</p>
+<h1 id="binaryedge-api">BinaryEdge API:</h1>
+<p>curl "https://api.binaryedge.io/v2/query/search?query=ssl_subject_cn:evil-domain</p>
+<pre><code>-H &quot;X-Key: YOUR_KEY&quot;
+</code></pre>
+<h3 id="onyphe-european-focused-internet-intelligence">Onyphe — European-focused Internet Intelligence</h3>
+<p>Onyphe indexes both passive DNS and active scanning, with good European</p>
+<h3 id="ip-coverage">IP coverage:</h3>
+<h1 id="onyphe-query-syntax">Onyphe query syntax:</h1>
+<p>category:datascan ip:185.220.101.47<br />
+category:datascan domain:evil-domain.com<br />
+category:resolver ip:185.220.101.47 (passive DNS)</p>
+<h3 id="greynoise-separating-noise-from-targeted-activity">Greynoise — Separating Noise from Targeted Activity</h3>
+<h3 id="greynoise-is-a-critical-complement-to-shodan-it-tells-you-whether-an-ip-is-a">Greynoise is a critical complement to Shodan: it tells you whether an IP is a</h3>
+<p>mass internet scanner (noise) or targeted/purposeful infrastructure:</p>
+<h1 id="before-pivoting-on-an-ip-from-shodan-check-greynoise">Before pivoting on an IP from Shodan, check Greynoise:</h1>
+<p>https://viz.greynoise.io/ip/IP_ADDRESS</p>
+<h1 id="if-greynoise-tags-it-benign-or-malicious-scanner-its-mass-scanning-nois">If Greynoise tags it "Benign" or "Malicious Scanner" → it's mass scanning nois</h1>
+<h1 id="if-greynoise-has-no-data-more-likely-to-be-targeted-c2-or-staging-infrastruc">If Greynoise has no data → more likely to be targeted C2 or staging infrastruc</h1>
+<h1 id="api-curl-httpsapigreynoiseiov3communityip_address-h-key-your_key">API: curl "https://api.greynoise.io/v3/community/IP_ADDRESS" -H "key: YOUR_KEY</h1>
+<h3 id="leakix-service-exposure-and-misconfiguration-detection">LeakIX — Service Exposure and Misconfiguration Detection</h3>
+<h3 id="leakix-indexes-exposed-services-with-a-focus-on-misconfigurations-useful">LeakIX indexes exposed services with a focus on misconfigurations — useful</h3>
+<p>for finding actor-operated servers with exposed admin panels or unintended<br />
+services:</p>
+<p>https://leakix.net/search?scope=leak&amp;q=+ssl.domain:evil-domain.com<br />
+https://leakix.net/search?scope=service&amp;q=+ip:185.220.101.47</p>
+<p>Pivot Type 7: WHOIS and Registration Pattern Analysis</p>
+<p>Tools: whois CLI · ViewDNS · DomainTools · SecurityTrails · ICANN RDAP ·<br />
+WhoisXML API · SpyOnWeb · DomainTools Iris · AnalyzeID · HackerTarget</p>
+<p>What WHOIS Reveals (and What It Doesn’t)</p>
+<h3 id="modern-whois-data-is-often-heavily-redacted-due-to-gdpr-and-registrar">Modern WHOIS data is often heavily redacted due to GDPR and registrar</h3>
+<p>Registrar identity: Which registrar was used? (Namecheap, Porkbun,<br />
+GoDaddy, etc.)</p>
+<p>Registration date: When was this domain registered? Proximity to known<br />
+campaign dates is significant.</p>
+<p>consistently use specific privacy services.</p>
+<p>Nameservers: What nameservers are configured? (See earlier section on</p>
+<h3 id="ns-pivoting">NS pivoting)</h3>
+<p>Expiration pattern: When is it set to expire? Actors often set domains to<br />
+auto-renew or to expire shortly after the expected campaign end.</p>
+<h1 id="basic-whois-cli">Basic WHOIS (CLI)</h1>
+<p>whois evil-domain.com</p>
+<h1 id="icann-rdap-standardized-more-reliable-than-legacy-whois">ICANN RDAP - standardized, more reliable than legacy WHOIS</h1>
+<p>https://lookup.icann.org/en/lookup?name=evil-domain.com</p>
+<h1 id="viewdnsinfo-historical-whois-data-free">ViewDNS.info - historical WHOIS data (free)</h1>
+<p>https://viewdns.info/whois/?domain=evil-domain.com</p>
+<h1 id="securitytrails-whois-history-free-tier">SecurityTrails WHOIS history (free tier)</h1>
+<p>https://securitytrails.com/domain/evil-domain.com/history/whois</p>
+<h1 id="domaintools-best-historical-whois-registrant-tracking">DomainTools - best historical WHOIS, registrant tracking</h1>
+<p>https://whois.domaintools.com/evil-domain.com</p>
+<h1 id="whoisxml-api-free-tier-500mo-bulk-whois-registrant-email-monitoring">WhoisXML API - free tier (500/mo), bulk WHOIS, registrant email monitoring</h1>
+<p>https://main.whoisxmlapi.com/</p>
+<h1 id="analyzeid-pivots-on-email-phone-nameserver-across-whois-records-free">AnalyzeID - pivots on email, phone, nameserver across WHOIS records (free)</h1>
+<p>https://analyzeid.com/email/registrant@evil.com<br />
+https://analyzeid.com/ns/ns1.custom-nameserver.example</p>
+<h1 id="hackertarget-reverse-whois-free-limited">HackerTarget reverse WHOIS (free, limited)</h1>
+<p>https://hackertarget.com/reverse-whois-lookup/?q=registrant@evil.com</p>
+<h1 id="spyonweb-pivot-on-analytics-ids-adsense-nameservers-across-domains">SpyOnWeb - pivot on analytics IDs, adsense, nameservers across domains</h1>
+<p>https://spyonweb.com/ns1.custom-nameserver.example</p>
+<h3 id="registrant-email-pivoting">Registrant Email Pivoting</h3>
+<p>When WHOIS data is not redacted (older registrations, some TLDs), the<br />
+registrant email is a high-value pivot:</p>
+<h1 id="passivetotal-reverse-whois-by-email">PassiveTotal: reverse WHOIS by email</h1>
+<h1 id="find-all-domains-registered-with-this-email-address">"Find all domains registered with this email address"</h1>
+<p>https://community.riskiq.com/search/registrant@evil.com/whois</p>
+<h1 id="securitytrails-reverse-whois">SecurityTrails reverse WHOIS</h1>
+<p>curl "https://api.securitytrails.com/v1/domains/list" \</p>
+<pre><code>-d '{&quot;filter&quot;: {&quot;whois_email&quot;: &quot;registrant@evil.com&quot;}}' \
+-H &quot;apikey: YOUR_KEY&quot;
+</code></pre>
+<h1 id="domaintools-iris-subscription">DomainTools Iris (subscription)</h1>
+<h1 id="full-reverse-whois-across-multiple-fields-simultaneously">Full reverse WHOIS across multiple fields simultaneously</h1>
+<h3 id="when-an-actor-uses-the-same-email-address-or-email-address-pattern-to">When an actor uses the same email address (or email address pattern) to</h3>
+<p>register multiple campaign domains, every domain registered by that email<br />
+is actor infrastructure.</p>
+<h3 id="registration-timestamp-clustering">Registration Timestamp Clustering</h3>
+<h3 id="actors-who-set-up-campaigns-register-multiple-domains-in-a-compressed">Actors who set up campaigns register multiple domains in a compressed</h3>
+<p>time window. Searching passive DNS and WHOIS data for domains<br />
+registered:</p>
+<p>In the same 24–48 hour window</p>
+<h3 id="on-the-same-registrar">On the same registrar</h3>
+<h3 id="with-the-same-nameservers">With the same nameservers</h3>
+<h3 id="resolving-to-the-same-ip-block">Resolving to the same IP block</h3>
+<p>…reveals the full scope of a campaign infrastructure deployment, even if<br />
+only one domain was initially reported.</p>
+<h1 id="domaintools-iris-query-example-concept">DomainTools Iris query (example concept):</h1>
+<p>registrar = "Namecheap"<br />
+AND registered_date BETWEEN "2024-03-15" AND "2024-03-16"<br />
+AND ns1 = "dns1.registrar-servers.com"<br />
+AND resolves_to_asn = "AS9009"<br />
+AND NOT historical_malicious_flag</p>
+<h1 id="this-type-of-query-applied-to-an-actors-known-registrarnsasn-pattern">This type of query, applied to an actor's known registrar+NS+ASN pattern,</h1>
+<h1 id="surfaces-undetected-actor-domains-from-the-same-registration-campaign">surfaces undetected actor domains from the same registration campaign.</h1>
+<h3 id="the-complete-tooling-stack">The Complete Tooling Stack</h3>
+<h3 id="free-tier-tools-sufficient-for-most-analysis">Free Tier Tools (Sufficient for Most Analysis)</h3>
+<h3 id="paid-subscription-tools-enterprise-standard">Paid / Subscription Tools (Enterprise Standard)</h3>
+<p>The Analyst’s Minimum Viable Stack (Free)<br />
+For a CTI analyst without budget access, this combination covers the core<br />
+workflow:</p>
+<h3 id="dns-resolution">DNS RESOLUTION:</h3>
 <ol>
-<li>Introduction: Why Infrastructure Pivoting Is a Core CTI Skill</li>
-<li>The Mental Model: Why Attackers Leave Trails</li>
-<li>The Pivoting Workflow: Domain → IP → ASN → Certificates → Expanded Infrastructure</li>
-<li>Pivot Type 1: Domain → IP Resolution</li>
-<li>Pivot Type 2: Passive DNS — The History Book of the Internet</li>
-<li>Pivot Type 3: IP → ASN / Hosting Reuse</li>
-<li>Pivot Type 4: TLS Certificates — The Most Underused Pivot</li>
-<li>Pivot Type 5: Subdomain Patterns and Enumeration</li>
-<li>Pivot Type 6: Shodan / Censys / FOFA — Fingerprinting Infrastructure</li>
-<li>Pivot Type 7: WHOIS and Registration Pattern Analysis</li>
-<li>The Complete Tooling Stack</li>
-<li>Full Worked Example: Tracing a C2 Network End-to-End</li>
-<li>Automating the Workflow with Python</li>
-<li>Common Pivoting Mistakes and Dead Ends</li>
-<li>Interview-Ready: Answering "How Do You Discover Attacker Infrastructure?"</li>
-<li>Quick Reference Cheatsheet</li>
-<li>Conclusion</li>
-<li>References and Further Reading</li>
+<li>dig / host / nslookup   → Live resolution, all record types, TTL analysis</li>
+<li>dnsx                    → Bulk resolution, fast, pipeline-friendly</li>
 </ol>
-<hr />
-<h2 id="tool-autowfpy-automated-infrastructure-pivot-workflow">Tool: autoWF.py — Automated Infrastructure Pivot Workflow</h2>
-<p><code>autoWF.py</code> implements the article's pivoting workflow as a single-command Python script. Given a seed domain, it automatically runs all four pivot stages and returns a structured infrastructure map.</p>
-<h3 id="what-it-does">What it does</h3>
-<p><strong>Stage 1 — VirusTotal passive DNS</strong><br />
-Queries the VirusTotal API for the domain's full historical DNS resolution history, extracting every IP the domain has ever resolved to.</p>
-<p><strong>Stage 2 — Reverse IP pivot (SecurityTrails)</strong><br />
-For each discovered IP, queries SecurityTrails reverse DNS to find all other domains that have resolved to the same IP — uncovering co-hosted or reused infrastructure.</p>
-<p><strong>Stage 3 — Subdomain enumeration (SecurityTrails)</strong><br />
-Enumerates all known subdomains for the seed domain, expanding the infrastructure surface area.</p>
-<p><strong>Stage 4 — Certificate transparency (crt.sh)</strong><br />
-Queries crt.sh CT logs for all TLS certificates issued for the domain and its subdomains, surfacing additional hostnames the attacker may have registered.</p>
-<h3 id="output">Output</h3>
-<p>Returns a JSON summary with:<br />
-- <code>discovered_ips</code> — all IPs the seed domain has resolved to<br />
-- <code>discovered_domains</code> — all co-hosted domains found via reverse IP lookup<br />
-- <code>subdomains</code> — all known subdomains<br />
-- <code>certificate_names</code> — all CN/SAN names from CT logs</p>
-<h3 id="requirements">Requirements</h3>
-<pre><code>pip install requests
+<h3 id="passive-dns">PASSIVE DNS:</h3>
+<h2 id="3-virustotal-domainip-history-fileurl-correlation">3. VirusTotal              → Domain/IP history, file/URL correlation</h2>
+<h2 id="4-securitytrails-deep-dns-history-subdomain-history-50mo-free">4. SecurityTrails          → Deep DNS history, subdomain history (50/mo free)</h2>
+<h2 id="5-circl-pdns-free-no-account-fast-european-passive-dns">5. CIRCL pDNS              → Free, no account, fast European passive DNS</h2>
+<h3 id="asn-ip">ASN / IP:</h3>
+<ol start="6">
+<li>bgp.he.net              → ASN lookup, routing data, subnet browsing</li>
+</ol>
+<h2 id="7-shodan-free-port-fingerprinting-banner-search-c2-detection">7. Shodan (free)           → Port fingerprinting, banner search, C2 detection</h2>
+<h2 id="8-greynoise-community-confirm-ip-is-targeted-c2-not-mass-scanner-nois">8. Greynoise (community)   → Confirm IP is targeted C2, not mass scanner nois</h2>
+<h3 id="certificates">CERTIFICATES:</h3>
+<ol start="9">
+<li>crt.sh                  → CT log search, subdomain discovery via SANs</li>
+</ol>
+<h2 id="10-censys-research-tls-cert-search-self-signed-detection-asn-quer">10. Censys (research)       → TLS cert search, self-signed detection, ASN quer</h2>
+<ol start="11">
+<li>certstream              → Real-time CT monitoring for new actor certs</li>
+</ol>
+<h3 id="subdomains">SUBDOMAINS:</h3>
+<h2 id="12-subfinder-passive-enumeration-from-50-sources">12. Subfinder               → Passive enumeration from 50+ sources</h2>
+<h2 id="13-assetfinder-fast-lightweight-passive-subdomain-finder">13. Assetfinder             → Fast lightweight passive subdomain finder</h2>
+<ol start="14">
+<li>dnsx + httpx            → Resolve discovered subdomains, probe live hosts</li>
+</ol>
+<h3 id="whois-registration">WHOIS / REGISTRATION:</h3>
+<pre><code>15. whois CLI + ICANN RDAP   → Current WHOIS, standardized output
+16. AnalyzeID                → Free reverse WHOIS by email, NS, phone
+17. ViewDNS                  → Historical WHOIS snapshots
 </code></pre>
-<p>API keys (free tiers sufficient for most CTI work):<br />
-- <strong>VirusTotal:</strong> <a href="https://www.virustotal.com">virustotal.com</a> — free API key<br />
-- <strong>SecurityTrails:</strong> <a href="https://securitytrails.com">securitytrails.com</a> — free tier available</p>
-<h3 id="usage">Usage</h3>
-<pre><code class="language-bash">export VT_API_KEY=your_virustotal_api_key
-export ST_API_KEY=your_securitytrails_api_key
-
-python3 autoWF.py &lt;seed_domain&gt;
+<h3 id="visualization">VISUALIZATION:</h3>
+<h2 id="18-virustotal-graph-quick-graphical-pivot-view">18. VirusTotal Graph         → Quick graphical pivot view</h2>
+<h2 id="19-obsidian-maltego-ce-manual-graph-building-for-complex-campaigns">19. Obsidian / Maltego CE    → Manual graph building for complex campaigns</h2>
+<p>Full Worked Example: Tracing a C2 Network End-to-End</p>
+<h3 id="starting-point">Starting Point</h3>
+<h3 id="you-receive-a-threat-intelligence-report-with-a-single-indicator">You receive a threat intelligence report with a single indicator:</h3>
+<p>“A phishing campaign targeting financial sector organizations has been observed<br />
+using the domain secure-banklogin[.]com as a credential harvesting page."</p>
+<p>That is all you have. One domain. No IP. No actor attribution. Let’s build the<br />
+picture.</p>
+<p>Step 1: Initial Domain Pivot</p>
+<h1 id="current-resolution_1">Current resolution</h1>
+<p>dig secure-banklogin.com A +short</p>
+<h1 id="output-18522010147">OUTPUT: 185.220.101.47</h1>
+<h1 id="ns-records">NS records</h1>
+<p>dig secure-banklogin.com NS +short</p>
+<h1 id="output-ns1nameserver-providercom">OUTPUT: ns1.nameserver-provider.com</h1>
+<h1 id="ns2nameserver-providercom">ns2.nameserver-provider.com</h1>
+<h1 id="whois">WHOIS</h1>
+<p>whois secure-banklogin.com</p>
+<h1 id="output">OUTPUT:</h1>
+<h1 id="registrar-namecheap">Registrar: Namecheap</h1>
+<h1 id="registered-2024-11-15t092314z">Registered: 2024-11-15T09:23:14Z</h1>
+<h1 id="registrant-redacted">Registrant: REDACTED</h1>
+<h1 id="name-server-ns1nameserver-providercom">Name Server: NS1.NAMESERVER-PROVIDER.COM</h1>
+<h3 id="findings-so-far">Findings so far:</h3>
+<p>IP: 185.220.101.47</p>
+<h3 id="registrar-namecheap_1">Registrar: Namecheap</h3>
+<p>Registration date: November 15, 2024 (09:23 UTC)</p>
+<p>Nameservers: ns1/ns2.nameserver-provider.com</p>
+<p>Step 2: Passive DNS — Historical Resolution</p>
+<p>SecurityTrails query: secure-banklogin.com → DNS History (A records)</p>
+<h3 id="results">RESULTS:</h3>
+<pre><code>185.220.101.47   (current, since 2024-11-15)
+185.220.101.31   (previous, 2024-11-08 to 2024-11-15)
 </code></pre>
-<p><strong>Example:</strong></p>
-<pre><code class="language-bash">python3 autoWF.py malicious-c2.example.com
+<p>New finding: The domain previously resolved to 185.220.101.31 . The actor<br />
+moved their server but kept the domain. Both IPs are actor infrastructure.</p>
+<p>Step 3: IP Pivot — Reverse DNS Lookup</p>
+<p>PassiveTotal / SecurityTrails: What other domains resolved to 185.220.101.47?</p>
+<h3 id="results_1">RESULTS:</h3>
+<pre><code>secure-banklogin.com      (our starting domain)
+paypal-verify[.]net       (registered 2024-11-15 - same day!)
+account-suspended[.]com   (registered 2024-11-14)
+login-banking[.]org       (registered 2024-11-15)
+update-your-info[.]net    (registered 2024-11-13)
 </code></pre>
-<p><strong>Example output:</strong></p>
-<pre><code>[*] Starting pivot on: malicious-c2.example.com
-  [DNS] Historical resolution: malicious-c2.example.com → 185.220.101.45
-  [IP PIVOT] 185.220.101.45 → another-c2.example.net
-  [SUB] staging.malicious-c2.example.com
-  [CERT] Found in CT logs: admin.malicious-c2.example.com
-
-=== PIVOT SUMMARY ===
+<p>Critical finding: Four additional phishing domains on the same IP, all<br />
+registered within a 3-day window around the same date. This is a campaign<br />
+deployment event. All five domains are actor infrastructure.</p>
+<p>Now perform the same pivot on the previous IP 185.220.101.31 :</p>
+<p>Reverse DNS on 185.220.101.31:</p>
+<h3 id="results_2">RESULTS:</h3>
+<pre><code>support-helpdesk[.]com    (2024-11-01)
+verify-account[.]net      (2024-11-03)
+customer-service[.]org    (2024-11-01)
+</code></pre>
+<h3 id="extended-finding-three-more-domains-from-an-earlier-deployment-on-the">Extended finding: Three more domains from an earlier deployment on the</h3>
+<p>staging IP. The actor appears to have been running this campaign since at<br />
+least November 1.</p>
+<p>Total actor domains discovered so far: 8 (up from 1)</p>
+<p>Step 4: ASN Analysis</p>
+<pre><code># Get ASN for 185.220.101.47
+whois 185.220.101.47 | grep -i &quot;AS\|origin\|netname&quot;
+# OUTPUT:
+#   origin: AS47674
+#   netname: NET-FRANTECH-185-220-101
+#   descr: FranTech Solutions
+# bgp.he.net confirms: AS9009 / Frantech Solutions (this is Frantech's range)
+</code></pre>
+<p>Finding: The actor is using Frantech/M247 (AS9009) — a bulletproof hosting<br />
+provider known for high abuse tolerance. This is a significant pattern signal.<br />
+Note it for actor profiling.</p>
+<pre><code># Shodan: Look for other hosts in the same /24 with C2-like characteristics
+shodan search &quot;net:185.220.101.0/24 port:443&quot;
+# RESULTS show 12 active hosts in the subnet.
+# Check each for C2 framework fingerprints.
+# 3 of the 12 return responses consistent with phishing page templates.
+</code></pre>
+<p>New finding: 3 additional infrastructure nodes in the same subnet that may<br />
+be related. Flag for investigation.</p>
+<p>Step 5: TLS Certificate Pivot</p>
+<h1 id="get-certificate-from-the-known-domain">Get certificate from the known domain</h1>
+<p>openssl s_client -connect secure-banklogin.com:443 </dev/null 2>/dev/null \</p>
+<pre><code>| openssl x509 -noout -text
+</code></pre>
+<h1 id="output_1">OUTPUT:</h1>
+<h1 id="subject-cn-secure-banklogincom">Subject: CN = secure-banklogin.com</h1>
+<h1 id="subject-alternative-names">Subject Alternative Names:</h1>
+<h1 id="dnssecure-banklogincom">DNS:secure-banklogin.com</h1>
+<h1 id="dnswwwsecure-banklogincom">DNS:www.secure-banklogin.com</h1>
+<h1 id="issuer-cn-lets-encrypt-r3">Issuer: CN = Let's Encrypt R3</h1>
+<h1 id="not-before-nov-15-093105-2024-gmt">Not Before: Nov 15 09:31:05 2024 GMT</h1>
+<h1 id="not-after-feb-13-093104-2025-gmt">Not After : Feb 13 09:31:04 2025 GMT</h1>
+<h1 id="sha256-fingerprint-a3b4c5-fingerprint">SHA256 Fingerprint: a3:b4:c5:... [FINGERPRINT]</h1>
+<p>Certificate observation: Issued by Let’s Encrypt, 8 minutes after domain<br />
+registration (domain registered 09:23, cert issued 09:31). This is automated<br />
+infrastructure provisioning — the actor has scripted their setup.</p>
+<h1 id="shodan-find-all-ips-serving-this-exact-certificate">Shodan: find all IPs serving this exact certificate</h1>
+<p>shodan search "ssl.cert.fingerprint:A3B4C5..."</p>
+<h1 id="result-18522010147-only-certificate-is-unique-to-this-domain">RESULT: 185.220.101.47 only — certificate is unique to this domain</h1>
+<p>Now search crt.sh for certificates issued to the same naming pattern around<br />
+the same time:</p>
+<p>crt.sh query: %login%.com AND issuance: 2024-11-13 to 2024-11-17<br />
+Filter: Let's Encrypt + IP resolves to AS9009</p>
+<h3 id="results_3">RESULTS:</h3>
+<pre><code>paypal-login[.]com     (cert issued 2024-11-14)
+banklogin-secure[.]net (cert issued 2024-11-15)
+mobile-login[.]org     (cert issued 2024-11-13)
+</code></pre>
+<p>New finding: 3 more domains matching the naming pattern + registrar +<br />
+certificate timeline. All likely same actor.</p>
+<p>Total actor domains discovered so far: 11 (up from 1)</p>
+<p>Step 6: WHOIS Registration Pattern Pivot<br />
+All discovered domains: Namecheap, registered November 13–15, 2024. Let’s</p>
+<h3 id="securitytrails-passivetotal-query">SecurityTrails / PassiveTotal query:</h3>
+<pre><code>registrar = &quot;Namecheap&quot;
+nameserver contains &quot;nameserver-provider&quot;
+registered between 2024-11-10 and 2024-11-20
+resolves_to_asn = 9009 (Frantech)
+</code></pre>
+<p>This query surfaces 4 additional domains matching the pattern that were not<br />
+yet captured by direct pivot:</p>
+<p>bank-account-update[.]com (2024-11-13)</p>
+<pre><code>secure-payment-form[.]net (2024-11-14)
+login-security-check[.]org (2024-11-16)
+account-verification[.]com (2024-11-11)
+</code></pre>
+<p>Step 7: Subdomain Enumeration</p>
+<p>subfinder -d secure-banklogin.com -all 2&gt;/dev/null</p>
+<h1 id="results_4">RESULTS:</h1>
+<pre><code>www.secure-banklogin.com     → same IP
+mail.secure-banklogin.com    → 185.220.101.48 (DIFFERENT IP!)
+admin.secure-banklogin.com   → 185.220.101.48
+</code></pre>
+<h1 id="new-ip-18522010148">New IP: 185.220.101.48</h1>
+<p>Critical finding: The actor’s mail server and admin panel are on an adjacent<br />
+IP in the same /24 subnet. The mail server is used for sending phishing<br />
+emails — confirming this is a phishing campaign rather than a passive<br />
+redirect.</p>
+<p>Reverse DNS on 185.220.101.48 reveals additional actor domains.</p>
+<h3 id="final-infrastructure-map">Final Infrastructure Map</h3>
+<p>Starting from 1 domain, systematic pivoting discovered:</p>
+<p>ACTOR INFRASTRUCTURE MAP (Phishing Campaign — November 2024)<br />
+CONFIRMED C2/PHISHING INFRASTRUCTURE:</p>
+<pre><code>IPs: 185.220.101.31, 185.220.101.47, 185.220.101.48
+ASN: AS9009 (Frantech/Bulletproof)
+DOMAINS (15 total discovered):
+Credential harvesting:
+secure-banklogin[.]com
+paypal-verify[.]net
+account-suspended[.]com
+login-banking[.]org
+</code></pre>
+<pre><code>update-your-info[.]net
+bank-account-update[.]com
+secure-payment-form[.]net
+login-security-check[.]org
+account-verification[.]com
+paypal-login[.]com
+banklogin-secure[.]net
+mobile-login[.]org
+Infrastructure:
+mail.secure-banklogin[.]com   (phishing email sending)
+admin.secure-banklogin[.]com (actor management interface)
+From earlier campaign:
+support-helpdesk[.]com
+verify-account[.]net
+customer-service[.]org
+</code></pre>
+<h3 id="campaign-pattern">CAMPAIGN PATTERN:</h3>
+<h3 id="registrar-namecheap-consistent">Registrar: Namecheap (consistent)</h3>
+<pre><code>Nameserver: nameserver-provider.com (consistent)
+Hosting: Frantech AS9009 (bulletproof)
+Certificate: Let's Encrypt, automated provisioning
+Registration timing: Batch deployments 3-5 days before campaign activation
+Naming convention: [legitimate-brand/action]-[banking-term].[common-TLD]
+</code></pre>
+<p>Outcome: From one reported phishing domain, you have identified 15+<br />
+infrastructure nodes, two campaign waves, the actor’s infrastructure pattern,<br />
+and predictive indicators for future campaigns.</p>
+<h2 id="12-automating-the-workflow-with-python">12. Automating the Workflow with Python</h2>
+<p>For repeated pivoting on multiple IOCs, automation saves hours. Here is a</p>
+<h3 id="python-skeleton-using-the-virustotal-and-securitytrails-apis">Python skeleton using the VirusTotal and SecurityTrails APIs:</h3>
+<p>import requests<br />
+import json<br />
+from datetime import datetime<br />
+VT_API_KEY = "YOUR_VT_KEY"</p>
+<p>ST_API_KEY = "YOUR_ST_KEY"<br />
+def vt_domain_info(domain: str) -&gt; dict:</p>
+<pre><code>&quot;&quot;&quot;Get domain info from VirusTotal including passive DNS and relationships.&quot;
+headers = {&quot;x-apikey&quot;: VT_API_KEY}
+# Domain report
+resp = requests.get(
+f&quot;https://www.virustotal.com/api/v3/domains/{domain}&quot;,
+headers=headers
+)
+# Historical resolutions
+resolutions = requests.get(
+f&quot;https://www.virustotal.com/api/v3/domains/{domain}/resolutions&quot;,
+headers=headers
+)
+data = resp.json()
+dns_history = [
 {
-  &quot;seed&quot;: &quot;malicious-c2.example.com&quot;,
-  &quot;discovered_ips&quot;: [&quot;185.220.101.45&quot;],
-  &quot;discovered_domains&quot;: [&quot;another-c2.example.net&quot;, &quot;malicious-c2.example.com&quot;],
-  &quot;subdomains&quot;: [&quot;staging.malicious-c2.example.com&quot;],
-  &quot;certificate_names&quot;: [&quot;admin.malicious-c2.example.com&quot;, &quot;malicious-c2.example.com&quot;]
+&quot;ip&quot;: r[&quot;attributes&quot;][&quot;ip_address&quot;],
+&quot;date&quot;: r[&quot;attributes&quot;][&quot;date&quot;]
+}
+for r in resolutions.json().get(&quot;data&quot;, [])
+]
+return {
+&quot;domain&quot;: domain,
+&quot;last_dns_records&quot;: data.get(&quot;data&quot;, {}).get(&quot;attributes&quot;, {}).get(&quot;last
+&quot;dns_history&quot;: dns_history
 }
 </code></pre>
-<h3 id="notes">Notes</h3>
-<ul>
-<li>IPv6 addresses are skipped for SecurityTrails reverse lookup (API limitation).</li>
-<li>crt.sh failures are non-fatal — the script continues and logs a warning.</li>
-<li>For large infrastructure clusters, SecurityTrails free tier rate limits may apply.</li>
-<li><strong>Defensive / research use only.</strong> Run against infrastructure you are authorized to investigate.</li>
-</ul>
-<hr />
-<h2 id="source">Source</h2>
-<ul>
-<li><strong>Medium:</strong> <a href="https://medium.com/@1200km">medium.com/@1200km</a></li>
-<li><strong>Evidence cutoff:</strong> March 2026</li>
-</ul>
+<p>def st_reverse_ip(ip: str) -&gt; list:</p>
+<pre><code>&quot;&quot;&quot;Find all domains that have resolved to an IP (passive DNS reverse).&quot;&quot;&quot;
+headers = {&quot;apikey&quot;: ST_API_KEY}
+resp = requests.get(
+f&quot;https://api.securitytrails.com/v1/search/list?ipv4={ip}&quot;,
+headers=headers
+)
+records = resp.json()
+return [r[&quot;hostname&quot;] for r in records.get(&quot;records&quot;, [])]
+</code></pre>
+<p>def st_subdomains(domain: str) -&gt; list:</p>
+<pre><code>&quot;&quot;&quot;Get all known subdomains for a domain.&quot;&quot;&quot;
+headers = {&quot;apikey&quot;: ST_API_KEY}
+resp = requests.get(
+f&quot;https://api.securitytrails.com/v1/domain/{domain}/subdomains&quot;,
+headers=headers
+)
+subs = resp.json().get(&quot;subdomains&quot;, [])
+return [f&quot;{s}.{domain}&quot; for s in subs]
+</code></pre>
+<p>def crtsh_certificates(domain: str) -&gt; list:</p>
+<pre><code>&quot;&quot;&quot;Get all certificates issued for a domain and its subdomains.&quot;&quot;&quot;
+resp = requests.get(
+f&quot;https://crt.sh/?q=%.{domain}&amp;output=json&quot;,
+timeout=30
+</code></pre>
+<pre><code>)
+certs = resp.json()
+return list(set([
+entry.get(&quot;common_name&quot;, &quot;&quot;)
+for entry in certs
+if entry.get(&quot;common_name&quot;)
+]))
+</code></pre>
+<p>def pivot_domain(seed_domain: str) -&gt; dict:</p>
+<pre><code>&quot;&quot;&quot;
+Full pivot workflow from a seed domain.
+Returns all discovered infrastructure.
+&quot;&quot;&quot;
+results = {
+&quot;seed&quot;: seed_domain,
+&quot;timestamp&quot;: datetime.utcnow().isoformat(),
+&quot;discovered_ips&quot;: set(),
+&quot;discovered_domains&quot;: set([seed_domain]),
+&quot;subdomains&quot;: set(),
+&quot;certificate_names&quot;: set()
+}
+print(f&quot;[*] Starting pivot on: {seed_domain}&quot;)
+# Step 1: VT domain info + passive DNS
+vt_data = vt_domain_info(seed_domain)
+for record in vt_data.get(&quot;dns_history&quot;, []):
+ip = record[&quot;ip&quot;]
+results[&quot;discovered_ips&quot;].add(ip)
+print(f&quot; [DNS] Historical resolution: {seed_domain} → {ip}&quot;)
+# Step 2: Reverse IP pivot for each discovered IP
+co_hosted = st_reverse_ip(ip)
+for d in co_hosted:
+if d not in results[&quot;discovered_domains&quot;]:
+results[&quot;discovered_domains&quot;].add(d)
+print(f&quot; [IP PIVOT] {ip} → {d}&quot;)
+# Step 3: Subdomain enumeration
+subs = st_subdomains(seed_domain)
+results[&quot;subdomains&quot;].update(subs)
+for sub in subs:
+print(f&quot; [SUB] {sub}&quot;)
+# Step 4: Certificate transparency
+cert_names = crtsh_certificates(seed_domain)
+results[&quot;certificate_names&quot;].update(cert_names)
+for cn in cert_names:
+if cn != seed_domain and cn not in results[&quot;discovered_domains&quot;]:
+print(f&quot; [CERT] Found in CT logs: {cn}&quot;)
+# Convert sets to sorted lists for output
+results[&quot;discovered_ips&quot;] = sorted(results[&quot;discovered_ips&quot;])
+results[&quot;discovered_domains&quot;] = sorted(results[&quot;discovered_domains&quot;])
+results[&quot;subdomains&quot;] = sorted(results[&quot;subdomains&quot;])
+results[&quot;certificate_names&quot;] = sorted(results[&quot;certificate_names&quot;])
+return results
+</code></pre>
+<p>if <strong>name</strong> == "<strong>main</strong>":</p>
+<pre><code>import sys
+seed = sys.argv[1] if len(sys.argv) &gt; 1 else &quot;example.com&quot;
+result = pivot_domain(seed)
+print(&quot;\n=== PIVOT SUMMARY ===&quot;)
+print(json.dumps(result, indent=2))
+</code></pre>
+<h2 id="13-common-pivoting-mistakes-and-dead-ends">13. Common Pivoting Mistakes and Dead Ends</h2>
+<p>Mistake 1: Over-Pivoting on Shared Infrastructure</p>
+<h3 id="problem-bulletproof-hosting-providers-like-frantech-host-thousands-of">Problem: Bulletproof hosting providers like Frantech host thousands of</h3>
+<p>customers, including many unrelated threat actors. Pivoting on “all domains<br />
+on AS9009” produces enormous noise that obscures the signal.</p>
+<p>Fix: Always pivot on combinations of signals, not single signals. Frantech ASN<br />
++ specific nameserver + Namecheap + November 2024 registration window is<br />
+specific. Frantech ASN alone is noise.</p>
+<p>Mistake 2: Treating CDN IPs as Actor Infrastructure<br />
+Problem: Cloudflare, Akamai, Fastly, and other CDN providers show massive</p>
+<h3 id="ip-to-domain-relationships-because-they-serve-millions-of-domains-from">IP-to-domain relationships because they serve millions of domains from</h3>
+<p>domains.</p>
+<p>Fix: Identify CDN IPs immediately. whois IP | grep Cloudflare → stop the<br />
+pivot, go back to the domain level. CDN IPs have no attribution value — pivot<br />
+on the origin server IP instead.</p>
+<p>Mistake 3: Assigning Attribution Too Early</p>
+<p>Problem: You discover 15 domains on the same IP with similar naming<br />
+patterns. You immediately write in the report “these are all operated by APT-<br />
+X.”</p>
+<p>Fix: Infrastructure discovery is not attribution. The infrastructure map tells<br />
+you what is connected. Attribution requires TTP analysis, historical<br />
+comparison to known actor profiles, and multiple evidence types. Document<br />
+the infrastructure cluster, note it as “consistent with Actor X’s infrastructure<br />
+provisioning patterns,” and proceed to TTP analysis before claiming<br />
+attribution.</p>
+<p>Mistake 4: Missing Domain Expiration and Reuse<br />
+Problem: Passive DNS shows that evil-domain.com resolved to a known APT<br />
+IP in 2019. You note this as ongoing actor infrastructure. But the domain was<br />
+abandoned in 2020, expired in 2021, re-registered by an unrelated party in<br />
+2023, and is now a parked domain.</p>
+<h3 id="fix-always-check-registration-history-and-current-status-before-including">Fix: Always check registration history and current status before including</h3>
+<p>historical DNS data in an infrastructure map. A domain that points to actor<br />
+infrastructure historically is only actor infrastructure if it was controlled by<br />
+the actor when the C2 activity occurred.</p>
+<p>Mistake 5: Ignoring TTL Patterns</p>
+<h3 id="problem-you-focus-only-on-the-current-dns-resolution-and-miss-that-the">Problem: You focus only on the current DNS resolution and miss that the</h3>
+<p>domain is fast-fluxing across dozens of IPs.</p>
+<p>Fix: Check TTL values. Short TTL (60–300 seconds) combined with changing<br />
+resolutions across your passive DNS query indicates fast-flux. In fast-flux<br />
+networks, the IPs are often not actor infrastructure themselves — they are</p>
+<p>infected hosts acting as proxies. Focus on the domain, the nameserver, and<br />
+the registration pattern rather than the rotating IPs.</p>
+<h2 id="14-interview-ready-answering-how-do-you-discover-attacker">14. Interview-Ready: Answering “How Do You Discover Attacker</h2>
+<p>Infrastructure Beyond Initial IOCs?”</p>
+<h3 id="the-full-answer-framework">The Full Answer Framework</h3>
+<p>When this question comes up in an interview, structure your answer around<br />
+the workflow:</p>
+<p>Opening statement — the principle: “Infrastructure pivoting exploits the fact<br />
+that attackers reuse patterns. Every time they set up new infrastructure, they make<br />
+choices — registrar, hosting provider, certificate authority, naming convention —<br />
+that tend to be consistent across campaigns. A single confirmed IOC is a key that<br />
+unlocks those patterns.”</p>
+<p>The workflow — walk through each step: “Starting from one domain, I would:<br />
+resolve current and historical DNS to find IPs; reverse-pivot on those IPs to find co-<br />
+hosted domains; identify the ASN and look for other actor-owned infrastructure on<br />
+that hosting provider; analyze the TLS certificate for SANs and fingerprint all IPs<br />
+serving that certificate; enumerate subdomains; and look at WHOIS registration<br />
+metadata to find other domains registered in the same time window with the same<br />
+registrar and nameserver pattern.”</p>
+<p>The tools — demonstrate practical knowledge: “For passive DNS I use<br />
+SecurityTrails or PassiveTotal. For certificate transparency I use crt.sh and Censys.<br />
+For infrastructure fingerprinting I use Shodan, with specific queries for C2</p>
+<p>framework JA3 and JARM hashes. For reverse WHOIS I use DomainTools or<br />
+PassiveTotal.”</p>
+<p>The outcome — what you can build: “Done systematically, pivoting from a<br />
+single phishing domain can surface an actor’s full campaign infrastructure — all<br />
+their C2 nodes, staging servers, and phishing pages — most of which are still active<br />
+and undiscovered. It also reveals their infrastructure provisioning pattern, which I<br />
+document as a behavioral fingerprint for detecting future campaigns before they<br />
+launch.”</p>
+<p>The caveat — shows analytical maturity: “Infrastructure analysis is<br />
+intelligence, not attribution. Finding connected infrastructure tells me what is<br />
+linked. It takes TTP analysis and historical comparison to say who is operating it.”</p>
+<h3 id="quick-fire-interview-qa">Quick-Fire Interview Q&amp;A</h3>
+<p>Q: “What is the difference between IOC overlap and infrastructure<br />
+analysis?” → IOC overlap = same indicator observed in two places.<br />
+Infrastructure analysis = understanding the behavioral pattern of how<br />
+infrastructure is built and maintained. The first is a single data point; the<br />
+second is a fingerprint.</p>
+<p>Q: “What is passive DNS and why is it useful?” → Historical record of all DNS<br />
+resolutions. Tells you what a domain pointed to before the actor rotated<br />
+infrastructure, and what else pointed to the same IP — connecting related<br />
+infrastructure even when indicators have been rotated.</p>
+<p>Q: “How do you find Cobalt Strike servers?” → JARM fingerprinting via<br />
+Shodan (specific hashes for default CS TLS configuration), Censys certificate<br />
+queries for default CS certificate CN, and HTTP response header analysis for</p>
+<p>default profile signatures. Combine with ASN/subnet analysis for actors<br />
+using known hosting providers.</p>
+<p>Q: “What is Certificate Transparency and how do you use it for CTI?” → CT<br />
+logs record every publicly issued TLS certificate. I use crt.sh and Censys to<br />
+couldn’t find otherwise — and to find clusters of certificates issued in the<br />
+same time window with similar naming patterns, indicating campaign<br />
+deployment events.</p>
+<p>Q: “How do you avoid false positives in infrastructure pivoting?” → Pivot on<br />
+combinations of signals, not individual ones. A single IP or ASN in common<br />
+with another actor is noise. The same IP + same registrar + same nameserver<br />
++ same registration window + same certificate authority + similar naming<br />
+convention is high-confidence.</p>
+<h2 id="15-quick-reference-cheatsheet">15. Quick Reference Cheatsheet</h2>
+<p>The Full Pivot Workflow in 7 Steps</p>
+<h2 id="1-domain-current-ip">1. DOMAIN → CURRENT IP</h2>
+<pre><code>dig DOMAIN A +short
+</code></pre>
+<h2 id="2-domain-historical-ips-passive-dns">2. DOMAIN → HISTORICAL IPs (passive DNS)</h2>
+<h3 id="securitytrails-passivetotal-domain-history-query">SecurityTrails / PassiveTotal: domain history query</h3>
+<h2 id="3-ip-co-hosted-domains-reverse-passive-dns">3. IP → CO-HOSTED DOMAINS (reverse passive DNS)</h2>
+<h3 id="securitytrails-passivetotal-ip-reverse-query">SecurityTrails / PassiveTotal: IP reverse query</h3>
+<h3 id="virustotal-ip-relations-tab">VirusTotal: IP relations tab</h3>
+<h2 id="4-ip-asn-subnet-fingerprinting">4. IP → ASN → SUBNET FINGERPRINTING</h2>
+<pre><code>bgp.he.net / whois IP
+shodan search &quot;net:IP.IP.IP.0/24 port:PORT&quot;
+shodan search &quot;asn:ASXXXX FINGERPRINT_QUERY&quot;
+</code></pre>
+<h2 id="5-domainip-tls-certificate">5. DOMAIN/IP → TLS CERTIFICATE</h2>
+<pre><code>openssl s_client -connect DOMAIN:443
+crt.sh: %.DOMAIN
+Censys: services.tls.certificates.leaf_data.names: DOMAIN
+shodan search &quot;ssl.cert.fingerprint:SHA256&quot;
+</code></pre>
+<h2 id="6-domain-subdomains">6. DOMAIN → SUBDOMAINS</h2>
+<pre><code>subfinder -d DOMAIN -all
+crt.sh: %.DOMAIN (wildcard)
+SecurityTrails: /domain/DOMAIN/subdomains
+</code></pre>
+<h2 id="7-registration-pattern-pivot">7. REGISTRATION PATTERN PIVOT</h2>
+<pre><code>WHOIS: registrar, NS, registration date
+PassiveTotal: reverse WHOIS by registrar/NS pattern
+SecurityTrails: DNS history + registration metadata
+</code></pre>
+<h3 id="essential-shodan-queries">Essential Shodan Queries</h3>
+<h1 id="c2-framework-detection">C2 Framework Detection</h1>
+<p>shodan search "product:\"Cobalt Strike Beacon\""<br />
+shodan search "ssl.jarm:07d14d16d21d21d07c42d41d00041d24a458a375eef0c576d23a7bab</p>
+<h1 id="certificate-pivoting">Certificate pivoting</h1>
+<p>shodan search "ssl.cert.fingerprint:SHA256_HASH"<br />
+shodan search "ssl.cert.subject.cn:*.DOMAIN.com"</p>
+<h1 id="asn-port-combination">ASN + port combination</h1>
+<p>shodan search "asn:AS12345 port:8443"<br />
+shodan search "net:IP.IP.IP.0/24 port:443"</p>
+<h1 id="http-response-fingerprinting">HTTP response fingerprinting</h1>
+<p>shodan search "http.html_hash:HASH"<br />
+shodan search "http.title:\"Specific Title\""</p>
+<h3 id="essential-censys-queries">Essential Censys Queries</h3>
+<h1 id="tls-certificate-search">TLS certificate search</h1>
+<p>services.tls.certificates.leaf_data.names: "domain.com"<br />
+services.tls.certificates.leaf_data.subject.common_name: "domain.com"</p>
+<h1 id="self-signed-certificates-on-specific-asn">Self-signed certificates on specific ASN</h1>
+<p>services.tls.certificates.leaf_data.issuer_dn = services.tls.certificates.leaf_d<br />
+AND autonomous_system.asn: 12345</p>
+<h1 id="find-related-infrastructure-by-certificate-subject">Find related infrastructure by certificate subject</h1>
+<p>services.tls.certificates.leaf_data.subject.organization: "Organization Name"</p>
+<h3 id="pivot-point-value-ranking">Pivot Point Value Ranking</h3>
+<p>⭐⭐⭐⭐⭐ Unique nameserver (actor-controlled NS)<br />
+⭐⭐⭐⭐⭐ Registrant email (non-redacted WHOIS)<br />
+⭐⭐⭐⭐ Certificate SANs (multiple domains on one cert)<br />
+⭐⭐⭐⭐ JARM / JA3 C2 fingerprint<br />
+⭐⭐⭐⭐ Registration timestamp cluster (same registrar, same day)<br />
+⭐⭐⭐ Hosting ASN + port fingerprint combination<br />
+⭐⭐⭐ Passive DNS co-hosted domains<br />
+⭐⭐ Nameserver provider (shared with thousands)<br />
+⭐⭐ Registrar alone (Namecheap used by millions)<br />
+⭐   Single IP overlap (without pattern context)<br />
+⭐   Single ASN membership (without fingerprint match)</p>
+<h3 id="osint-infrastructure-analysis-toolbox">OSINT Infrastructure Analysis Toolbox</h3>
+<p>PASSIVE DNS:     SecurityTrails, PassiveTotal, VirusTotal, Farsight DNSDB,</p>
+<pre><code>CIRCL pDNS, Validin, DNSlytics, Cisco Umbrella InvestigateCERT
+Entrust CT Search, Google Transparency Report
+</code></pre>
+<p>IP/ASN:          bgp.he.net, ipinfo.io, RIPE Stat, ARIN, Team Cymru,</p>
+<pre><code>ipapi.co, Shodan, Censys, Greynoise
+</code></pre>
+<p>WHOIS:           whois CLI, ICANN RDAP, ViewDNS, SecurityTrails, WhoisXML API,</p>
+<pre><code>DomainTools, AnalyzeID, HackerTarget, SpyOnWeb
+</code></pre>
+<p>SUBDOMAINS:      Subfinder, Amass, dnsx, httpx, Assetfinder, theHarvester,</p>
+<pre><code>Shosubgo, crt.sh wildcard, SecurityTrails
+</code></pre>
+<p>C2 DETECTION:    Shodan (JARM/JA3), Censys, FOFA, ZoomEye, BinaryEdge,</p>
+<pre><code>Onyphe, LeakIX, Greynoise
+</code></pre>
+<p>SCANNING:        Nmap (on confirmed actor infra only), dnsx, httpx, masscan<br />
+VISUALIZATION:   Maltego CE, VirusTotal Graph, SpiderFoot, Obsidian (manual)</p>
+<h3 id="conclusion">Conclusion</h3>
+<h3 id="infrastructure-pivoting-transforms-a-list-of-iocs-into-a-behavioral">Infrastructure pivoting transforms a list of IOCs into a behavioral</h3>
+<p>understanding of how a threat actor operates. The analyst who can look at a<br />
+single domain and see — through systematic pivoting — the hosting provider<br />
+pattern, the certificate provisioning workflow, the registration timing habits,<br />
+and the full scope of a campaign’s infrastructure is an analyst who can write<br />
+intelligence that is operationally ahead of the attacker.</p>
+<p>The skills are not exotic. They require only methodical application of freely<br />
+available tools, disciplined documentation of each pivot step, and the<br />
+analytical habit of treating every finding as a new starting point rather than<br />
+an endpoint.</p>
+<p>The answer to “how do you discover attacker infrastructure beyond initial<br />
+IOCs?” is: one pivot at a time, following every thread until the patterns run<br />
+out.</p>
+<p>Author: Andrey Pautov Published: March 2026 Tags: Threat Intelligence, CTI,<br />
+OSINT, Infrastructure Analysis, Passive DNS, TLS Certificates, Shodan, Censys,<br />
+Attribution, C2 Detection</p>
+<h3 id="references-and-further-reading">References and Further Reading</h3>
+<p>RiskIQ / PassiveTotal documentation: https://community.riskiq.com</p>
+<p>Shodan search reference: https://help.shodan.io/the-basics/search-query-<br />
+fundamentals</p>
+<p>Censys search documentation: https://search.censys.io/search/language</p>
+<p>crt.sh Certificate Transparency: https://crt.sh</p>
+<p>SecurityTrails API documentation: https://docs.securitytrails.com</p>
+<p>JARM GitHub (Salesforce): https://github.com/salesforce/jarm</p>
+<h3 id="subfinder-projectdiscovery">Subfinder (ProjectDiscovery):</h3>
+<p>https://github.com/projectdiscovery/subfinder</p>
+<p>DomainTools Iris: https://www.domaintools.com/products/iris</p>
+<p>“Tracking Threat Actor Infrastructure” — DomainTools blog series</p>
+<p>SANS FOR578 (Cyber Threat Intelligence) — infrastructure analysis<br />
+module</p>
+<h3 id="cybersecurity-information-security-cyber-threat-intelligence">Cybersecurity      Information Security        Cyber Threat Intelligence</h3>
+<h3 id="indicator-of-compromise-infrastructure">Indicator Of Compromise       Infrastructure</h3>
+<pre><code>Written by Andrey Pautov                                                           Edit profile
+1K followers · 54 following
+</code></pre>
+<pre><code>Red Team-minded security researcher. AI-driven pentesting workflows, real tool
+output, troubleshooting, and a defender’s perspective on what to log and detect.
+</code></pre>
+<h3 id="no-responses-yet">No responses yet</h3>
+<h3 id="andrey-pautov">Andrey Pautov</h3>
+<p>What are your thoughts?</p>
+<h3 id="andrey-pautov_1">Andrey Pautov</h3>
+<h3 id="ai-driven-pentesting-at-home-using">AI-Driven Pentesting at Home: Using</h3>
+<h3 id="hexstrike-ai-for-full-network-discovery">HexStrike-AI for Full Network Discovery</h3>
+<p>and Exploitation<br />
+How I Used Gemini + HexStrike-AI on Kali Linux to Scan,<br />
+Enumerate, and Exploit My Own Network</p>
+<pre><code>Dec 21, 2025      83       1
+</code></pre>
+<h3 id="see-all-from-andrey-pautov">See all from Andrey Pautov</h3>
+<h3 id="recommended-from-medium">Recommended from Medium</h3>
+<pre><code>JBXSec                                          In OSINT … by Sigmund Brandstaetter CISSP, CCS…
+</code></pre>
+<h3 id="building-a-cybersecurity-home-lab-building-a-self-hosted-dark-web">Building a Cybersecurity Home Lab               Building a Self-Hosted Dark Web</h3>
+<p>— Part 5.2: Enhanced Auditing /…                Monitoring Portal Part 2 — The…<br />
+Overview                                        In Part 1, we built a basic self-hosted dark web</p>
+<pre><code>monitor, a simple script scanning a handful o…
+</code></pre>
+<p>Mar 5      1                                    5d ago     194      1</p>
+<pre><code>Hassen Hannachi                                 jaejun835
+</code></pre>
+<h3 id="essential-links-for-soc-analysts-active-directory-attack-cheat">Essential links for SOC Analysts                Active Directory Attack Cheat</h3>
+<h3 id="soc-analysts-often-maintain-their-own-private-sheet">SOC analysts often maintain their own private   Sheet</h3>
+<p>investigation toolkits. However, having a…      This is a cheat sheet for Active Directory</p>
+<pre><code>attack techniques used in TCM Security’s…
+</code></pre>
+<p>Mar 8      10    2                              Mar 3     20</p>
+<h3 id="taimur-ijlal-socfortress">Taimur Ijlal                         SOCFortress</h3>
+<p>5 Practical Projects to Prove You   We’ve Been Busy: New CoPilot<br />
+Understand AI Governance (2026…     Features You Need to See<br />
+Build These. Put Them on GitHub.    A lot of meaningful work has gone into CoPilot<br />
+Differentiate Yourself.             over the last several releases, and I wanted t…</p>
+<pre><code>Mar 12        126   1           4d ago     5
+</code></pre>
+<h3 id="see-more-recommendations">See more recommendations</h3>
   <p class="back-top"><a href="#top">↑ Back to top</a></p>
 </body>
 </html>
