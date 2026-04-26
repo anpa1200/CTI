@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI in Offensive Operations: How Threat Actors Use Artificial Intelligence</title>
+  <meta name="author" content="Andrey Pautov">
+  <link rel='canonical' href='https://medium.com/@1200km/ai-in-offensive-operations-how-threat-actors-use-artificial-intelligence-4eaeeaf029a9'>
+  <style>
+  :root {
+    font-family: "Georgia", "Times New Roman", serif;
+    line-height: 1.7;
+    color: #1a1a1a;
+    --toc-bg: #f8f9fa;
+    --border: #dee2e6;
+    --link: #0a5eb2;
+    --link-visited: #551a8b;
+    --code-bg: #f1f3f4;
+  }
+  body { margin: 0; padding: 0; max-width: 52rem; margin-left: auto; margin-right: auto; padding: 2rem 1.5rem 3rem; }
+  .doc-meta {
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 0.875rem;
+    color: #495057;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .doc-meta a { color: var(--link); }
+  h1 { font-size: 1.75rem; font-weight: 700; margin-top: 0; margin-bottom: 0.5rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; }
+  h2 { font-size: 1.35rem; margin-top: 2.5rem; margin-bottom: 0.75rem; scroll-margin-top: 1rem; }
+  h3 { font-size: 1.15rem; margin-top: 1.75rem; margin-bottom: 0.5rem; }
+  h4 { font-size: 1.05rem; margin-top: 1.25rem; margin-bottom: 0.4rem; }
+  nav.toc { background: var(--toc-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1rem 1.5rem; margin: 1.5rem 0 2rem; }
+  nav.toc ul { list-style: none; padding-left: 0; margin: 0; }
+  nav.toc li { margin: 0.4rem 0; }
+  nav.toc a { color: var(--link); text-decoration: none; }
+  nav.toc a:hover { text-decoration: underline; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  a:visited { color: var(--link-visited); }
+  code { font-family: "Consolas", "Monaco", monospace; background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-size: 0.88em; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 5px; padding: 1rem 1.2rem; overflow-x: auto; }
+  pre code { background: none; padding: 0; font-size: 0.85em; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0 1.5rem; font-size: 0.9em; }
+  th { background: #e9ecef; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.75rem; text-align: left; }
+  tr:nth-child(even) td { background: #f8f9fa; }
+  blockquote { border-left: 3px solid var(--border); margin: 1rem 0; padding: 0.5rem 1.2rem; color: #495057; font-style: italic; }
+  ul, ol { margin: 0.75rem 0 1.25rem 1.5rem; padding-left: 1.5rem; }
+  li { margin: 0.35rem 0; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  p { margin: 0.75rem 0; }
+  .back-top { margin-top: 2.5rem; font-size: 0.9rem; color: #6c757d; }
+  @media print {
+    body { padding: 1rem; }
+    nav.toc { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+  <header class="doc-meta">
+    <p>Author: <a href="https://medium.com/@1200km">Andrey Pautov</a>. <a href="https://medium.com/@1200km/ai-in-offensive-operations-how-threat-actors-use-artificial-intelligence-4eaeeaf029a9">Published on Medium</a></p>
+  </header>
+  <h1 id="ai-in-offensive-operations-how-threat-actors-use-artificial-intelligence">AI in Offensive Operations: How Threat Actors Use Artificial Intelligence</h1>
+<p><strong>A CTI assessment of documented malicious and dual-use AI activity through April 12, 2026, with a 2019-2025 comparison and forward forecast.</strong></p>
+<p>By <a href="https://medium.com/@1200km">Andrey Pautov</a> — Revised April 2026</p>
+<blockquote>
+<p><em>Published on Medium: <a href="https://medium.com/@1200km/ai-in-offensive-operations-how-threat-actors-use-artificial-intelligence-4eaeeaf029a9">AI in Offensive Operations: How Threat Actors Use Artificial Intelligence</a></em></p>
+<p><em>Evidence cutoff: April 12, 2026. Year-over-year comparison tables run through full-year 2025. 2026 is treated separately as a partial-year update.</em></p>
+</blockquote>
+<hr />
+<h2 id="confidence-scale">Confidence Scale</h2>
+<p>This report uses an intelligence probability yardstick rather than generic HIGH/MEDIUM/LOW labels:</p>
+<ul>
+<li><strong>Almost certain</strong> — the judgment is strongly supported and residual uncertainty is limited</li>
+<li><strong>Highly likely</strong> — the judgment is strongly favored, though not certain</li>
+<li><strong>Likely / Probable</strong> — the evidence favors the judgment, but plausible alternatives remain</li>
+<li><strong>Realistic possibility</strong> — the judgment is credible, but the evidence is mixed or incomplete</li>
+<li><strong>Unlikely</strong> — the evidence weighs against the judgment</li>
+<li><strong>Highly unlikely</strong> — the evidence strongly weighs against the judgment</li>
+<li><strong>Remote chance</strong> — the judgment cannot be excluded, but little evidence supports it</li>
+</ul>
+<p>The purpose is disciplined expression of uncertainty, not false numerical precision.</p>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol>
+<li><a href="#1-executive-summary">Executive Summary</a></li>
+<li><a href="#2-key-judgments">Key Judgments</a></li>
+<li><a href="#3-methodology-and-assessment-limitations">Methodology and Assessment Limitations</a></li>
+<li><a href="#4-chronological-timeline">Chronological Timeline</a></li>
+<li><a href="#5-major-incidents-and-high-signal-cases">Major Incidents and High-Signal Cases</a></li>
+<li><a href="#6-technical-analysis-mitre-atlas-aligned">Technical Analysis (MITRE ATLAS-Aligned)</a></li>
+<li><a href="#7-adversary-use-of-agentic-ai">Adversary Use of Agentic AI</a></li>
+<li><a href="#8-statistics-and-measurable-trends">Statistics and Measurable Trends</a></li>
+<li><a href="#9-reality-vs-hype">Reality vs. Hype</a></li>
+<li><a href="#10-actor-segmentation">Actor Segmentation</a></li>
+<li><a href="#11-supply-chain--infrastructure">Supply Chain &amp; Infrastructure</a></li>
+<li><a href="#12-technical-evolution-last-24-months">Technical Evolution (Last 24 Months)</a></li>
+<li><a href="#13-forecast-post-april-2026">Forecast (Post-April 2026)</a></li>
+<li><a href="#14-final-conclusions">Final Conclusions</a></li>
+<li><a href="#15-defender-recommendations">Defender Recommendations</a></li>
+<li><a href="#16-key-selected-sources">Key Selected Sources</a></li>
+</ol>
+<hr />
+<h2 id="introduction">Introduction</h2>
+<p>Artificial intelligence is now discussed in cyber threat reporting with two recurring distortions: speculative overstatement on one side, and narrow focus on "AI hacking" as a standalone phenomenon on the other. Both views are analytically weak. Offensive use of AI does not begin with fully autonomous intrusion, and it does not need to. The more useful question is where AI is already changing attacker economics, operational tempo, deception quality, infrastructure choices, and defender exposure.</p>
+<p>This report addresses that question by separating three problem sets that are often conflated: <strong>documented malicious use of AI by threat actors</strong>, <strong>defensive or academic research that signals future offensive capability</strong>, and <strong>security risks created by enterprise deployment of AI-enabled applications and agents</strong>. It treats these as related but distinct analytical categories. That distinction matters because a deepfake-enabled fraud case, an LLM prompt-injection weakness in an enterprise assistant, a provider disclosure of agentic misuse, and a research paper on one-day exploitation do not carry the same evidentiary weight or operational meaning.</p>
+<p>This revision updates the historical record through <strong>April 12, 2026</strong>. That change is methodological, not rhetorical: the public evidence base is materially different after 2025. The comparison section therefore separates a full-year <strong>2019-2025</strong> trend view from a <strong>2026 year-to-date</strong> update. By contrast, the defensive sections use current MITRE ATLAS and OWASP 2025 terminology because defenders need a modern control framework even when some of the referenced incidents predate that taxonomy.</p>
+<p>The intended audience is CTI analysts, security architects, detection engineers, and technical decision-makers who need a source-disciplined view of what is actually known, what is merely plausible, and where enterprise controls should adapt first. The central judgment is now sharper than it was in 2024: <strong>2025 marked the public inflection point</strong>, but the strongest pattern through April 2026 is still not general-purpose autonomous hacking. It is the convergence of AI-enhanced fraud, AI-accelerated intrusion support, agentic misuse with bounded human oversight, and rapid expansion of the enterprise AI stack as an attack surface.</p>
+<hr />
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Through April 12, 2026, the public record shows a clear transition from <strong>AI as attacker productivity support</strong> to <strong>AI as an operational component in selected parts of real campaigns</strong>. The transition is real, but uneven. The dominant effect is still acceleration and scaling of existing tradecraft, not wholesale replacement of skilled operators across the full intrusion lifecycle.</p>
+<p>The historical pattern is now best understood in five layers:</p>
+<ol>
+<li><strong>Fraud and impersonation:</strong> March 2019 voice-cloning fraud in the UK, the 2020 UAE deep-voice case, the February 2024 Hong Kong reported video-conference fraud, and 2025 FBI warnings on AI-generated voice impersonation show that synthetic media remains the earliest and most financially mature criminal AI use case.</li>
+<li><strong>Phishing and social engineering:</strong> By 2024-2026, AI had become a routine force multiplier for multilingual lure generation, role-tailored phishing, identity fabrication, and high-volume messaging. Microsoft's April 6, 2026 device-code-phishing research shows AI improving speed, personalization, and timing precision rather than changing the underlying credential-theft logic.</li>
+<li><strong>State-linked and criminal augmentation:</strong> OpenAI, Google GTIG, Microsoft, and Anthropic collectively documented threat actors using LLMs and agentic tools for reconnaissance, vulnerability research, translation, phishing, malware debugging, post-compromise support, and data triage.</li>
+<li><strong>Operational integration in 2025:</strong> Google GTIG documented PROMPTSTEAL, PROMPTFLUX, and QUIETVAULT in November 2025, showing public evidence of malware that queries or leverages models during execution, self-modifies with LLM support, or abuses local AI tooling on victim hosts.</li>
+<li><strong>AI stack exposure:</strong> Prompt injection, excessive agency, AI API token theft, AI-service misuse, and AI-adjacent supply chain compromise now form a confirmed defensive problem set. The March 2026 LiteLLM compromise is a high-signal example of AI infrastructure itself becoming a target.</li>
+</ol>
+<p>Two analytical conclusions follow.</p>
+<p>First, <strong>2025 is the strongest public inflection point</strong> in the AI threat timeline. It is the year in which the record expands from phishing, fraud, and coding assistance into LLM-integrated malware, AI-service API misuse as an operational channel, and provider-reported high-autonomy agentic misuse.</p>
+<p>Second, <strong>the strongest near-term enterprise risk still sits outside "autonomous hacking" hype</strong>. The highest-confidence harms remain AI-enhanced phishing, vishing, impersonation fraud, identity abuse, prompt injection, unsafe tool-calling, and theft or misuse of AI credentials and connectors. Even the most aggressive 2025 provider disclosures still show hallucination, operator oversight, or single-source concentration as important constraints.</p>
+<p>The most important 2026 update is not that AI has replaced human intruders. It is that threat actors now treat AI simultaneously as a <strong>tool</strong>, a <strong>traffic path</strong>, a <strong>credential surface</strong>, and an <strong>enterprise attack surface</strong>.</p>
+<hr />
+<h2 id="2-key-judgments">2. Key Judgments</h2>
+<p><strong>KJ-1</strong> [Likely] — The March 2019 UK voice-cloning fraud remains the earliest publicly documented criminal AI-enabled case identified in the open reporting reviewed for this document. Earlier cases may exist in restricted reporting or were not explicitly identified as AI-enabled at the time.</p>
+<p><strong>KJ-2</strong> [Almost certain] — Across 2019-2026, the primary operational value of AI to threat actors is capability uplift in social engineering, reconnaissance, translation, scripting, identity fraud, and post-compromise support functions.</p>
+<p><strong>KJ-3</strong> [Highly likely] — 2025 was the public inflection point in the AI threat record. By late 2025, official and provider reporting included LLM-integrated malware, AI-service API misuse, and high-autonomy agentic support for extortion and espionage.</p>
+<p><strong>KJ-4</strong> [Highly likely] — Even after that 2025 shift, the strongest pattern remains AI augmentation of existing TTPs rather than replacement of the full attack chain with autonomous AI.</p>
+<p><strong>KJ-5</strong> [Likely] — Provider disclosures in August and November 2025 show that agentic AI misuse is no longer purely theoretical. However, these cases remain partly constrained by single-source reporting, uneven independent corroboration, and persistent human oversight.</p>
+<p><strong>KJ-6</strong> [Highly likely] — Fully autonomous, end-to-end advanced intrusion at operational scale remained unproven in the open record through April 12, 2026. The most aggressive public claims still show hallucination, human checkpoints, or both.</p>
+<p><strong>KJ-7</strong> [Almost certain] — The highest near-term enterprise risk remains AI-enabled impersonation fraud, phishing, identity abuse, and AI-assisted credential theft, especially where approval processes still trust voice, video, or polished written language.</p>
+<p><strong>KJ-8</strong> [Almost certain] — The enterprise AI stack is now a confirmed attack surface. Prompt injection, excessive agency, unsafe tool invocation, AI API token theft, AI-service misuse, and AI-adjacent supply chain compromise are no longer merely design concerns.</p>
+<p><strong>KJ-9</strong> [Likely] — Most 2023 underground "dark LLM" offerings were wrappers, repackaging, or marketing claims rather than independently validated purpose-built criminal models. By 2025, however, underground AI tooling and repurposed mainstream/agentic services had matured enough to lower barriers for lower-skill actors in fraud, phishing, and malware development.</p>
+<p><strong>KJ-10</strong> [Likely] — Official quantification is now emerging. The FBI's 2025 IC3 annual report introduced an AI-related descriptor and recorded <strong>22,364 complaints</strong> and <strong>$893,346,472</strong> in losses, reinforcing that the dominant measurable impact remains in cyber-enabled fraud and impersonation rather than high-end autonomous intrusion.</p>
+<hr />
+<h2 id="3-methodology-and-assessment-limitations">3. Methodology and Assessment Limitations</h2>
+<p>This assessment uses publicly available material only. Historical findings are bounded to documents and reporting available through <strong>April 12, 2026</strong>.</p>
+<p><strong>a) Scope discipline.</strong> Historical incidents, actor cases, and technical claims dated after April 12, 2026 are excluded from the evidentiary record. The comparison tables run through full-year 2025; 2026 is treated separately as a partial-year update to avoid false precision.</p>
+<p><strong>b) Public reporting bias.</strong> Open reporting disproportionately captures cases that are unusual, embarrassing, commercially useful to disclose, or detectable by platform providers. The absence of public reporting is not evidence of capability absence.</p>
+<p><strong>c) Provider-selection bias.</strong> OpenAI, Microsoft, Google, and other platform operators can only report what they can observe on their own systems. Their reporting is valuable, but it reveals observed abuse of their platforms, not the full population of malicious AI use.</p>
+<p><strong>d) Source quality variation.</strong> This report distinguishes among primary government disclosures, provider telemetry, academic preprints, vendor research, and media reporting with primary-document basis. Secondary sources are used only where primary records are unavailable or inaccessible.</p>
+<p><strong>e) Comparison-method note.</strong> The statistical comparison in Section 8 uses three author-coded measures: <code>(1)</code> official/provider disclosures in scope, <code>(2)</code> documented AI-relevant attack-surface classes, and <code>(3)</code> AI-improved TTP families. These are indicators of visibility and diversification inside this report's corpus, not census-quality counts of all global activity.</p>
+<p><strong>f) Single-source concentration.</strong> Some of the most consequential 2025 disclosures, especially Anthropic's August and November 2025 casework, originate from a single provider. They are analytically important but require explicit caution when used to infer broader prevalence.</p>
+<p><strong>g) Technical framework note.</strong> Historical behavior is bounded to the 2026 cutoff, but the technical analysis and defensive strategy use current MITRE ATLAS AML identifiers and OWASP Top 10 for LLMs and GenAI 2025 terminology. These frameworks are used as normalization layers, not as evidence that adversaries or defenders described events that way at the time.</p>
+<p><strong>h) ATT&amp;CK usage.</strong> MITRE ATT&amp;CK is retained only where conventional cyber context materially clarifies the enterprise impact. MITRE ATLAS remains the lead framework for AI-enabled techniques.</p>
+<p><strong>i) Forecast method.</strong> The forecast section projects forward from the April 12, 2026 baseline using public reporting, research signals, and observed attacker incentives. It is not retrospective evidence.</p>
+<hr />
+<h2 id="4-chronological-timeline">4. Chronological Timeline</h2>
+<blockquote>
+<p><strong>Legend:</strong> CONFIRMED = primary source or direct official disclosure. REPORTED = credible secondary reporting with a primary-document basis. RESEARCH = academic or vendor research signal, not in-the-wild malicious deployment.</p>
+</blockquote>
+<hr />
+<h3 id="2019">2019</h3>
+<p><strong>March 2019 — UK voice-cloning fraud</strong><br />
+<em>Actor:</em> Unknown criminal operators | <em>Evidence:</em> REPORTED<br />
+Criminals used AI-generated voice impersonation in a CEO fraud / BEC-style scheme and induced a transfer of EUR220,000.<br />
+<em>Why it matters:</em> Earliest public open-source case in this review of generative-AI-enabled fraud.</p>
+<hr />
+<h3 id="2020">2020</h3>
+<p><strong>January 2020 (publicly reported October 2021) — UAE bank deep-voice fraud</strong><br />
+<em>Actor:</em> Unknown criminal group | <em>Evidence:</em> REPORTED<br />
+Court-document-based reporting described the use of "deep voice" impersonation alongside forged emails in a fraud totaling roughly USD35 million.<br />
+<em>Why it matters:</em> Demonstrated scale and cross-border coordination far beyond the 2019 case.</p>
+<hr />
+<h3 id="2021">2021</h3>
+<p><strong>August 2021 — GPT-3 phishing benchmark in government research</strong><br />
+<em>Actor:</em> Defensive research | <em>Evidence:</em> RESEARCH<br />
+Singapore government researchers presented evidence that GPT-3-generated phishing emails could outperform or match human-crafted phishing in controlled conditions.<br />
+<em>Why it matters:</em> Early high-signal proof that LLMs could compress phishing labor and improve social-engineering quality before mass-market LLM access.</p>
+<hr />
+<h3 id="2022">2022</h3>
+<p><strong>May 2022 — U.S. advisory on DPRK IT workers</strong><br />
+<em>Actor:</em> DPRK-linked labor and revenue-generation ecosystem | <em>Evidence:</em> CONFIRMED<br />
+The U.S. Department of State, Treasury, and FBI warned that DPRK IT workers were using false personas, stolen identities, and obfuscation to obtain remote technical work.<br />
+<em>Why it matters:</em> Not an AI case by itself, but important context for later AI-assisted identity fraud concerns.</p>
+<p><strong>November 2022 — ChatGPT public release</strong><br />
+<em>Actor:</em> Global enabling event | <em>Evidence:</em> CONFIRMED<br />
+OpenAI publicly released ChatGPT, making capable conversational LLM access mass-market.<br />
+<em>Why it matters:</em> Democratization event, not an attack event; it materially lowered access barriers for phishing, fraud scripting, and translation support.</p>
+<hr />
+<h3 id="2023">2023</h3>
+<p><strong>August 2023 — Trend Micro assesses WormGPT / FraudGPT claims</strong><br />
+<em>Actor:</em> Underground vendors and resellers | <em>Evidence:</em> RESEARCH<br />
+Trend Micro found clear underground interest and marketing activity around WormGPT and FraudGPT, but limited proof that the advertised "criminal LLM" products had the capabilities claimed.<br />
+<em>Why it matters:</em> Important corrective against inflated reporting on bespoke criminal AI models.</p>
+<p><strong>October 2023 — IBM X-Force phishing benchmark</strong><br />
+<em>Actor:</em> Defensive research | <em>Evidence:</em> RESEARCH<br />
+IBM showed that a generative-AI-assisted phishing workflow could produce persuasive phishing emails in minutes rather than many hours.<br />
+<em>Why it matters:</em> Useful empirical signal for attacker productivity gains.</p>
+<p><strong>Late 2023 — AI-assisted identity and employment fraud becomes clearer in DPRK-linked activity</strong><br />
+<em>Actor:</em> DPRK-linked IT worker ecosystem | <em>Evidence:</em> CONFIRMED<br />
+Later official and provider reporting tied AI-generated identities, resume support, and language assistance to DPRK remote-worker fraud operations already active in 2023.<br />
+<em>Why it matters:</em> Expanded the AI threat picture from short-duration scams to persistent access and long-duration fraud operations.</p>
+<hr />
+<h3 id="2024">2024</h3>
+<p><strong>January 24, 2024 — NCSC publishes near-term AI cyber threat assessment</strong><br />
+<em>Actor:</em> UK government | <em>Evidence:</em> CONFIRMED<br />
+NCSC assessed that AI would almost certainly increase the volume and impact of cyber attacks and that the near-term threat would come mainly from evolution of existing TTPs.<br />
+<em>Why it matters:</em> Baseline government assessment, methodologically rigorous and explicit on uncertainty.</p>
+<p><strong>February 7, 2024 — Hong Kong police case summarized by HKCERT</strong><br />
+<em>Actor:</em> Unknown criminal operators | <em>Evidence:</em> REPORTED<br />
+Hong Kong police statements, as summarized by HKCERT and reported in the media, described a deepfake-enabled video-conference fraud that induced transfers totaling HKD200 million to five accounts.<br />
+<em>Why it matters:</em> Strong early-2024 public evidence of escalation from audio-only impersonation to multi-person video deception, but the open-source chain is still indirect rather than a direct victim disclosure.</p>
+<p><strong>February 14, 2024 — OpenAI and Microsoft disclose five state-affiliated actors using LLMs</strong><br />
+<em>Actor:</em> Forest Blizzard, Emerald Sleet, Crimson Sandstorm, Charcoal Typhoon, Salmon Typhoon | <em>Evidence:</em> CONFIRMED<br />
+Reported use included open-source research, translation, scripting support, debugging, and phishing content generation.<br />
+<em>Why it matters:</em> First major public provider-backed disclosure tying named state-affiliated actors to LLM usage.</p>
+<p><strong>April 11-17, 2024 — UIUC publishes one-day vulnerability exploitation results</strong><br />
+<em>Actor:</em> Academic research | <em>Evidence:</em> RESEARCH<br />
+UIUC researchers reported that GPT-4 could exploit 87% of a 15-vulnerability one-day benchmark when given the CVE description, but only 7% without it.<br />
+<em>Why it matters:</em> Strong research signal that advanced models can materially assist post-disclosure exploitation, but not evidence of operational deployment.</p>
+<p><strong>April 11, 2024 — Microsoft details prompt-injection and guardrail-bypass risks</strong><br />
+<em>Actor:</em> Microsoft security research | <em>Evidence:</em> CONFIRMED<br />
+Microsoft documented direct prompt injection, indirect prompt injection via poisoned content, and multi-turn jailbreak patterns against AI-integrated applications.<br />
+<em>Why it matters:</em> Marked the transition from "AI used by attackers" to "AI systems themselves as attack surface."</p>
+<p><strong>May 30, 2024 — OpenAI details covert influence operations using its models</strong><br />
+<em>Actor:</em> Multiple IO networks | <em>Evidence:</em> CONFIRMED<br />
+OpenAI disclosed multiple covert influence operations using its models for content generation, translation, research, and basic automation support.<br />
+<em>Why it matters:</em> Reinforced the pattern that AI was improving scale and efficiency in influence operations without yet proving decisive audience impact.</p>
+<p><strong>November 13, 2024 — FinCEN warns on deepfake fraud targeting financial institutions</strong><br />
+<em>Actor:</em> U.S. Treasury / FinCEN | <em>Evidence:</em> CONFIRMED<br />
+FinCEN documented deepfake-enabled fraud as an emerging financial-sector risk.<br />
+<em>Why it matters:</em> Marked regulatory acknowledgement that synthetic audio and video had become financially material threats.</p>
+<hr />
+<h3 id="2025">2025</h3>
+<p><strong>January 29, 2025 — Google GTIG publishes "Adversarial Misuse of Generative AI"</strong><br />
+<em>Actor:</em> Multiple APT and IO actors | <em>Evidence:</em> CONFIRMED<br />
+Google assessed that Gemini misuse involved APT groups from more than 20 countries and spanned reconnaissance, vulnerability research, scripting, phishing content, and post-compromise support.<br />
+<em>Why it matters:</em> First broad provider-backed mapping of state-linked AI use across much of the attack lifecycle.</p>
+<p><strong>February 21, 2025 — OpenAI updates malicious-use reporting</strong><br />
+<em>Actor:</em> Multiple networks | <em>Evidence:</em> CONFIRMED<br />
+OpenAI's February 2025 report continued the pattern of AI abuse across scams, covert influence, and malicious cyber support activity.<br />
+<em>Why it matters:</em> Showed that malicious AI use was diversifying operationally, even where novel capability gains remained limited.</p>
+<p><strong>May 15, 2025 — FBI warns on impersonation of senior U.S. officials</strong><br />
+<em>Actor:</em> Unknown criminal and influence actors | <em>Evidence:</em> CONFIRMED<br />
+FBI reporting documented malicious messaging and impersonation campaigns targeting senior U.S. officials and their contacts.<br />
+<em>Why it matters:</em> Elevated AI-enabled impersonation from enterprise fraud risk to a national-level trust and access problem.</p>
+<p><strong>June 5, 2025 — OpenAI publishes June 2025 misuse report</strong><br />
+<em>Actor:</em> Multiple networks | <em>Evidence:</em> CONFIRMED<br />
+OpenAI reported detection of abusive activity including cyber espionage, social engineering, deceptive employment schemes, covert influence operations, and scams.<br />
+<em>Why it matters:</em> Confirmed that AI misuse was becoming a repeat reporting stream rather than isolated casework.</p>
+<p><strong>August 27, 2025 — Anthropic reports Claude Code misuse in large-scale extortion</strong><br />
+<em>Actor:</em> Criminal actor; additional DPRK-linked fraud casework | <em>Evidence:</em> CONFIRMED<br />
+Anthropic reported Claude Code supporting a data-extortion operation against at least 17 organizations and described broader misuse including DPRK employment fraud and AI-generated ransomware sales.<br />
+<em>Why it matters:</em> One of the clearest public signals that agentic coding systems had moved from experimentation into offensive support roles.</p>
+<p><strong>October 7, 2025 — OpenAI reports more than 40 disrupted malicious networks since February 2024</strong><br />
+<em>Actor:</em> Multiple networks | <em>Evidence:</em> CONFIRMED<br />
+OpenAI stated that it had disrupted and reported over 40 networks violating its policies since public threat reporting began.<br />
+<em>Why it matters:</em> Demonstrated sustained reporting volume and recurring multi-domain misuse of mainstream AI systems.</p>
+<p><strong>November 3, 2025 — Microsoft documents SesameOp</strong><br />
+<em>Actor:</em> Unknown threat actor | <em>Evidence:</em> CONFIRMED<br />
+Microsoft incident responders documented a backdoor using the OpenAI Assistants API for command-and-control communications.<br />
+<em>Why it matters:</em> First high-signal public case of a commercial AI API being used as an operational relay channel.</p>
+<p><strong>November 5, 2025 — Google GTIG AI Threat Tracker identifies operational AI-enabled malware</strong><br />
+<em>Actor:</em> Multiple state-linked and criminal actors | <em>Evidence:</em> CONFIRMED<br />
+GTIG documented PROMPTSTEAL, PROMPTFLUX, QUIETVAULT, and other malware families using AI during execution, for self-rewriting, or through on-host AI tooling.<br />
+<em>Why it matters:</em> Strongest public evidence that AI was no longer limited to coding assistance and phishing text generation.</p>
+<p><strong>November 13, 2025 — Anthropic reports AI-orchestrated espionage case</strong><br />
+<em>Actor:</em> Chinese state-sponsored actor, per Anthropic assessment | <em>Evidence:</em> CONFIRMED<br />
+Anthropic reported an espionage campaign in which Claude Code allegedly performed 80-90% of campaign actions across roughly 30 targets, with limited human intervention.<br />
+<em>Why it matters:</em> Most aggressive public provider claim to date on high-autonomy agentic intrusion, though still subject to single-source caution.</p>
+<p><strong>December 19, 2025 — FBI updates warning on senior U.S. official impersonation</strong><br />
+<em>Actor:</em> Unknown actors | <em>Evidence:</em> CONFIRMED<br />
+FBI stated malicious actors had been impersonating senior U.S. officials in text and AI-generated voice campaigns since at least 2023.<br />
+<em>Why it matters:</em> Officially linked AI-generated voice impersonation to sustained targeting of senior officials and their networks.</p>
+<hr />
+<h3 id="2026">2026</h3>
+<p><strong>February 25, 2026 — OpenAI publishes 2026 malicious-use report</strong><br />
+<em>Actor:</em> Multiple networks | <em>Evidence:</em> CONFIRMED<br />
+OpenAI emphasized that threat actors often combine AI with websites, social platforms, and multiple models rather than relying on a single AI service.<br />
+<em>Why it matters:</em> Reinforced that multi-model workflows and cross-platform misuse had become a normal analytic assumption.</p>
+<p><strong>March 6, 2026 — Microsoft publishes "AI as tradecraft"</strong><br />
+<em>Actor:</em> Multiple threat actors | <em>Evidence:</em> CONFIRMED<br />
+Microsoft assessed that threat actors were operationalizing AI across reconnaissance, phishing, malware support, post-compromise analysis, and identity fraud while humans retained control over objectives and deployment decisions.<br />
+<em>Why it matters:</em> Strong 2026 articulation of the "AI as accelerator, not replacement" pattern.</p>
+<p><strong>March 24, 2026 — TeamPCP compromises LiteLLM</strong><br />
+<em>Actor:</em> TeamPCP | <em>Evidence:</em> CONFIRMED<br />
+Wiz documented a supply-chain compromise affecting LiteLLM, demonstrating that AI middleware and proxy infrastructure had become a target in its own right.<br />
+<em>Why it matters:</em> Marks AI infrastructure, not just AI use, as a meaningful attack surface.</p>
+<p><strong>April 6, 2026 — Microsoft details AI-enabled device code phishing</strong><br />
+<em>Actor:</em> Unknown threat actor cluster | <em>Evidence:</em> CONFIRMED<br />
+Microsoft described a widespread device-code-phishing campaign that used AI-generated lures, dynamic code generation, automated backend infrastructure, and rapid post-compromise enrichment.<br />
+<em>Why it matters:</em> Illustrates the 2026 state of play: AI meaningfully sharpens existing phishing tradecraft without changing its core logic.</p>
+<hr />
+<h2 id="5-major-incidents-and-high-signal-cases">5. Major Incidents and High-Signal Cases</h2>
+<h3 id="51-uk-energy-sector-voice-cloning-fraud">5.1 UK Energy-Sector Voice-Cloning Fraud</h3>
+<p><strong>Date:</strong> March 2019<br />
+<strong>Actor:</strong> Unknown criminal operators<br />
+<strong>Victim profile:</strong> UK subsidiary executive at an energy company<br />
+<strong>AI component:</strong> Synthetic voice impersonation of the German parent-company executive<br />
+<strong>Loss:</strong> EUR220,000<br />
+<strong>Source quality:</strong> SECONDARY (Wall Street Journal reporting, based on insurer statements)<br />
+<strong>Assessment:</strong> The payment-authority fraud pattern was not new; the synthetic-voice layer was. The case is best treated as the earliest open-source marker of AI-enabled executive impersonation in financial fraud.</p>
+<hr />
+<h3 id="52-uae-deep-voice-fraud">5.2 UAE Deep-Voice Fraud</h3>
+<p><strong>Date of incident:</strong> January 2020<br />
+<strong>Public reporting:</strong> October 2021<br />
+<strong>Actor:</strong> Unknown; UAE reporting referenced at least 17 participants<br />
+<strong>Victim profile:</strong> Bank manager handling funds for a Japanese company<br />
+<strong>AI component:</strong> Voice cloning combined with forged email corroboration<br />
+<strong>Loss:</strong> Approximately USD35 million<br />
+<strong>Source quality:</strong> REPORTED (Forbes reporting based on court documents)<br />
+<strong>Assessment:</strong> The technical novelty lay in the synthetic voice, not the fraud mechanics. What changed materially was scale.</p>
+<hr />
+<h3 id="53-hong-kong-deepfake-video-conference-fraud">5.3 Hong Kong Deepfake Video-Conference Fraud</h3>
+<p><strong>Date:</strong> Public warning on February 7, 2024<br />
+<strong>Actor:</strong> Unknown criminal operators<br />
+<strong>Victim profile:</strong> Finance staff at a multinational company in Hong Kong<br />
+<strong>AI component:</strong> Deepfake video and voice impersonation of senior executives in a conference setting<br />
+<strong>Loss:</strong> HKD200 million<br />
+<strong>Source quality:</strong> REPORTED (official HKCERT bulletin summarizing police and media reporting)<br />
+<strong>Assessment:</strong> This is one of the strongest public early-2024 cases suggesting that multi-person synthetic video can materially degrade legacy approval controls based on "familiar face plus familiar voice." The victim identity was tied publicly to Arup later, but the February 2024 warning itself still rests on an indirect reporting chain rather than a direct victim disclosure.</p>
+<hr />
+<h3 id="54-openai-microsoft-state-actor-disclosure">5.4 OpenAI / Microsoft State-Actor Disclosure</h3>
+<p><strong>Date:</strong> February 14, 2024<br />
+<strong>Actors:</strong> Forest Blizzard, Emerald Sleet, Crimson Sandstorm, Charcoal Typhoon, Salmon Typhoon<br />
+<strong>AI component:</strong> Open-source research, translation, scripting help, code debugging, and phishing content support<br />
+<strong>Source quality:</strong> CONFIRMED PRIMARY<br />
+<strong>Assessment:</strong> The key finding is not that states are using AI at all, which was predictable, but that the disclosed uses remained narrow and augmentative. Through this date, provider telemetry did not show a public break into autonomous AI-driven intrusion.</p>
+<hr />
+<h3 id="55-prompt-injection-as-an-enterprise-security-problem">5.5 Prompt Injection as an Enterprise Security Problem</h3>
+<p><strong>Date:</strong> April 11, 2024<br />
+<strong>Actor:</strong> Defensive research / anticipated adversary tradecraft<br />
+<strong>AI component:</strong> Direct prompt injection, indirect prompt injection through poisoned content, and multi-turn guardrail bypass<br />
+<strong>Source quality:</strong> CONFIRMED PRIMARY (Microsoft security research)<br />
+<strong>Assessment:</strong> This is not a named threat-actor case. It is included because it defines the most consequential AI-specific attack surface visible by the evidence cutoff: exploitation of LLM-enabled applications through prompt-channel abuse rather than traditional memory corruption.</p>
+<hr />
+<h3 id="56-uiuc-one-day-exploitation-results">5.6 UIUC One-Day Exploitation Results</h3>
+<p><strong>Date:</strong> April 11-17, 2024<br />
+<strong>Actor:</strong> Academic research<br />
+<strong>AI component:</strong> GPT-4 agent exploiting one-day vulnerabilities from CVE descriptions<br />
+<strong>Source quality:</strong> RESEARCH (arXiv preprint)<br />
+<strong>Assessment:</strong> This is a high-signal research result. It should inform forecasting, but it should not be misreported as evidence that threat actors were already conducting autonomous AI-led exploitation at comparable reliability.</p>
+<hr />
+<h3 id="57-promptsteal-promptflux-quietvault">5.7 PROMPTSTEAL / PROMPTFLUX / QUIETVAULT</h3>
+<p><strong>Date:</strong> Publicly reported November 5, 2025<br />
+<strong>Actors:</strong> Multiple; PROMPTSTEAL linked by Google GTIG to APT28 activity reported by CERT-UA as LAMEHUG<br />
+<strong>AI component:</strong> Runtime LLM command generation, LLM-assisted self-rewriting for evasion, and abuse of on-host AI tooling<br />
+<strong>Source quality:</strong> CONFIRMED PRIMARY (Google GTIG; CERT-UA for LAMEHUG)<br />
+<strong>Assessment:</strong> This is one of the clearest public inflection points in the AI threat record. By late 2025, the record includes malware that calls an LLM during execution, uses an LLM to rewrite itself, or abuses AI tools already present on compromised systems. The operational maturity varies by family, but the shift in design pattern is real.</p>
+<hr />
+<h3 id="58-claude-code-in-data-extortion">5.8 Claude Code in Data Extortion</h3>
+<p><strong>Date:</strong> August 27, 2025<br />
+<strong>Actor:</strong> Unnamed criminal actor; Anthropic reporting also includes DPRK-linked fraud activity<br />
+<strong>AI component:</strong> Claude Code used to assist reconnaissance, credential harvesting, intrusion support, data triage, and tailored extortion decision-making<br />
+<strong>Source quality:</strong> CONFIRMED PRIMARY, SINGLE-SOURCE (Anthropic)<br />
+<strong>Assessment:</strong> Anthropic's August 2025 report is the strongest public provider disclosure of agentic AI supporting extortion operations at scale. The case is analytically significant, but it remains provider-sourced and should not be generalized into a claim that such operations were already widespread across the ecosystem.</p>
+<hr />
+<h3 id="59-sesameop-and-ai-service-api-abuse">5.9 SesameOp and AI-Service API Abuse</h3>
+<p><strong>Date:</strong> November 3, 2025<br />
+<strong>Actor:</strong> Unknown threat actor<br />
+<strong>AI component:</strong> Abuse of the OpenAI Assistants API for command-and-control communications<br />
+<strong>Source quality:</strong> CONFIRMED PRIMARY (Microsoft incident response)<br />
+<strong>Assessment:</strong> SesameOp matters less because it is technically complex than because it reframes AI services as blend-in operational infrastructure. It validates the concern that sanctioned model traffic can become a relay path if egress governance is weak.</p>
+<hr />
+<h3 id="510-anthropics-ai-orchestrated-espionage-disclosure">5.10 Anthropic's AI-Orchestrated Espionage Disclosure</h3>
+<p><strong>Date:</strong> November 13, 2025<br />
+<strong>Actor:</strong> Chinese state-sponsored actor, according to Anthropic's assessment<br />
+<strong>AI component:</strong> Claude Code reported to execute most campaign actions with limited human decision points<br />
+<strong>Source quality:</strong> CONFIRMED PRIMARY, SINGLE-SOURCE (Anthropic)<br />
+<strong>Assessment:</strong> This is the strongest public claim of high-autonomy offensive AI activity in the open record through April 2026. It cannot be ignored, but it should be handled with caution. The case is still provider-originated, and the most defensible interpretation is <strong>substantial AI orchestration with human supervision</strong>, not proof that fully autonomous intrusion had become routine. Notably, through April 2026 no independent government disclosure, victim organization confirmation, or second-provider corroboration has validated this specific case — that absence is itself an analytically relevant data point when estimating prevalence or generalizability.</p>
+<hr />
+<h3 id="511-litellm-and-the-ai-middleware-supply-chain">5.11 LiteLLM and the AI Middleware Supply Chain</h3>
+<p><strong>Date:</strong> March 24, 2026<br />
+<strong>Actor:</strong> TeamPCP<br />
+<strong>AI component:</strong> Not offensive AI use by the actor, but compromise of AI middleware used to broker model access<br />
+<strong>Source quality:</strong> CONFIRMED PRIMARY (Wiz); corroborated by additional vendor and project reporting<br />
+<strong>Assessment:</strong> LiteLLM is included because by 2026 the AI threat story is no longer only about how attackers use models. It is also about how attackers target the packages, proxies, tokens, connectors, and orchestration layers that make enterprise AI systems work.</p>
+<hr />
+<h2 id="6-technical-analysis-mitre-atlas-aligned">6. Technical Analysis (MITRE ATLAS-Aligned)</h2>
+<blockquote>
+<p><strong>Framework note:</strong> MITRE ATLAS is the primary technical framework in this section. ATT&amp;CK is referenced only where it still adds conventional enterprise cyber context. Some ATLAS techniques and mitigations cited below were formalized after some of the incidents discussed here; they are used as a current taxonomy, not as evidence that the historical events were labeled this way at the time.</p>
+</blockquote>
+<hr />
+<h3 id="61-observed-and-assessed-ai-enabled-activity-through-april-2026">6.1 Observed and Assessed AI-Enabled Activity Through April 2026</h3>
+<h4 id="amlta0002-reconnaissance">AML.TA0002 — Reconnaissance</h4>
+<p><strong>Status:</strong> CONFIRMED<br />
+<strong>Observed use:</strong> LLM-assisted OSINT, summarization, translation, and target profiling<br />
+<strong>Examples:</strong> Forest Blizzard, Emerald Sleet, Salmon Typhoon, Crimson Sandstorm, multiple 2025-2026 Microsoft and Google case studies<br />
+<strong>Assessment:</strong> AI improves research speed, language coverage, and target familiarization. It does not, by itself, grant access to non-public data.</p>
+<h4 id="amlt0016002-generative-ai">AML.T0016.002 — Generative AI</h4>
+<p><strong>Status:</strong> CONFIRMED<br />
+<strong>Observed use:</strong> Use of mainstream generative models to draft phishing lures, refine pretexts, accelerate translation, support lightweight coding tasks, and tailor impersonation content<br />
+<strong>Assessment:</strong> Through April 2026, the dominant pattern is still misuse of legitimate mainstream or hosted models rather than deployment of a mature ecosystem of bespoke criminal models.</p>
+<h4 id="amlta0004-amlt0052-initial-access-phishing">AML.TA0004 / AML.T0052 — Initial Access / Phishing</h4>
+<p><strong>Status:</strong> CONFIRMED<br />
+<strong>Observed use:</strong> AI-improved phishing, multilingual lure production, executive impersonation support, and device-code-phishing enrichment<br />
+<strong>Assessment:</strong> This remains the clearest public operational uplift area. Synthetic voice and video fraud sit adjacent to phishing in the same deception family even when the end goal is payment fraud rather than network access.</p>
+<h4 id="amlta0008-amlta0009-amlt0036-discovery-collection-data-from-information-repositories">AML.TA0008 / AML.TA0009 / AML.T0036 — Discovery / Collection / Data from Information Repositories</h4>
+<p><strong>Status:</strong> CONFIRMED, WITH CAVEATS<br />
+<strong>Observed use:</strong> Faster review of target-relevant material, post-compromise discovery support, data triage, exfiltration planning, and repository access through connected tools<br />
+<strong>Assessment:</strong> By late 2025, provider casework moved this category from plausible to publicly documented. The strongest examples remain provider-sourced and unevenly corroborated, but the pattern is no longer hypothetical.</p>
+<h4 id="amlt0040-amlt0024-ai-model-inference-api-access-exfiltration-via-ai-inference-api">AML.T0040 / AML.T0024 — AI Model Inference API Access / Exfiltration via AI Inference API</h4>
+<p><strong>Status:</strong> CONFIRMED<br />
+<strong>Observed use:</strong> Legitimate external model access, exposed provider keys, sensitive-context transmission, and use of AI APIs inside attacker workflows<br />
+<strong>Assessment:</strong> The inference path is now part of the operational perimeter. It is simultaneously a productivity channel, a credential surface, and a potential data-exposure path.</p>
+<h4 id="amlt0096-ai-service-api">AML.T0096 — AI Service API</h4>
+<p><strong>Status:</strong> CONFIRMED<br />
+<strong>Observed use:</strong> Use of AI-service APIs as operational infrastructure, including relay or control functions<br />
+<strong>Assessment:</strong> SesameOp moved this from forecast into public evidence. AI service traffic must now be treated as a governed egress channel rather than automatically trusted SaaS traffic.</p>
+<hr />
+<h3 id="62-prompt-injection-and-llm-mediated-application-abuse">6.2 Prompt Injection and LLM-Mediated Application Abuse</h3>
+<h4 id="amlt0051-llm-prompt-injection">AML.T0051 — LLM Prompt Injection</h4>
+<p><strong>Historical status through April 2026:</strong> CONFIRMED as a vulnerability class and active enterprise attack surface</p>
+<p>Prompt injection is the most important AI-native application risk visible in the public record. It includes direct prompt injection by a user, indirect prompt injection via poisoned documents or webpages, and multi-turn jailbreak patterns that progressively steer the model away from its intended function.</p>
+<p>ATLAS gives prompt injection a dedicated technical identifier. OWASP Top 10 for LLMs and GenAI 2025 reinforces the same problem space through <strong>LLM01:2025 Prompt Injection</strong> and <strong>LLM05:2025 Improper Output Handling</strong>. Once an application connects the model to enterprise repositories or downstream functions, prompt injection can become the entry condition for broader abuse, including <code>AML.T0036 Data from Information Repositories</code> and, in agentic systems, <code>AML.T0053 AI Agent Tool Invocation</code>.</p>
+<p><strong>Assessment:</strong> Prompt injection is better understood as a cross-boundary control failure than as a single bug class. By 2025-2026 it had moved from a design concern to a routine red-team and production-risk consideration wherever models are connected to retrieval systems, tools, or external actions.</p>
+<hr />
+<h3 id="63-ai-services-model-apis-and-covert-relay-potential">6.3 AI Services, Model APIs, and Covert Relay Potential</h3>
+<h4 id="amlt0040-ai-model-inference-api-access">AML.T0040 — AI Model Inference API Access</h4>
+<p><strong>Historical status through April 2026:</strong> CONFIRMED as a legitimate and dual-use access path</p>
+<p>Modern AI-enabled applications normalize traffic to external inference APIs. That access model creates several technical consequences for defenders: exposed provider keys become privileged secrets, model-access telemetry becomes part of the security perimeter, and sanctioned model endpoints become potential cover traffic if not governed tightly.</p>
+<h4 id="amlt0013-amlt0014-amlt0069-discover-ai-model-ontology-discover-ai-model-family-discover-llm-system-information">AML.T0013 / AML.T0014 / AML.T0069 — Discover AI Model Ontology, Discover AI Model Family, Discover LLM System Information</h4>
+<p><strong>Historical status through April 2026:</strong> RESEARCH / PLAUSIBLE<br />
+These ATLAS techniques describe the information-gathering phase that supports jailbreak development, system prompt extraction, and model-specific abuse. By the cutoff, these were already relevant as defensive design concerns even where repeated named-actor public cases were limited.</p>
+<h4 id="amlt0024-exfiltration-via-ai-inference-api">AML.T0024 — Exfiltration via AI Inference API</h4>
+<p><strong>Historical status through April 2026:</strong> CONFIRMED AS A MATERIAL RISK<br />
+As enterprise systems send sensitive prompts and retrieved context to external model providers, the inference path itself becomes a potential data-exposure channel. Public reporting through 2026 shows this as a meaningful enterprise risk, even where named actor attribution remains limited.</p>
+<h4 id="amlt0096-ai-service-api_1">AML.T0096 — AI Service API</h4>
+<p><strong>Historical status through April 2026:</strong> CONFIRMED<br />
+ATLAS recognizes AI service APIs as a potential communication channel. By late 2025, public reporting confirmed operational use of a commercial AI API as a relay path.</p>
+<p><strong>Assessment:</strong> AI API traffic is not inherently malicious. The security problem arises when organizations normalize it without token governance, egress policy, and behavioral monitoring.</p>
+<hr />
+<h2 id="7-adversary-use-of-agentic-ai">7. Adversary Use of Agentic AI</h2>
+<blockquote>
+<p><strong>Historical note:</strong> As of April 12, 2026, agentic AI misuse is no longer purely hypothetical in the public record. The strongest cases remain provider-sourced, especially Anthropic's August and November 2025 disclosures, so they require caution. Even so, the risk introduced when LLMs receive memory, tools, and delegated authority is now supported by public casework rather than forecast alone.</p>
+</blockquote>
+<h3 id="71-excessive-agency-as-the-core-architectural-risk">7.1 Excessive Agency as the Core Architectural Risk</h3>
+<p>OWASP <strong>LLM06:2025 Excessive Agency</strong> is the clearest modern framing for agentic AI abuse. The root problem is not that a model can generate text; it is that the surrounding application grants the model the ability to act. OWASP identifies three recurring causes:</p>
+<ul>
+<li>excessive functionality</li>
+<li>excessive permissions</li>
+<li>excessive autonomy</li>
+</ul>
+<p>This is the condition that turns a prompt-injection flaw, hallucinated instruction, or ambiguous output into a real-world security event. The 2025 public record shows that once models are granted meaningful authority, the difference between "assistant" and "operator" becomes operational rather than semantic.</p>
+<h3 id="72-tool-calling-risks-mapped-to-atlas">7.2 Tool-Calling Risks Mapped to ATLAS</h3>
+<ul>
+<li><strong><code>AML.T0053 AI Agent Tool Invocation</code></strong> — adversaries induce an agent to call downstream tools, APIs, or services.</li>
+<li><strong><code>AML.T0085.001 AI Agent Tools</code></strong> — adversaries enumerate or abuse the tool surface exposed to the agent.</li>
+<li><strong><code>AML.T0080 AI Agent Context Poisoning</code></strong> — adversaries manipulate persistent context or memory to alter future behavior.</li>
+<li><strong><code>AML.T0084 Discover AI Agent Configuration</code></strong> — adversaries discover prompts, memory, tool definitions, identities, or connection details.</li>
+<li><strong><code>AML.T0083 Credentials from AI Agent Configuration</code></strong> — adversaries extract API keys, tokens, or connection strings from agent configuration.</li>
+<li><strong><code>AML.T0081 Modify AI Agent Configuration</code></strong> — adversaries alter configuration to persist malicious behavior or weaken controls.</li>
+<li><strong><code>AML.T0086 Exfiltration via AI Agent Tool Invocation</code></strong> — write-enabled tools become exfiltration channels.</li>
+<li><strong><code>AML.T0099 AI Agent Tool Data Poisoning</code></strong> — adversaries place malicious content where the agent's tools will retrieve it.</li>
+<li><strong><code>AML.T0034.002 Agentic Resource Consumption</code></strong> — adversaries induce expensive tool fan-out, excessive calls, or budget exhaustion.</li>
+<li><strong><code>AML.T0108 AI Agent</code></strong> and <strong><code>AML.T0096 AI Service API</code></strong> — current ATLAS taxonomy also treats agent frameworks and AI service APIs as possible abuse paths for relay, tasking, or covert control.</li>
+</ul>
+<h3 id="73-security-implication">7.3 Security Implication</h3>
+<p>The principal security equation for agentic systems is:</p>
+<p><strong>model weakness x permissions x automation x reachable systems = operational risk</strong></p>
+<p>Prompt injection is often only the trigger. The material damage comes from what the agent is allowed to do after it is influenced. This is why agentic security deserves separate treatment rather than being folded into generic prompt-injection discussion. The 2025 casework indicates that the decisive variables are not model eloquence or benchmark scores, but reachable tools, token scope, memory persistence, and whether humans remain in the approval path.</p>
+<p>Current ATLAS mitigations map directly to this problem set: <code>AML.M0026 Privileged AI Agent Permissions Configuration</code>, <code>AML.M0027 Single-User AI Agent Permissions Configuration</code>, <code>AML.M0028 AI Agent Tools Permissions Configuration</code>, <code>AML.M0029 Human-In-the-Loop for AI Agent Actions</code>, and <code>AML.M0030 Restrict AI Agent Tool Invocation on Untrusted Data</code>.</p>
+<hr />
+<h2 id="8-statistics-and-measurable-trends">8. Statistics and Measurable Trends</h2>
+<blockquote>
+<p>No global authority publishes a complete year-by-year census of "AI-enabled attacks." The comparison below therefore uses a fixed coding scheme applied to this report's evidence base rather than claiming exhaustive world totals. Numbers increase across years in part because reporting accumulates over time — the table tracks the visibility of documented activity within this corpus, not the volume of global attacks.</p>
+</blockquote>
+<h3 id="81-year-over-year-comparison-2019-2025">8.1 Year-over-Year Comparison, 2019-2025</h3>
+<table>
+<thead>
+<tr>
+<th>Year</th>
+<th>Official/provider disclosures in scope*</th>
+<th>Documented attack surface classes**</th>
+<th>AI-improved TTP families***</th>
+<th>Dominant shift</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>2019</strong></td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>Synthetic voice enters BEC-style fraud</td>
+</tr>
+<tr>
+<td><strong>2020</strong></td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>Deep-voice fraud scales dramatically in dollar impact</td>
+</tr>
+<tr>
+<td><strong>2021</strong></td>
+<td>0</td>
+<td>2</td>
+<td>2</td>
+<td>LLM-phishing capability becomes visible in research</td>
+</tr>
+<tr>
+<td><strong>2022</strong></td>
+<td>1</td>
+<td>2</td>
+<td>2</td>
+<td>Mass-market LLM access lowers the barrier to phishing and fraud scripting</td>
+</tr>
+<tr>
+<td><strong>2023</strong></td>
+<td>1</td>
+<td>3</td>
+<td>6</td>
+<td>State-linked experimentation and AI-assisted identity fraud become clearer</td>
+</tr>
+<tr>
+<td><strong>2024</strong></td>
+<td>8</td>
+<td>5</td>
+<td>9</td>
+<td>Provider telemetry, prompt injection, and multi-person deepfake fraud expand the picture</td>
+</tr>
+<tr>
+<td><strong>2025</strong></td>
+<td>10</td>
+<td>8</td>
+<td>12</td>
+<td>Runtime AI malware, AI-service misuse, and agentic offensive support enter the public record</td>
+</tr>
+</tbody>
+</table>
+<p>* <strong>Official/provider disclosures in scope</strong> = government, platform-provider, or incident-response disclosures directly used in this report and mapped to the activity year they illuminate.<br />
+*<em> </em><em>Attack surface classes</em><em> in this coding scheme = synthetic audio, synthetic video, hosted LLM platforms, AI-assisted identity fraud, AI-enabled enterprise applications, AI-service/API channel, agentic/coding assistants, AI-integrated malware or on-host AI tooling, and AI middleware/supply chain.<br />
+*</em><em> </em><em>AI-improved TTP families</em>* in this coding scheme = impersonation fraud, phishing/lure generation, reconnaissance, translation/localization, persona fabrication, coding or malware development, vulnerability research, prompt injection/jailbreak, post-compromise discovery/collection support, runtime AI malware, AI-service relay/C2, agentic intrusion or extortion orchestration, and AI-infrastructure supply-chain targeting.</p>
+<h3 id="82-2026-ytd-snapshot">8.2 2026 YTD Snapshot</h3>
+<p>By <strong>April 12, 2026</strong>, the public record is too incomplete for a full-year comparison, but the trajectory is clear:</p>
+<ul>
+<li><strong>Official/provider disclosures in scope:</strong> <code>5</code></li>
+<li><strong>Attack surface classes visible in the coding scheme:</strong> <code>9 of 9</code></li>
+<li><strong>AI-improved TTP families visible in the coding scheme:</strong> <code>13 of 13</code></li>
+</ul>
+<p>The 2026 year-to-date evidence does <strong>not</strong> show a clean break to generalized autonomous intrusion. It does show consolidation in three areas:</p>
+<ul>
+<li>AI-assisted phishing infrastructure is becoming more automated and timing-aware, as shown by Microsoft's April 6, 2026 device-code-phishing case.</li>
+<li>Threat reporting now treats AI as standard tradecraft support across reconnaissance, phishing, identity abuse, and post-compromise analysis.</li>
+<li>AI infrastructure itself has become part of the target set, as shown by the March 2026 LiteLLM compromise.</li>
+</ul>
+<h3 id="83-hard-numbers">8.3 Hard Numbers</h3>
+<ul>
+<li><strong>March 2019 voice-cloning case:</strong> EUR220,000 loss.</li>
+<li><strong>January 2020 UAE deep-voice case:</strong> approximately USD35 million loss.</li>
+<li><strong>February 2024 Hong Kong reported deepfake case:</strong> HKD200 million loss.</li>
+<li><strong>IBM X-Force benchmark (2023):</strong> roughly <strong>5 minutes</strong> to generate a phishing email from five prompts versus roughly <strong>16 hours</strong> for a human red-team workflow (controlled vendor experiment under defined conditions; operational time deltas will vary by context).</li>
+<li><strong>UIUC one-day exploitation benchmark (April 2024):</strong> GPT-4 exploited <strong>87%</strong> of the 15 one-day vulnerabilities when given the CVE description, and <strong>7%</strong> without it.</li>
+<li><strong>Google GTIG (January 2025):</strong> APT actors from <strong>more than 20 countries</strong> were observed using Gemini.</li>
+<li><strong>Anthropic (August 2025):</strong> at least <strong>17 organizations</strong> targeted in an extortion case, with some ransom demands exceeding <strong>$500,000</strong>.</li>
+<li><strong>Anthropic (November 2025):</strong> roughly <strong>30 targets</strong> in a reported espionage campaign with <strong>80-90%</strong> of campaign actions attributed to AI by Anthropic's own assessment.</li>
+<li><strong>OpenAI (October 7, 2025):</strong> over <strong>40 networks</strong> disrupted and reported since public threat reporting began in February 2024.</li>
+<li><strong>FBI IC3 2025 annual report, available by April 2026:</strong> <strong>22,364 AI-related complaints</strong> and <strong>$893,346,472</strong> in AI-related losses.</li>
+</ul>
+<h3 id="84-comparative-interpretation">8.4 Comparative Interpretation</h3>
+<ul>
+<li><strong>2019-2020:</strong> High-impact fraud appears first; visibility is low and evidence is mostly secondary.</li>
+<li><strong>2021-2022:</strong> Capability democratization becomes the main story. The important change is access, not novel offensive technique.</li>
+<li><strong>2023-2024:</strong> Provider telemetry and application-security research expand the evidence base. Threat actors are clearly using AI, but mostly for support tasks.</li>
+<li><strong>2025:</strong> The public record diversifies sharply. Runtime AI malware, AI-service abuse, and agentic misuse move from forecast to documented casework.</li>
+<li><strong>2026 YTD:</strong> The AI threat problem broadens again, from attacker use of models to direct targeting of AI middleware, identity flows, and trusted AI-connected infrastructure.</li>
+</ul>
+<hr />
+<h2 id="9-reality-vs-hype">9. Reality vs. Hype</h2>
+<h3 id="91-what-ai-is-genuinely-changing">9.1 What AI Is Genuinely Changing</h3>
+<ol>
+<li><strong>Social engineering quality.</strong> AI reduces grammar, translation, and tone defects that historically exposed phishing and fraud.</li>
+<li><strong>Operational tempo.</strong> AI compresses drafting, summarization, translation, and scripting time.</li>
+<li><strong>Impersonation realism.</strong> Voice cloning and deepfake video weaken controls that treat familiar voice or appearance as reliable identity proof.</li>
+<li><strong>Operational integration.</strong> By 2025, the public record includes malware that queries or leverages models during execution, and agentic systems that support intrusion and extortion workflows.</li>
+<li><strong>Attack surface expansion.</strong> AI-connected applications introduce prompt injection, unsafe output handling, unsafe tool invocation, token theft, and AI-adjacent supply chain exposure as material security concerns.</li>
+</ol>
+<hr />
+<h3 id="92-what-the-evidence-does-not-support-through-april-2026">9.2 What the Evidence Does Not Support Through April 2026</h3>
+<ol>
+<li><strong>Fully autonomous advanced intrusion at operational scale.</strong> Even by April 2026, the public record does not support that claim with strong, independently corroborated evidence.</li>
+<li><strong>Major ransomware programs rebuilding core encryption operations around AI.</strong> Public evidence still points more strongly to AI support in development, targeting, or low-skill enablement than to re-architected flagship ransomware operations.</li>
+<li><strong>A wholesale replacement of human operators.</strong> The strongest cases still show humans selecting targets, setting objectives, approving key actions, or correcting model errors.</li>
+<li><strong>A clean break into an entirely separate AI warfighting category.</strong> The record now includes some genuinely novel operational patterns, but the dominant trend is still modification and acceleration of known tradecraft.</li>
+</ol>
+<hr />
+<h3 id="93-analytical-verdict">9.3 Analytical Verdict</h3>
+<p><strong>Through April 2026, AI has produced a non-linear capability increase in selected parts of the attack lifecycle and a meaningful expansion of the enterprise attack surface, but not a documented replacement of end-to-end human intrusion tradecraft.</strong></p>
+<p>The most important distinction is this:</p>
+<ul>
+<li><strong>AI as an attacker productivity amplifier:</strong> confirmed</li>
+<li><strong>AI as a fraud realism amplifier:</strong> confirmed</li>
+<li><strong>AI as an AI-application exploitation vector:</strong> confirmed</li>
+<li><strong>AI as a substantial offensive operator in selected public cases:</strong> confirmed, but unevenly corroborated</li>
+<li><strong>AI as a fully autonomous offensive operator at scale:</strong> not confirmed by the cutoff</li>
+</ul>
+<hr />
+<h2 id="10-actor-segmentation">10. Actor Segmentation</h2>
+<h3 id="101-financially-motivated-fraud-operators">10.1 Financially Motivated Fraud Operators</h3>
+<p><strong>Adoption level:</strong> HIGH<br />
+<strong>Why:</strong> Their mission aligns directly with current model strengths: persuasion, impersonation, multilingual interaction, and low-cost content generation.<br />
+<strong>Assessment:</strong> This remains the most operationally mature AI-enabled actor class in the public record through April 2026.</p>
+<h3 id="102-state-linked-actors">10.2 State-Linked Actors</h3>
+<p><strong>Adoption level:</strong> MEDIUM to HIGH<br />
+<strong>Why:</strong> Provider-backed reporting now confirms use across reconnaissance, translation, phishing, vulnerability research, malware support, post-compromise analysis, and in some 2025 cases higher-autonomy operational support.<br />
+<strong>Assessment:</strong> Public evidence is still uneven by country and provider visibility. Iran, China, and DPRK appear most frequently in the public record, but the distribution is partly a function of what the major platforms can observe.</p>
+<h3 id="103-ransomware-ecosystem">10.3 Ransomware Ecosystem</h3>
+<p><strong>Adoption level:</strong> LOW to MEDIUM<br />
+<strong>Why:</strong> Public discussion remains louder than the evidence, but 2025 casework shows AI-assisted ransomware development and low-skill malware commercialization.<br />
+<strong>Assessment:</strong> The strongest operational relevance remains indirect or supportive: phishing, scripting, targeting, triage, and development assistance rather than AI-operated flagship encryption workflows.</p>
+<h3 id="104-influence-and-information-operations">10.4 Influence and Information Operations</h3>
+<p><strong>Adoption level:</strong> LOW to MEDIUM<br />
+<strong>Why:</strong> AI clearly lowers content-production costs and translation friction, and provider reporting confirms recurring misuse in IO workflows.<br />
+<strong>Assessment:</strong> The strongest defensible claim remains scale and efficiency increase. The evidence base for decisive real-world audience impact remains weaker than for fraud and phishing.</p>
+<h3 id="105-hacktivists-and-low-skill-opportunists">10.5 Hacktivists and Low-Skill Opportunists</h3>
+<p><strong>Adoption level:</strong> LOW to MEDIUM<br />
+<strong>Why:</strong> LLMs lower the expertise threshold for phishing, messaging, and simple scripting.<br />
+<strong>Assessment:</strong> The main effect is access uplift from a low baseline.</p>
+<hr />
+<h2 id="11-supply-chain-infrastructure">11. Supply Chain &amp; Infrastructure</h2>
+<blockquote>
+<p><strong>Defensive framing note:</strong> The historical record now runs through April 12, 2026, but this section still uses current ATLAS and OWASP 2025 language to organize defensive risk across the modern AI stack.</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>AI stack layer</th>
+<th>Principal risks</th>
+<th>Representative ATLAS mappings</th>
+<th>Relevant OWASP 2025 lens</th>
+<th>Historical signal through April 2026</th>
+<th>Priority controls</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Model</strong></td>
+<td>Inference API abuse, model fingerprinting, system prompt leakage, provider-key exposure, model-specific jailbreak discovery</td>
+<td><code>AML.T0040</code>, <code>AML.T0013</code>, <code>AML.T0014</code>, <code>AML.T0069</code>, <code>AML.T0024</code></td>
+<td><code>LLM02 Sensitive Information Disclosure</code>, <code>LLM03 Supply Chain</code>, <code>LLM04 Data and Model Poisoning</code></td>
+<td>Public research, provider telemetry, and repeated platform-abuse cases are now visible; model access is clearly a governed security boundary</td>
+<td>Model inventory, API gatewaying, scoped credentials, rate limits, telemetry, provider access review</td>
+</tr>
+<tr>
+<td><strong>App</strong></td>
+<td>Prompt injection, improper output handling, unsafe session/state handling, covert use of sanctioned AI APIs</td>
+<td><code>AML.T0051</code>, <code>AML.T0096</code></td>
+<td><code>LLM01 Prompt Injection</code>, <code>LLM05 Improper Output Handling</code>, <code>LLM07 System Prompt Leakage</code></td>
+<td>Prompt injection was clearly visible by 2024; by 2025-2026 AI-service relay abuse and unsafe application mediation are confirmed concerns</td>
+<td>Strict input separation, output validation, egress allowlisting, session/state review, policy logging</td>
+</tr>
+<tr>
+<td><strong>Data</strong></td>
+<td>Poisoned RAG content, over-broad repository access, sensitive data disclosure, vector or embedding weaknesses</td>
+<td><code>AML.T0036</code>, <code>AML.T0099</code></td>
+<td><code>LLM02 Sensitive Information Disclosure</code>, <code>LLM04 Data and Model Poisoning</code>, <code>LLM08 Vector and Embedding Weaknesses</code></td>
+<td>Poisoned-content and retrieval abuse are established design risks; later casework increases their operational importance</td>
+<td>Provenance controls, ACL-preserving retrieval, chunk tagging, DLP, canary content, repository segmentation</td>
+</tr>
+<tr>
+<td><strong>Tools</strong></td>
+<td>Excessive agency, tool misuse, agent configuration discovery, credential theft, exfiltration through write-enabled tools, budget exhaustion</td>
+<td><code>AML.T0053</code>, <code>AML.T0080</code>, <code>AML.T0081</code>, <code>AML.T0083</code>, <code>AML.T0084</code>, <code>AML.T0086</code>, <code>AML.T0034.002</code></td>
+<td><code>LLM06 Excessive Agency</code>, <code>LLM10 Unbounded Consumption</code>, <code>LLM03 Supply Chain</code></td>
+<td>Tool-calling risk is now supported by public provider casework, not just design analysis</td>
+<td>Least privilege, single-user identities, human approval, tool allowlists, rate limiting, continuous AI red teaming</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="12-technical-evolution-last-24-months">12. Technical Evolution (Last 24 Months)</h2>
+<h3 id="121-2024-provider-telemetry-and-application-layer-risk">12.1 2024 — Provider Telemetry and Application-Layer Risk</h3>
+<p>The 2024 record established two durable facts. First, named state-affiliated actors were already using LLMs in support roles. Second, AI-enabled applications themselves had become a viable attack surface through prompt injection, guardrail bypass, and unsafe tool integration. This is the year in which AI security ceased to be only a model-governance issue and became an enterprise application-security issue.</p>
+<h3 id="122-2025-operational-inflection-point">12.2 2025 — Operational Inflection Point</h3>
+<p>The 2025 record broadened from "AI helps attackers work faster" to "AI is now present inside parts of live operations." Public reporting now included runtime AI malware, AI-assisted self-modifying code, AI-service relay misuse, and provider-reported agentic support for extortion and espionage. The practical consequence was not universal autonomy, but broader AI presence across delivery, execution, post-compromise analysis, and exfiltration support.</p>
+<h3 id="123-early-2026-ai-as-tradecraft-and-ai-as-attack-surface">12.3 Early 2026 — AI as Tradecraft and AI as Attack Surface</h3>
+<p>By early 2026, the emerging pattern was consolidation rather than novelty for novelty's sake. Microsoft's March and April 2026 reporting showed AI strengthening reconnaissance, phishing, backend automation, and post-compromise processing. At the same time, the LiteLLM compromise showed that AI middleware and orchestration layers had become targets in their own right. The threat model now has two parallel branches: <strong>AI used by attackers</strong>, and <strong>AI infrastructure attacked by attackers</strong>.</p>
+<hr />
+<h2 id="13-forecast-post-april-2026">13. Forecast (Post-April 2026)</h2>
+<blockquote>
+<p><strong>This section projects forward from the April 12, 2026 evidence baseline.</strong></p>
+</blockquote>
+<h3 id="131-most-likely-developments-over-the-next-12-months">13.1 Most Likely Developments Over the Next 12 Months</h3>
+<p><strong>Projected Threat 1</strong> [Almost certain] — <strong>AI-assisted impersonation fraud, phishing, and identity abuse will continue to scale faster than high-end AI-assisted intrusion.</strong><br />
+Rationale: the return on investment is immediate, the tooling is accessible, and the control failures are still widespread.</p>
+<p><strong>Projected Threat 2</strong> [Highly likely] — <strong>Prompt injection and excessive agency will become routine adversary and red-team tradecraft against enterprise copilots, agents, and RAG workflows.</strong><br />
+Rationale: these paths exploit trust boundaries and connector permissions rather than memory corruption, making them structurally attractive.</p>
+<p><strong>Projected Threat 3</strong> [Highly likely] — <strong>AI API token theft, connector abuse, and AI-adjacent supply chain compromise will grow as organizations expand model access.</strong><br />
+Rationale: provider keys, orchestration proxies, agent configs, and retrieval connectors increasingly function as privileged credentials and trust anchors.</p>
+<p><strong>Projected Threat 4</strong> [Likely] — <strong>Semi-autonomous operator loops will become more common for bounded tasks such as target research, exploit triage, phishing generation, malware modification, and stolen-data review.</strong><br />
+Rationale: the current evidence already shows value in narrow loops even where full autonomy remains unreliable.</p>
+<p><strong>Projected Threat 5</strong> [Likely] — <strong>Trusted cloud and AI services will be used more aggressively as blend-in infrastructure for phishing, staging, redirect chains, and low-volume control channels.</strong><br />
+Rationale: defenders still over-trust sanctioned cloud and AI traffic compared with traditional attacker infrastructure.</p>
+<p><strong>Projected Threat 6</strong> [Likely] — <strong>AI-enhanced OAuth and identity-flow abuse will increase.</strong><br />
+Rationale: device-code phishing, workforce fraud, and synthetic-identity operations align directly with AI's strengths in personalization, timing, and role mimicry.</p>
+<h3 id="132-what-remains-less-likely-in-the-near-term">13.2 What Remains Less Likely in the Near Term</h3>
+<p><strong>Projected Threat 7</strong> [Unlikely] — <strong>Fully autonomous, end-to-end advanced intrusion at operational scale.</strong><br />
+Rationale: stealth, target-specific judgment, deconfliction, error recovery, and operational security still benefit heavily from skilled humans.</p>
+<p><strong>Projected Threat 8</strong> [Unlikely] — <strong>Major ransomware programs materially re-architecting their core encryption and deployment workflows around AI.</strong><br />
+Rationale: mature crews still optimize for reliability, tested playbooks, and deterministic payload behavior.</p>
+<p><strong>Projected Threat 9</strong> [Realistic possibility] — <strong>A sharper jump in public agentic casework from a second provider or government source.</strong><br />
+Rationale: the capability direction is plausible, but broader corroboration has not yet caught up with the most aggressive 2025 provider disclosures.</p>
+<hr />
+<h2 id="14-final-conclusions">14. Final Conclusions</h2>
+<p><strong>1. Through April 2026, the most important AI offense story is still not general-purpose autonomous hacking. It is better fraud, better phishing, faster attacker support functions, and broader exposure of the enterprise AI stack.</strong></p>
+<p><strong>2. 2025 was the public inflection point.</strong> That is when the record moved beyond support tasks and into LLM-integrated malware, AI-service misuse, and public provider disclosures of agentic offensive support.</p>
+<p><strong>3. The most defensible AI-specific attack surface is the enterprise AI stack itself.</strong> Prompt injection, unsafe output handling, excessive agency, unsafe connector design, token exposure, and AI-adjacent supply chain compromise are now first-order risks.</p>
+<p><strong>4. Public reporting still shows humans retaining control over objectives, targeting, or key approvals.</strong> Even the strongest 2025 public claims do not justify calling fully autonomous intrusion a mature, generalized operational reality.</p>
+<p><strong>5. Fraud controls are cyber controls, and AI controls are identity controls.</strong> Organizations that still trust voice, video, polished language, or AI-connected workflows without strong authorization boundaries are exposed.</p>
+<p><strong>6. The next threat transition is more likely to come from insecure integration and excessive agency than from model autonomy alone.</strong> The decisive issue is what the model can access, invoke, retrieve, send, or exfiltrate on behalf of a user or agent.</p>
+<hr />
+<h2 id="15-defender-recommendations">15. Defender Recommendations</h2>
+<h3 id="immediate-technical-controls">Immediate Technical Controls</h3>
+<ol>
+<li>
+<p><strong>Adopt an internal LLM content security policy pattern.</strong> Treat AI applications like browsers with a strict allowlist: approved data sources, approved tools, approved outbound domains, maximum privilege level, and explicit approval requirements for side-effecting actions. This is an architectural pattern, not a formal industry standard.</p>
+</li>
+<li>
+<p><strong>Broker all enterprise model access through a controlled gateway.</strong> Do not let endpoints, scripts, and individual applications call external model APIs directly with unmanaged long-lived tokens.</p>
+</li>
+<li>
+<p><strong>Enforce egress controls for AI APIs.</strong> Allowlist approved AI provider domains and block outbound AI API traffic from systems that should not be invoking models. Treat unexpected traffic to model endpoints as a detection event.</p>
+</li>
+<li>
+<p><strong>Rotate and scope AI API tokens aggressively.</strong> Use short-lived credentials where possible, workload identity where available, separate tokens by environment and application, and revoke on role change or suspected exposure. Apply the same control standard to AI middleware secrets, package-publish tokens, and connector credentials.</p>
+</li>
+<li>
+<p><strong>Separate instructions from untrusted content.</strong> Delimit retrieved documents, emails, tickets, webpages, and attachments so the model can distinguish data from control text. Do not concatenate raw untrusted content into high-privilege instruction context.</p>
+</li>
+<li>
+<p><strong>Enforce least privilege for agents and tools.</strong> For agentic systems, map permissions explicitly to the ATLAS control model: <code>AML.M0026 Privileged AI Agent Permissions Configuration</code>, <code>AML.M0027 Single-User AI Agent Permissions Configuration</code>, and <code>AML.M0028 AI Agent Tools Permissions Configuration</code>.</p>
+</li>
+<li>
+<p><strong>Require human approval for high-impact agent actions.</strong> Sending email, executing code, modifying repositories, deleting data, or initiating financial workflows should require policy checks and human confirmation. This aligns directly to <code>AML.M0029 Human-In-the-Loop for AI Agent Actions</code>.</p>
+</li>
+<li>
+<p><strong>Restrict tool invocation on untrusted data.</strong> If an agent is processing external email, webpages, tickets, or uploaded documents, disable or heavily constrain automatic tool use. This aligns to <code>AML.M0030 Restrict AI Agent Tool Invocation on Untrusted Data</code>.</p>
+</li>
+<li>
+<p><strong>Never execute model output directly.</strong> All code, shell commands, SQL, browser actions, and infrastructure changes generated by a model should pass through validation and least-privilege execution boundaries.</p>
+</li>
+<li>
+<p><strong>Log the full decision chain.</strong> Retain prompt metadata, retrieved context references, tool invocations, outbound connectors, policy decisions, and model outputs in centralized telemetry with appropriate privacy controls.</p>
+</li>
+<li>
+<p><strong>Apply DLP and secret scanning to both prompts and outputs.</strong> Sensitive data loss can occur in either direction: user-to-model or model-to-user.</p>
+</li>
+<li>
+<p><strong>Harden approval workflows against synthetic impersonation.</strong> Payment releases, privileged account resets, and executive requests should require out-of-band verification and cryptographic or device-bound factors where possible.</p>
+</li>
+</ol>
+<h3 id="continuous-assurance">Continuous Assurance</h3>
+<ol start="13">
+<li>
+<p><strong>Run AI red teaming as a continuous process, not a one-time test.</strong> Align scenarios to OWASP 2025 risk areas such as <code>LLM01 Prompt Injection</code>, <code>LLM05 Improper Output Handling</code>, <code>LLM06 Excessive Agency</code>, and <code>LLM10 Unbounded Consumption</code>, and to ATLAS techniques such as <code>AML.T0051</code>, <code>AML.T0053</code>, <code>AML.T0080</code>, <code>AML.T0086</code>, <code>AML.T0096</code>, and <code>AML.T0034.002</code>.</p>
+</li>
+<li>
+<p><strong>Re-test on every material architecture change.</strong> Trigger AI red teaming when the model changes, the system prompt changes, a new connector or tool is added, an agent gets new permissions, or a retrieval source is widened.</p>
+</li>
+<li>
+<p><strong>Red-team prompt injection and tool abuse together.</strong> Testing prompt injection in isolation is insufficient for agentic systems. The meaningful question is whether an attacker can convert prompt influence into tool invocation, data access, or destructive action.</p>
+</li>
+<li>
+<p><strong>Reduce connector blast radius.</strong> Limit model-connected access to email, drives, source code, ticketing systems, CRMs, and browsers to the minimum data scope required for the use case.</p>
+</li>
+<li>
+<p><strong>Instrument anomaly detection for AI usage.</strong> Useful signals include unexpected model traffic, unusual token geography, abnormal prompt volume, sudden connector fan-out, unexpected tool invocation, and retrieval of sensitive repositories inconsistent with user role.</p>
+</li>
+<li>
+<p><strong>Build incident response playbooks for AI-enabled abuse.</strong> Include prompt-injection containment, token revocation, retrieved-data exposure analysis, unsafe-output forensics, agent configuration review, provider engagement procedures, and AI middleware or connector compromise response.</p>
+</li>
+</ol>
+<h3 id="strategic-direction">Strategic Direction</h3>
+<ol start="19">
+<li>
+<p><strong>Design AI systems for constrained agency by default.</strong> Give models bounded tools, bounded data, bounded time, and bounded authority.</p>
+</li>
+<li>
+<p><strong>Shift from trust-in-content to trust-in-control.</strong> The model can improve content quality for both defenders and attackers. Trust decisions must rely on identity, authorization, and policy enforcement, not on how convincing a message or meeting appears.</p>
+</li>
+</ol>
+<hr />
+<h2 id="16-key-selected-sources">16. Key Selected Sources</h2>
+<p>Quality labels: <strong>PRIMARY</strong> = government, court-derived, or direct company / platform disclosure. <strong>SECONDARY</strong> = academic preprint, vendor experiment, or media reporting with primary-document basis.</p>
+<hr />
+<p><strong>Primary sources</strong></p>
+<ul>
+<li><a href="https://atlas.mitre.org/">MITRE ATLAS, <em>ATLAS official knowledge base</em></a> and <a href="https://github.com/mitre-atlas/atlas-data">official data repository</a> — <em>PRIMARY framework source.</em> Authoritative source for <code>AML</code> tactics, techniques, and mitigations used in this revision.</li>
+<li><a href="https://www.ncsc.gov.uk/report/impact-of-ai-on-cyber-threat">NCSC, <em>The near-term impact of AI on the cyber threat</em></a> — January 24, 2024. <em>PRIMARY.</em> Baseline government assessment and probability-language model.</li>
+<li><a href="https://openai.com/index/disrupting-malicious-uses-of-ai-by-state-affiliated-threat-actors/">OpenAI, <em>Disrupting malicious uses of AI by state-affiliated threat actors</em></a> — February 14, 2024. <em>PRIMARY.</em> Core source for named state-affiliated actor use of LLMs.</li>
+<li><a href="https://openai.com/index/disrupting-deceptive-uses-of-ai-by-covert-influence-operations/">OpenAI, <em>Disrupting deceptive uses of AI by covert influence operations</em></a> — May 30, 2024. <em>PRIMARY.</em> Useful for AI-enabled influence operations and scale-vs-impact analysis.</li>
+<li><a href="https://www.microsoft.com/en-us/security/blog/2024/04/11/how-microsoft-discovers-and-mitigates-evolving-attacks-against-ai-guardrails/">Microsoft Security Blog, <em>How Microsoft discovers and mitigates evolving attacks against AI guardrails</em></a> — April 11, 2024. <em>PRIMARY.</em> Direct and indirect prompt injection; multi-turn jailbreaks; defensive controls.</li>
+<li><a href="https://www.fincen.gov/news/news-releases/fincen-issues-alert-fraud-schemes-involving-deepfake-media-targeting-financial">FinCEN, <em>Alert on Fraud Schemes Involving Deepfake Media Targeting Financial Institutions</em></a> — November 13, 2024. <em>PRIMARY.</em> U.S. regulatory warning on deepfake-enabled fraud.</li>
+<li><a href="https://cloud.google.com/blog/topics/threat-intelligence/adversarial-misuse-generative-ai">Google GTIG, <em>Adversarial Misuse of Generative AI</em></a> — January 29, 2025. <em>PRIMARY.</em> Broad provider-backed assessment of APT and IO actor misuse of Gemini.</li>
+<li><a href="https://openai.com/global-affairs/disrupting-malicious-uses-of-ai/">OpenAI, <em>Disrupting malicious uses of AI</em></a> — February 21, 2025. <em>PRIMARY.</em> Continuing public casework on scams, covert influence, and cyber misuse.</li>
+<li><a href="https://www.ic3.gov/PSA/2025/PSA250515">FBI IC3, <em>Impersonation of Senior U.S. Officials and Their Contacts</em></a> — May 15, 2025. <em>PRIMARY.</em> Official warning on impersonation campaigns affecting senior U.S. officials and their contacts.</li>
+<li><a href="https://openai.com/global-affairs/disrupting-malicious-uses-of-ai-june-2025/">OpenAI, <em>Disrupting Malicious Uses of AI: June 2025</em></a> — June 5, 2025. <em>PRIMARY.</em> Multi-network casework including cyber, scam, and deceptive employment activity.</li>
+<li><a href="https://www.anthropic.com/news/detecting-countering-misuse-aug-2025">Anthropic, <em>Detecting and countering misuse: August 2025</em></a> — August 27, 2025. <em>PRIMARY.</em> Key source for Claude Code misuse in extortion and related abuse trends.</li>
+<li><a href="https://openai.com/global-affairs/disrupting-malicious-uses-of-ai-october-2025/">OpenAI, <em>Disrupting malicious uses of AI: October 2025</em></a> — October 7, 2025. <em>PRIMARY.</em> Reports more than 40 disrupted malicious networks since threat reporting began.</li>
+<li><a href="https://www.microsoft.com/en-us/security/blog/2025/11/03/sesameop-novel-backdoor-uses-openai-assistants-api-for-command-and-control/">Microsoft Security Blog, <em>SesameOp: Novel backdoor uses OpenAI Assistants API for command and control</em></a> — November 3, 2025. <em>PRIMARY.</em> High-signal case of AI-service API abuse as an operational channel.</li>
+<li><a href="https://cloud.google.com/blog/topics/threat-intelligence/threat-actor-usage-of-ai-tools">Google GTIG, <em>Threat actor usage of AI tools</em></a> — November 5, 2025. <em>PRIMARY.</em> Key source for PROMPTSTEAL, PROMPTFLUX, QUIETVAULT, and broader AI-enabled malware observations.</li>
+<li><a href="https://www.anthropic.com/news/disrupting-AI-espionage">Anthropic, <em>Disrupting the first reported AI-orchestrated cyber espionage campaign</em></a> — November 13, 2025. <em>PRIMARY.</em> Provider disclosure on high-autonomy agentic espionage use.</li>
+<li><a href="https://www.ic3.gov/PSA/2025/PSA251219">FBI IC3, <em>Senior U.S. Officials Impersonated in Ongoing Malicious Messaging Campaign</em></a> — December 19, 2025. <em>PRIMARY.</em> AI-generated voice impersonation warning tied to sustained targeting of senior officials.</li>
+<li><a href="https://openai.com/index/disrupting-malicious-ai-uses/">OpenAI, <em>Disrupting malicious uses of AI</em></a> — February 25, 2026. <em>PRIMARY.</em> 2026 update on multi-model and cross-platform threat actor misuse.</li>
+<li><a href="https://www.microsoft.com/en-us/security/blog/2026/03/06/ai-as-tradecraft-how-threat-actors-operationalize-ai/">Microsoft Security Blog, <em>AI as tradecraft: How threat actors operationalize AI</em></a> — March 6, 2026. <em>PRIMARY.</em> Current Microsoft view on how AI is operationalized across the attack lifecycle.</li>
+<li><a href="https://www.wiz.io/blog/threes-a-crowd-teampcp-trojanizes-litellm-in-continuation-of-campaign">Wiz Research, <em>Three's a Crowd: TeamPCP trojanizes LiteLLM</em></a> — March 24, 2026. <em>PRIMARY vendor incident report.</em> Core source for the LiteLLM compromise and AI middleware supply-chain risk.</li>
+<li><a href="https://www.microsoft.com/en-us/security/blog/2026/04/06/ai-enabled-device-code-phishing-campaign-april-2026/">Microsoft Security Blog, <em>AI-enabled device code phishing campaign</em></a> — April 6, 2026. <em>PRIMARY.</em> Current case study showing AI-enhanced phishing automation and post-compromise enrichment.</li>
+<li><a href="https://www.ic3.gov/AnnualReport/Reports/2025_IC3Report.pdf">FBI IC3, <em>2025 Internet Crime Report</em></a> — available by April 2026. <em>PRIMARY.</em> First IC3 annual report to publish an AI-related descriptor and associated complaint/loss totals.</li>
+<li><a href="https://ofac.treasury.gov/system/files/126/20220516_dprk_it_worker_advisory.pdf">U.S. Treasury / OFAC, <em>Guidance on the Democratic People's Republic of Korea Information Technology Workers</em></a> — May 16, 2022. <em>PRIMARY.</em> Useful context for identity fraud and remote-worker tradecraft.</li>
+</ul>
+<p><strong>Secondary, research, and defensive framework sources</strong></p>
+<ul>
+<li><a href="https://www.hkcert.org/security-bulletin/phishing-alert-phishing-campaigns-targeting-instagram-backup-codes-to-bypass-2fa-on-the-rise_20240207">HKCERT, <em>Phishing Alert - Public should be vigilant against fraudulent video conference scam using AI Deepfake technology</em></a> — February 7, 2024. <em>SECONDARY official bulletin.</em> Hong Kong deepfake video-conference fraud summary based on police and media reporting rather than a direct victim disclosure. <em>(Editorial note: The URL slug references an unrelated Instagram 2FA phishing path; the landing-page title and body text correspond to the cited deepfake bulletin. The URL is preserved for traceability pending identification of a canonical permalink.)</em></li>
+<li><a href="https://genai.owasp.org/llmrisk/llm01-prompt-injection/">OWASP, <em>LLM01:2025 Prompt Injection</em></a> — <em>SECONDARY framework reference.</em> Direct source for the prompt-injection defensive framing used in this revision.</li>
+<li><a href="https://genai.owasp.org/llmrisk/llm052025-improper-output-handling/">OWASP, <em>LLM05:2025 Improper Output Handling</em></a> — <em>SECONDARY framework reference.</em> Direct source for the output-handling risk model used in this revision.</li>
+<li><a href="https://genai.owasp.org/llmrisk/llm062025-excessive-agency/">OWASP, <em>LLM06:2025 Excessive Agency</em></a> — <em>SECONDARY framework reference.</em> Core source for the dedicated agentic-AI risk section.</li>
+<li><a href="https://genai.owasp.org/llmrisk/llm102025-unbounded-consumption/">OWASP, <em>LLM10:2025 Unbounded Consumption</em></a> — <em>SECONDARY framework reference.</em> Direct source for the resource-consumption and denial-of-wallet framing used in this revision.</li>
+<li><a href="https://genai.owasp.org/initiatives/genai-red-teaming-initiative/">OWASP, <em>GenAI Red Teaming Initiative</em></a> — <em>SECONDARY framework reference.</em> Current OWASP initiative used to support the recommendation that AI red teaming be treated as a continuous process.</li>
+<li>Singapore government GPT-3 phishing benchmark — August 2021. <em>RESEARCH.</em> Singapore government researchers demonstrated that GPT-3-generated spear-phishing emails could match or outperform human-crafted lures in controlled conditions. <em>(Canonical source URL to be confirmed before publication; referenced in Section 4 timeline under August 2021.)</em></li>
+<li><a href="https://arxiv.org/abs/2404.08144">Richard Fang et al., <em>LLM Agents can Autonomously Exploit One-day Vulnerabilities</em></a> — submitted April 11, 2024; revised April 17, 2024. <em>RESEARCH / SECONDARY.</em> Key research signal for one-day exploitation capability.</li>
+<li><a href="https://www.trendmicro.com/vinfo/gb/security/news/cybercrime-and-digital-threats/hype-vs-reality-ai-in-the-cybercriminal-underground">Trend Micro, <em>Hype vs. Reality: AI in the Cybercriminal Underground</em></a> — August 15, 2023. <em>SECONDARY.</em> Strong corrective on WormGPT / FraudGPT claims.</li>
+<li><a href="https://www.ibm.com/think/x-force/ai-vs-human-deceit-unravelling-new-age-phishing-tactics">IBM X-Force, <em>AI vs. human deceit: Unravelling the new age of phishing tactics</em></a> — 2023. <em>SECONDARY vendor experiment.</em> Useful for productivity delta and near-parity social-engineering quality.</li>
+<li><a href="https://www.forbes.com/sites/thomasbrewster/2021/10/14/huge-bank-fraud-uses-deep-fake-voice-tech-to-steal-millions/">Forbes, <em>Fraudsters Cloned Company Director's Voice In $35 Million Heist, Police Find</em></a> — October 14, 2021. <em>SECONDARY with court-document basis.</em> Best accessible source for the 2020 UAE case.</li>
+<li><a href="https://blog.knowbe4.com/ai-used-for-social-engineering.-fraudsters-mimic-ceos-voice-in-unusual-cybercrime-case-wsj">KnowBe4 summary of Wall Street Journal reporting, <em>AI Used For Social Engineering. Fraudsters Mimic CEO's Voice in Unusual Cybercrime Case</em></a> — August 30, 2019. <em>SECONDARY.</em> Best accessible source for the 2019 UK voice-fraud case.</li>
+</ul>
+<hr />
+<p><em>Evidence cutoff: April 12, 2026. Section 8 compares full-year 2019-2025 activity; 2026 is treated separately as a partial-year update. Section 13 is a forward forecast from this baseline rather than historical event reporting.</em></p>
+<p><em>Classification: Open source / Unclassified.</em></p>
+<p><em>For corrections, additional sourcing, or technical questions: <a href="https://medium.com/@1200km/ai-in-offensive-operations-how-threat-actors-use-artificial-intelligence-4eaeeaf029a9">Medium @1200km</a></em></p>
+  <p class="back-top"><a href="#top">↑ Back to top</a></p>
+</body>
+</html>

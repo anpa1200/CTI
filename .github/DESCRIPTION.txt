@@ -1,0 +1,1 @@
+Open-source cyber threat intelligence reports: evidence-labeled assessments, SOC-oriented guidance, and defensive research. PDF and HTML with table of contents and working reference links. Handala Hack Group, Sandworm/APT44. By Andrey Pautov (@1200km). Long-form articles on Medium.

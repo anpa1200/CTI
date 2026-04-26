@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Offensive Security: Practical Attacks Against LLM Agents</title>
+  <meta name="author" content="Andrey Pautov">
+  
+  <style>
+  :root {
+    font-family: "Georgia", "Times New Roman", serif;
+    line-height: 1.7;
+    color: #1a1a1a;
+    --toc-bg: #f8f9fa;
+    --border: #dee2e6;
+    --link: #0a5eb2;
+    --link-visited: #551a8b;
+    --code-bg: #f1f3f4;
+  }
+  body { margin: 0; padding: 0; max-width: 52rem; margin-left: auto; margin-right: auto; padding: 2rem 1.5rem 3rem; }
+  .doc-meta {
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 0.875rem;
+    color: #495057;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .doc-meta a { color: var(--link); }
+  h1 { font-size: 1.75rem; font-weight: 700; margin-top: 0; margin-bottom: 0.5rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; }
+  h2 { font-size: 1.35rem; margin-top: 2.5rem; margin-bottom: 0.75rem; scroll-margin-top: 1rem; }
+  h3 { font-size: 1.15rem; margin-top: 1.75rem; margin-bottom: 0.5rem; }
+  h4 { font-size: 1.05rem; margin-top: 1.25rem; margin-bottom: 0.4rem; }
+  nav.toc { background: var(--toc-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1rem 1.5rem; margin: 1.5rem 0 2rem; }
+  nav.toc ul { list-style: none; padding-left: 0; margin: 0; }
+  nav.toc li { margin: 0.4rem 0; }
+  nav.toc a { color: var(--link); text-decoration: none; }
+  nav.toc a:hover { text-decoration: underline; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  a:visited { color: var(--link-visited); }
+  code { font-family: "Consolas", "Monaco", monospace; background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-size: 0.88em; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 5px; padding: 1rem 1.2rem; overflow-x: auto; }
+  pre code { background: none; padding: 0; font-size: 0.85em; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0 1.5rem; font-size: 0.9em; }
+  th { background: #e9ecef; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.75rem; text-align: left; }
+  tr:nth-child(even) td { background: #f8f9fa; }
+  blockquote { border-left: 3px solid var(--border); margin: 1rem 0; padding: 0.5rem 1.2rem; color: #495057; font-style: italic; }
+  ul, ol { margin: 0.75rem 0 1.25rem 1.5rem; padding-left: 1.5rem; }
+  li { margin: 0.35rem 0; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  p { margin: 0.75rem 0; }
+  .back-top { margin-top: 2.5rem; font-size: 0.9rem; color: #6c757d; }
+  @media print {
+    body { padding: 1rem; }
+    nav.toc { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+  <header class="doc-meta">
+    <p>Author: <a href="https://medium.com/@1200km">Andrey Pautov</a>. </p>
+  </header>
+  <h1 id="ai-offensive-security-practical-attacks-against-llm-agents">AI Offensive Security: Practical Attacks Against LLM Agents</h1>
+<h2 id="red-team-and-appsec-practitioner-guide">Red-Team and AppSec Practitioner Guide</h2>
+<h2 id="introduction">Introduction</h2>
+<p>LLM agents merge low-trust data ingestion, probabilistic planning, and high-impact tool execution into a single runtime path. That collapses traditional control boundaries: untrusted content can influence planning, planning can invoke privileged actions, and side effects can occur before deterministic policy checks are applied. For red teams and AppSec, the attack surface is no longer only APIs and code; it is the instruction supply chain across prompts, retrieval, memory, and tools.<a href="https://arxiv.org/abs/2302.12173">[1]</a> This broadly aligns with OWASP LLM risks and MITRE ATLAS adversary behaviors.<a href="https://owasp.org/www-project-top-10-for-large-language-model-applications/">[2]</a> <a href="https://atlas.mitre.org/">[3]</a></p>
+<p>Methodology: this guide is derived from public security research, offensive testing literature, framework taxonomies, and reproducible PoC patterns. Claims are labeled using three evidence tiers: <code>Confirmed public incident</code>, <code>Confirmed public research/PoC</code>, and <code>Plausible, not publicly confirmed</code>. Where broad production-scale empirical confirmation is lacking, that gap is explicitly stated rather than inferred.<a href="https://arxiv.org/abs/2302.12173">[1]</a> <a href="https://owasp.org/www-project-top-10-for-large-language-model-applications/">[2]</a> <a href="https://atlas.mitre.org/">[3]</a></p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol>
+<li>Introduction</li>
+<li>Attack Techniques</li>
+<li>Safe Lab Walkthrough (Local-Only)</li>
+<li>Detection Engineering</li>
+<li>Tactical Hardening Checklist</li>
+<li>Expanded Attack Catalog for Full-Spectrum Testing</li>
+<li>AI-Driven Tool Attack Testing Matrix</li>
+<li>How to Run a Full Attack Campaign (Repeatable)</li>
+<li>Public Evidence Discipline</li>
+<li>Appendices and References</li>
+</ol>
+<hr />
+<h2 id="2-attack-techniques">2) Attack Techniques</h2>
+<h3 id="threat-model-applies-to-all-attacks">Threat Model (applies to all attacks)</h3>
+<ul>
+<li><strong>Actor A:</strong> external attacker with write access to low-trust data sources (uploads, web content, shared docs, public feeds).</li>
+<li><strong>Actor B:</strong> malicious or compromised end user with direct prompt/session access.</li>
+<li><strong>Actor C:</strong> compromised or malicious tool/plugin/MCP provider in the integration supply chain.</li>
+</ul>
+<h3 id="attack-1-indirect-prompt-injection-via-ragdocuments">Attack 1: Indirect Prompt Injection via RAG/Documents</h3>
+<ul>
+<li><strong>Actor model:</strong> A, B</li>
+<li><strong>Name:</strong> Indirect prompt injection (document-borne instruction takeover)</li>
+<li><strong>Realistic scenario:</strong> SOC assistant summarizes uploaded incident reports and can call <code>email_send</code>, <code>ticket_create</code>, and <code>kb_update</code>. A poisoned PDF contains hidden instructions to override normal flow.</li>
+<li><strong>Prerequisites:</strong></li>
+<li>Retrieval from low/medium-trust sources</li>
+<li>Retrieved text inserted into model context without strict instruction/data separation</li>
+<li>Side-effect tools enabled</li>
+<li><strong>Step-by-step execution:</strong><br />
+  1. Add poisoned content to a likely-to-be-retrieved source.<br />
+  2. Include imperative override language and target tool-action phrasing.<br />
+  3. Trigger a query that retrieves the poisoned chunk.<br />
+  4. Observe model plan shift and sensitive tool call.</li>
+<li><strong>Impact:</strong> unauthorized actions, data leakage, workflow tampering</li>
+<li><strong>Why it works (exact flaw):</strong> no enforceable boundary between evidence text and executable control instructions</li>
+<li><strong>Practical SOC detection logic:</strong> correlate low-trust retrieval with subsequent sensitive tool invocation and intent divergence</li>
+<li><strong>Hardening:</strong> strict channel separation (<code>instructions</code> vs <code>evidence</code>), trust-aware execution policy, and content sanitization</li>
+<li><strong>Public case status:</strong> <code>Confirmed public research/PoC</code> (indirect prompt injection demonstrated against tool-enabled assistants).<a href="https://arxiv.org/abs/2302.12173">[1]</a></li>
+</ul>
+<h3 id="attack-2-toolfunction-abuse-through-argument-steering">Attack 2: Tool/Function Abuse Through Argument Steering</h3>
+<ul>
+<li><strong>Actor model:</strong> A, B</li>
+<li><strong>Name:</strong> Tool abuse via semantically valid but policy-violating arguments</li>
+<li><strong>Realistic scenario:</strong> assistant has <code>sql_query(readonly=true)</code> and <code>crm_export(fields=...)</code>; attacker steers broad scope exports</li>
+<li><strong>Prerequisites:</strong> coarse tool-level allow rules, weak argument-level authorization, no row/field controls</li>
+<li><strong>Step-by-step execution:</strong> prompt toward operationally plausible but over-broad parameters (<code>*</code>, full date range, unrestricted tenants)</li>
+<li><strong>Impact:</strong> mass over-collection and policy bypass</li>
+<li><strong>Why it works:</strong> authorization anchored to tool identity, not to argument semantics or result sensitivity</li>
+<li><strong>Practical SOC detection logic:</strong> outlier detection on argument cardinality, time ranges, and result size</li>
+<li><strong>Hardening:</strong> ABAC/ReBAC at argument and result layers, schema guardrails, per-tool max scope</li>
+<li><strong>Public case status:</strong> <code>Plausible, not publicly confirmed</code> (commonly found in red-team assessments, sparse public forensics)</li>
+</ul>
+<h3 id="attack-3-data-exfiltration-through-agent-actions">Attack 3: Data Exfiltration Through Agent Actions</h3>
+<ul>
+<li><strong>Actor model:</strong> A, B, C</li>
+<li><strong>Name:</strong> Action-channel exfiltration (email/webhook/ticket sink abuse)</li>
+<li><strong>Realistic scenario:</strong> attacker causes assistant to embed sensitive records into outbound update sent to attacker-controlled destination</li>
+<li><strong>Prerequisites:</strong> outbound action tools, weak destination controls, no DLP on tool arguments</li>
+<li><strong>Step-by-step execution:</strong> induce summarization + outbound action to first-seen domain/recipient</li>
+<li><strong>Impact:</strong> covert data theft under normal business workflow appearance</li>
+<li><strong>Why it works:</strong> egress policy checks network endpoints, but not semantic sensitivity in agent payloads</li>
+<li><strong>Practical SOC detection logic:</strong> sensitive-entity detection in tool args + first-seen destination correlation</li>
+<li><strong>Hardening:</strong> destination allow-lists, inline payload DLP, mandatory approval for novel destinations</li>
+<li><strong>Public case status:</strong> <code>Plausible, not publicly confirmed</code></li>
+</ul>
+<h3 id="attack-4-memory-poisoning-long-term-persistence">Attack 4: Memory Poisoning (Long-Term Persistence)</h3>
+<ul>
+<li><strong>Actor model:</strong> A, B</li>
+<li><strong>Name:</strong> Persistent memory poisoning</li>
+<li><strong>Realistic scenario:</strong> attacker inserts durable instruction-like memory entry that influences future unrelated sessions</li>
+<li><strong>Prerequisites:</strong> writable memory, weak schema/provenance/TTL controls, automatic memory reuse</li>
+<li><strong>Step-by-step execution:</strong> submit seemingly benign "preference" update that stores imperative directive</li>
+<li><strong>Impact:</strong> persistent behavior compromise across sessions</li>
+<li><strong>Why it works:</strong> memory plane lacks integrity controls and type restrictions</li>
+<li><strong>Practical SOC detection logic:</strong> detect instruction-like text in memory writes from low-trust provenance</li>
+<li><strong>Hardening:</strong> typed memory schema, signed provenance, trust labels, TTL, approval for high-impact memory keys</li>
+<li><strong>Public case status:</strong> <code>Plausible, not publicly confirmed</code> — Direct PoC citation for memory persistence manipulation is pending author verification.</li>
+</ul>
+<h3 id="attack-5-goal-hijacking-instruction-override">Attack 5: Goal Hijacking / Instruction Override</h3>
+<ul>
+<li><strong>Actor model:</strong> A, B</li>
+<li><strong>Name:</strong> Goal hijacking via priority inversion</li>
+<li><strong>Realistic scenario:</strong> retrieved text introduces urgent "compliance override" subgoal unrelated to original user objective</li>
+<li><strong>Prerequisites:</strong> mutable planner goals, weak instruction hierarchy enforcement</li>
+<li><strong>Step-by-step execution:</strong> inject authority-framed instruction that supersedes original goal and triggers side-effect actions</li>
+<li><strong>Impact:</strong> unauthorized operational actions and objective drift</li>
+<li><strong>Why it works:</strong> objective protection and instruction precedence are weakly enforced</li>
+<li><strong>Practical SOC detection logic:</strong> semantic mismatch between declared goal and executed tool intent</li>
+<li><strong>Hardening:</strong></li>
+<li><strong>Cryptographic control:</strong> immutable run-goal hash signed at task start</li>
+<li><strong>Policy control:</strong> explicit policy decision requiring tool-intent alignment with approved task objective</li>
+<li>reject non-system imperative meta-instructions from low-trust channels</li>
+<li><strong>Public case status:</strong> <code>Confirmed public research/PoC</code> (goal override behaviors shown in prompt-injection research and red-team demonstrations).<a href="https://arxiv.org/abs/2302.12173">[1]</a> <a href="https://owasp.org/www-project-top-10-for-large-language-model-applications/">[2]</a></li>
+</ul>
+<h3 id="attack-6-tool-output-injection-second-order-injection">Attack 6: Tool-Output Injection (Second-Order Injection)</h3>
+<ul>
+<li><strong>Actor model:</strong> A, C</li>
+<li><strong>Name:</strong> Tool-output injection</li>
+<li><strong>Realistic scenario:</strong> external enrichment tool returns hidden directives in response fields; model consumes output and executes follow-on privileged actions</li>
+<li><strong>Prerequisites:</strong> tool outputs fed back into context unsanitized, no trust downgrade on tool responses</li>
+<li><strong>Step-by-step execution:</strong> influence upstream response -&gt; inject instruction-like payload -&gt; trigger sensitive follow-on tool</li>
+<li><strong>Impact:</strong> pivot from low-trust integration data to privileged actions</li>
+<li><strong>Why it works:</strong> second-order trust confusion (data interpreted as control)</li>
+<li><strong>Practical SOC detection logic:</strong> detect chain <code>untrusted_tool_output -&gt; model_decision -&gt; sensitive_tool_call</code> without sanitization/policy checkpoint</li>
+<li><strong>Hardening:</strong> structural parsing + sanitization of tool outputs; enforce a <strong>policy mediation checkpoint</strong> (see Section 4 Definitions)</li>
+<li><strong>Public case status:</strong> <code>Confirmed public research/PoC</code> (indirect injection via integrated tool/data paths demonstrated).<a href="https://arxiv.org/abs/2302.12173">[1]</a></li>
+</ul>
+<h3 id="attack-7-malicious-mcpplugintool-supply-chain">Attack 7: Malicious MCP/Plugin/Tool Supply Chain</h3>
+<ul>
+<li><strong>Actor model:</strong> C</li>
+<li><strong>Name:</strong> Agent toolchain supply-chain compromise</li>
+<li><strong>Realistic scenario:</strong> third-party MCP/tool integration update over-requests permissions, logs prompts, or manipulates tool output</li>
+<li><strong>Prerequisites:</strong> dynamic tool onboarding, weak signing/review, broad runtime privileges</li>
+<li><strong>Step-by-step execution:</strong> malicious package/update introduced -&gt; trusted by runtime -&gt; exfiltration or abuse through normal tool path</li>
+<li><strong>Impact:</strong> tenant-wide compromise and persistent backdoor in automation fabric</li>
+<li><strong>Why it works:</strong> integration supply chain is trusted without software-grade control rigor</li>
+<li><strong>Practical SOC detection logic:</strong> registry hash/scope drift + first-seen egress after plugin update</li>
+<li><strong>Hardening:</strong> signed artifacts, pinned versions/hashes, isolated runtime, explicit credential brokerage</li>
+<li><strong>Public case status:</strong> <code>Plausible, not publicly confirmed</code> for LLM-agent ecosystems; analogous high-impact software supply-chain failures include SolarWinds and XZ Utils.<a href="https://www.cisa.gov/news-events/cybersecurity-advisories/aa20-352a">[8]</a> <a href="https://www.openwall.com/lists/oss-security/2024/03/29/4">[9]</a></li>
+</ul>
+<h3 id="attack-8-retrieval-poisoning">Attack 8: Retrieval Poisoning</h3>
+<ul>
+<li><strong>Actor model:</strong> A, B</li>
+<li><strong>Name:</strong> Retrieval poisoning (index/ranking manipulation)</li>
+<li><strong>Realistic scenario:</strong> attacker inserts semantically similar poisoned docs that outrank legitimate SOP content in top-k</li>
+<li><strong>Prerequisites:</strong> weak ingestion validation, trust-agnostic ranking, automatic indexing of low-trust sources</li>
+<li><strong>Step-by-step execution:</strong> inject embedding-mimic docs -&gt; reindex -&gt; trigger query -&gt; poisoned chunk selected</li>
+<li><strong>Impact:</strong> repeatable misguidance and policy-unsafe downstream actions</li>
+<li><strong>Why it works:</strong> retrieval relevance optimized without integrity/trust weighting</li>
+<li><strong>Practical SOC detection logic:</strong> detect top-k provenance drift and sudden dominance by newly ingested low-trust source</li>
+<li><strong>Hardening:</strong> trust-weighted ranking, signed/approved ingestion, corpus tiering (curated vs uncurated)</li>
+<li><strong>Public case status:</strong> <code>Plausible, not publicly confirmed</code> at broad enterprise incident level</li>
+</ul>
+<hr />
+<h2 id="3-safe-lab-walkthrough-local-only">3) Safe Lab Walkthrough (Local-Only)</h2>
+<h3 id="lab-objective">Lab Objective</h3>
+<p>Reproduce all major attack classes safely with local data, stub tools, synthetic secrets, and no external side effects.</p>
+<h3 id="lab-architecture">Lab Architecture</h3>
+<ul>
+<li><strong>LLM runtime:</strong> local model endpoint or deterministic mock planner</li>
+<li><strong>RAG corpus:</strong> <code>./lab/corpus/</code></li>
+<li><strong>Index:</strong> local vector store (<code>faiss</code>/SQLite)</li>
+<li><strong>Memory:</strong> <code>./lab/state/memory.json</code></li>
+<li><strong>Stub tools only:</strong></li>
+<li><code>email_send_stub(to, subject, body)</code> -&gt; write JSON to sink</li>
+<li><code>webhook_post_stub(url, payload)</code> -&gt; write JSON to sink</li>
+<li><code>ticket_create_stub(project, title, description)</code> -&gt; write JSON to sink</li>
+<li><code>db_query_stub(query, limit)</code> -&gt; synthetic rows only</li>
+<li><code>tool_registry_stub(action, manifest)</code> -&gt; local registry simulation only</li>
+<li><strong>Logs:</strong> <code>./lab/logs/trace.jsonl</code>, <code>./lab/logs/actions.jsonl</code>, <code>./lab/logs/registry.jsonl</code></li>
+<li><strong>Policy modes:</strong> <code>vulnerable</code>, <code>secure</code><br />
+Network isolation requirement: the lab host must have no access to production credentials, production network segments, or external internet egress during attack testing. Install all dependencies before isolating the environment, then disconnect.</li>
+</ul>
+<h3 id="sample-requirementstxt-pinned-stub">Sample <code>requirements.txt</code> (pinned stub)</h3>
+<pre><code class="language-text">fastapi==0.115.0
+uvicorn==0.30.6
+pydantic==2.9.2
+faiss-cpu==1.8.0.post1
+sentence-transformers==3.0.1
+numpy==1.26.4
+pandas==2.2.2
+scikit-learn==1.5.1
+opentelemetry-sdk==1.27.0
+pyyaml==6.0.2
+</code></pre>
+<p>Before use, verify all pinned versions against current vulnerability advisories using pip-audit, OSV.dev, or your organization's SCA tooling. Version numbers reflect a point-in-time snapshot and will age.</p>
+<h3 id="malicious-document-examples-safe">Malicious Document Examples (safe)</h3>
+<ul>
+<li><strong>Instruction obfuscation techniques to test (realistic):</strong></li>
+<li>zero-width Unicode character insertion</li>
+<li>homoglyph substitution (e.g., Cyrillic/Latin lookalikes)</li>
+<li>instruction fragmentation across retrieved chunks (no single chunk appears malicious)</li>
+</ul>
+<h3 id="attack-steps-and-expected-behavior">Attack Steps and Expected Behavior</h3>
+<p>Run each attack twice: <code>vulnerable</code> then <code>secure</code>.</p>
+<ol>
+<li><strong>Indirect injection:</strong> poisoned document retrieved.</li>
+<li><strong>Tool abuse:</strong> over-broad export/query arguments.</li>
+<li><strong>Exfiltration:</strong> outbound action to first-seen sink.</li>
+<li><strong>Memory poisoning:</strong> low-trust instruction-like write.</li>
+<li><strong>Goal hijack:</strong> injected objective override.</li>
+<li><strong>Tool-output injection:</strong> enrichment tool returns instruction payload.</li>
+<li><strong>Supply-chain drift:</strong> altered tool manifest with widened scopes.</li>
+<li><strong>Retrieval poisoning:</strong> embedding-mimic corpus spam.</li>
+</ol>
+<ul>
+<li><strong>Vulnerable expected:</strong> unsafe tool emissions and executions, memory persistence, exfil payloads accepted.</li>
+<li><strong>Secure expected:</strong> policy denials or step-up approvals, memory write rejection/downgrade, outbound blocking/redaction, registry drift quarantine.</li>
+</ul>
+<h3 id="logs-to-collect">Logs to Collect</h3>
+<ul>
+<li><code>trace_id</code>, <code>session_id</code>, <code>agent_id</code>, <code>user_goal_hash</code></li>
+<li>retrieval provenance (<code>source_uri</code>, <code>source_trust</code>, <code>chunk_id</code>)</li>
+<li>model decision metadata (<code>decision_type</code>, <code>policy_gate_result</code>)</li>
+<li>tool envelope (<code>tool_name</code>, <code>tool_args_hash</code>, <code>tool_args_sensitivity_score</code>, <code>approval_state</code>)</li>
+<li>memory writes (<code>key</code>, <code>value_type</code>, <code>provenance</code>, <code>ttl</code>, <code>decision</code>)</li>
+<li>outbound sink metadata (<code>destination_domain</code>, <code>is_new_destination</code>)</li>
+<li>tool registry snapshot hashes and diffs</li>
+</ul>
+<hr />
+<h2 id="4-detection-engineering">4) Detection Engineering</h2>
+<h3 id="definitions">Definitions</h3>
+<ul>
+<li><strong>Policy engine:</strong> deterministic authorization component that evaluates runtime facts (trust labels, sensitivity, actor, tool, arguments, destination, approval state) and returns <code>allow | deny | require_approval</code>.</li>
+<li><strong>Policy mediation checkpoint:</strong> a deterministic rule-evaluation step, separate from the LLM reasoning path, that must explicitly authorize privileged follow-on actions using trust labels, provenance, and policy rules before they execute.</li>
+<li><strong>Reference architectures:</strong></li>
+<li>Open Policy Agent (OPA) with Rego policies</li>
+<li>Amazon Cedar policy language and authorization model</li>
+</ul>
+<blockquote>
+<h2 id="custom-instrumentation-required">Custom instrumentation required</h2>
+<p>The following fields are non-standard and generally do <strong>not</strong> exist in default SIEM ingestion. You must instrument them in the agent runtime and forward them into telemetry:<br />
+- <code>source_trust</code><br />
+- <code>sensitivity</code><br />
+- <code>is_new_destination</code><br />
+- <code>approval_state</code><br />
+- <code>tool_args_sensitivity_score</code><br />
+- <code>dlp_hit</code> (DLP classification label attached to tool_call events by inline DLP component; classification output must be forwarded as a structured telemetry field, not parsed from log text)</p>
+</blockquote>
+<h3 id="translator-note">Translator Note</h3>
+<p>All rules below are <strong>PSEUDOCODE — requires translation to target SIEM</strong> (Sigma correlation, Splunk SPL, KQL, Sentinel, Elastic, Chronicle, etc.). Single-event Sigma can express parts of these detections, but production-grade coverage requires multi-event joins keyed by <code>trace_id</code>/<code>session_id</code>.</p>
+<h3 id="detection-1-pseudocode-low-trust-document-sensitive-tool-call">Detection 1 (PSEUDOCODE): Low-Trust Document -&gt; Sensitive Tool Call</h3>
+<pre><code class="language-yaml">title: LowTrustRetrievalFollowedBySensitiveTool
+type: multi_event_join
+join_key: trace_id
+events:
+  - e1:
+      event_type: retrieval
+      source_trust:
+        - user_upload
+        - external_web
+  - e2:
+      event_type: tool_call
+      sensitivity:
+        - confidential
+        - secret
+condition: e1 followed_by e2 where e2.trace_id == e1.trace_id
+correlation_window: configure per environment mean agent task completion time; starting value 300s for most deployments
+falsepositives:
+  - legitimate analyst workflows where low-trust documents are intentionally processed and approved
+</code></pre>
+<h3 id="detection-2-pseudocode-external-content-outbound-action">Detection 2 (PSEUDOCODE): External Content -&gt; Outbound Action</h3>
+<pre><code class="language-yaml">title: ExternalContentToOutboundChannel
+type: multi_event_join
+join_key: trace_id
+events:
+  - e1:
+      event_type: retrieval
+      source_trust: external_web
+  - e2:
+      event_type: tool_call
+      tool_name:
+        - email_send
+        - webhook_post
+        - ticket_create
+      approval_state: not_approved_via_human
+condition: e1 followed_by e2 where e2.trace_id == e1.trace_id
+falsepositives:
+  - sanctioned automations for public-intel reporting
+</code></pre>
+<h3 id="detection-3-pseudocode-suspicious-memory-write">Detection 3 (PSEUDOCODE): Suspicious Memory Write</h3>
+<pre><code class="language-yaml">title: InstructionLikeMemoryWrite
+type: single_or_multi_event
+selection:
+  event_type: memory_write
+  source_trust:
+    - user_upload
+    - external_web
+    - tool_output
+secondary_conditions:
+  keyword_heuristic:
+    memory_value_regex: '(always|ignore|override|from now on|system instruction)'
+    comment: &quot;keyword match is intentionally secondary; do not promote it to a standalone alert.&quot;
+condition: selection and secondary_conditions.keyword_heuristic
+falsepositives:
+  - benign descriptive text containing these keywords
+</code></pre>
+<h4 id="false-positive-guidance">False positive guidance</h4>
+<ul>
+<li>These keywords are high-frequency in normal language and should not be used alone.</li>
+<li>Mitigation (a): require co-occurrence with imperative sentence structure detection (e.g., command verbs, second-person directives).</li>
+<li>Mitigation (b): scope to memory writes from low-trust provenance only (<code>user_upload</code>, <code>external_web</code>, <code>tool_output</code>), not trusted/system channels.</li>
+</ul>
+<h3 id="detection-4-moved">Detection 4 moved</h3>
+<p>The sequence-anomaly rule (Markov/ML-based) is intentionally moved to <strong>Appendix A: Advanced ML-based detections</strong> because it is not a standard SIEM rule.</p>
+<h3 id="detection-5-pseudocode-sensitive-data-in-tool-arguments">Detection 5 (PSEUDOCODE): Sensitive Data in Tool Arguments</h3>
+<pre><code class="language-yaml">title: SensitiveContentInToolArgs
+type: single_event
+selection:
+  event_type: tool_call
+  dlp_hit:
+    - api_key
+    - access_token
+    - customer_pii
+    - credential_pattern
+condition: selection
+falsepositives:
+  - red-team simulation payloads
+  - synthetic test fixtures with fake credentials
+</code></pre>
+<h3 id="detection-6-pseudocode-new-recipientdomain">Detection 6 (PSEUDOCODE): New Recipient/Domain</h3>
+<pre><code class="language-yaml">title: FirstSeenRecipientOrDomain
+type: single_event
+selection:
+  event_type: tool_call
+  tool_name:
+    - email_send
+    - webhook_post
+  is_new_destination: true
+  sensitivity:
+    - internal
+    - confidential
+    - secret
+condition: selection
+falsepositives:
+  - approved onboarding of new partners/vendors
+</code></pre>
+<h3 id="detection-7-pseudocode-tool-registry-drift">Detection 7 (PSEUDOCODE): Tool Registry Drift</h3>
+<pre><code class="language-yaml">title: ToolRegistryDrift
+type: single_event
+selection_base:
+  event_type: tool_registry_change
+selection_new_tool:
+  new_tool_added: true
+selection_scope_expansion:
+  scope_expansion: true
+selection_hash_change:
+  artifact_hash_changed: true
+  # Pseudocode: trigger if ANY of the following sub-conditions are true (Sigma: condition: 1 of selection_*; KQL/SPL: use OR-clause between sub-filters)
+selection_ticket_missing:
+  change_ticket_ref: null
+condition: selection_base and selection_ticket_missing and (selection_new_tool or selection_scope_expansion or selection_hash_change)
+falsepositives:
+  - emergency changes where ticket linkage lags ingestion
+</code></pre>
+<hr />
+<h2 id="5-tactical-hardening-checklist">5) Tactical Hardening Checklist</h2>
+<h3 id="rag-controls">RAG Controls</h3>
+<ul>
+<li>Separate instruction and evidence channels at parser/runtime layers.</li>
+<li>Trust-label all chunks; include trust in ranking and execution decisions.</li>
+<li>Quarantine chunks with injection markers before retrieval-time use.</li>
+<li>Partition curated policy corpus from uncurated corpora.</li>
+</ul>
+<h3 id="tool-permissions">Tool Permissions</h3>
+<ul>
+<li>Enforce least privilege per tool, argument, and result shape.</li>
+<li>Add row/field-level authorization in downstream data systems.</li>
+<li>Cap parameter scope (time range, record count, recipient count).</li>
+<li>Deny dangerous defaults (<code>*</code>, unbounded ranges, wildcard destinations).</li>
+<li>Enforce a policy mediation checkpoint before privileged follow-on actions (see Section 4 Definitions).</li>
+</ul>
+<h3 id="human-approvals">Human Approvals</h3>
+<ul>
+<li>Require step-up approval for low-trust influenced sensitive actions.</li>
+<li>Require approval for first-seen destination/recipient.</li>
+<li><strong>Dual control:</strong> two-person authorization requirement; both approvers must independently authenticate and approve the action.</li>
+</ul>
+<h3 id="egress-control">Egress Control</h3>
+<ul>
+<li>Destination allow-list for outbound channels.</li>
+<li>Inline payload DLP for tool args and output payloads.</li>
+<li>Block direct external webhooks unless explicitly approved.</li>
+</ul>
+<h3 id="memory-governance">Memory Governance</h3>
+<ul>
+<li>Typed schema; prohibit free-form executable directives.</li>
+<li>Signed provenance, trust labels, TTL, and rollback capability.</li>
+<li>Integrity scans for instruction-like drift and key collisions.</li>
+</ul>
+<h3 id="trace-logging">Trace Logging</h3>
+<ul>
+<li>Persist provenance, policy decisions, and approval states for replay.</li>
+<li>Store immutable trace/audit logs and registry snapshots.</li>
+</ul>
+<h3 id="mcpplugin-review">MCP/Plugin Review</h3>
+<ul>
+<li><code>Tool manifest</code>: declarative metadata describing a tool's identity, endpoints, capabilities, permissions, and version/hash.</li>
+<li><code>Scopes</code>: fine-grained permission boundaries defining what a tool can access or execute.</li>
+<li>Apply signed artifacts, pinned versions/hashes, isolated runtimes, and credential brokering.</li>
+<li>For MCP-style integrations, align with MCP specification security expectations and explicit scope governance.<a href="https://modelcontextprotocol.io/">[4]</a></li>
+</ul>
+<h3 id="red-team-test-cases-continuous">Red-Team Test Cases (Continuous)</h3>
+<ul>
+<li>Indirect injection from uploaded and web-retrieved sources.</li>
+<li>Tool-output injection for every external integration.</li>
+<li>Memory poisoning with delayed-trigger validation.</li>
+<li>Exfil to first-seen destinations with sensitive payloads.</li>
+<li>Retrieval poisoning and ranking manipulation.</li>
+<li>Registry drift and malicious plugin update simulation.</li>
+</ul>
+<hr />
+<h2 id="6-expanded-attack-catalog-for-full-spectrum-testing">6) Expanded Attack Catalog for Full-Spectrum Testing</h2>
+<h3 id="61-inputcontext-plane">6.1 Input/Context Plane</h3>
+<ul>
+<li>direct prompt injection</li>
+<li>indirect prompt injection</li>
+<li>multimodal injection (OCR/metadata text)</li>
+<li>obfuscation bypass — Safe test: document containing zero-width Unicode character sequences, homoglyph substitution, or imperative instructions fragmented across multiple retrieved chunks with no single chunk appearing malicious in isolation.</li>
+<li>context flooding/truncation</li>
+<li>delimiter/parser confusion</li>
+</ul>
+<h3 id="62-retrievalknowledge-plane">6.2 Retrieval/Knowledge Plane</h3>
+<ul>
+<li>retrieval poisoning</li>
+<li>embedding collision/mimicry</li>
+<li>metadata poisoning</li>
+<li>index desynchronization</li>
+<li><strong>cross-tenant retrieval bleed</strong></li>
+<li>ranking abuse via keyword stuffing</li>
+</ul>
+<h4 id="cross-tenant-retrieval-bleed-minimum-test-package">Cross-tenant retrieval bleed: minimum test package</h4>
+<ul>
+<li><strong>Attack scenario:</strong> a multi-tenant assistant incorrectly scopes vector queries, returning tenant B chunk IDs when tenant A issues a semantically similar query.</li>
+<li><strong>Detection rule (PSEUDOCODE):</strong></li>
+</ul>
+<pre><code class="language-yaml">title: CrossTenantRetrievalBleed
+type: single_event
+selection:
+  event_type: retrieval
+# All retrieval events are in scope; requester_tenant_id filter is not
+# applied in selection — the inequality is enforced in condition only.
+condition: selection and retrieved_chunk_tenant_id != requester_tenant_id
+falsepositives:
+  - approved cross-tenant managed-service operations with explicit break-glass ticket
+</code></pre>
+<ul>
+<li><strong>Hardening control:</strong> enforce tenant filter at index query layer plus post-retrieval authorization check (<code>requester_tenant_id == chunk_tenant_id</code>) before context assembly.</li>
+</ul>
+<h3 id="63-planningorchestration-plane">6.3 Planning/Orchestration Plane</h3>
+<ul>
+<li>goal hijacking</li>
+<li>planner state poisoning</li>
+<li>verification-step skipping</li>
+<li>forbidden-subtask smuggling</li>
+</ul>
+<h3 id="64-tool-plane-ai-driven-tools-included">6.4 Tool Plane (AI-driven tools included)</h3>
+<ul>
+<li>function argument abuse</li>
+<li>tool-output injection</li>
+<li>parameter smuggling</li>
+<li>chained tool exfiltration</li>
+<li>side-effect laundering via ticket/wiki/comms tools</li>
+<li>tool selection manipulation (attacker steers agent to choose a higher-privilege tool over an equivalent lower-privilege option)</li>
+<li>command-template injection into code-exec tools (injecting shell or interpreter commands through tool parameter fields)</li>
+<li>prompt injection into downstream LLM tools (agent-to-agent injection where one model's output becomes another's input without sanitization)</li>
+<li>privilege pivot via helper tools with broader scopes (using a low-sensitivity utility tool whose implementation has access to broader resources)</li>
+<li>autonomous retries exploiting race windows (repeated tool invocations during transient permission or state windows)</li>
+</ul>
+<h3 id="65-identityapproval-plane">6.5 Identity/Approval Plane</h3>
+<ul>
+<li>session fixation</li>
+<li>approval spoofing</li>
+<li>Approval fatigue via prompt flooding: repeated low-stakes or identical approval requests that desensitize human-in-the-loop reviewers, making them more likely to approve a high-stakes action embedded in the sequence.</li>
+<li>principal confusion (human vs service agent)</li>
+<li>cross-session memory carryover abuse (exploiting memory state persisted from a prior session to influence a new session's authorization context)</li>
+</ul>
+<h3 id="66-memory-plane">6.6 Memory Plane</h3>
+<ul>
+<li>long-term memory poisoning</li>
+<li>key collision overwrite</li>
+<li>delayed trigger replay</li>
+<li>policy-memory confusion: facts and executable directives stored in the same untyped memory namespace, enabling directives to masquerade as facts</li>
+<li>temporal poisoning: manipulating memory TTL or expiry metadata to make transient attacker-authored entries persist beyond their intended lifetime</li>
+</ul>
+<h3 id="67-supply-chain-and-runtime-plane">6.7 Supply Chain and Runtime Plane</h3>
+<ul>
+<li>malicious plugin/MCP tool package</li>
+<li>update-channel compromise</li>
+<li>runtime secret exposure</li>
+<li><strong>denial of wallet</strong> (adapted from cloud security terminology): forced cost/resource exhaustion by driving excessive token/tool usage</li>
+</ul>
+<p>(Note: attack categories covering model/output-layer and runtime/infrastructure vectors are intentionally omitted from this revision; they will be covered in a companion guide.)</p>
+<h3 id="68-multi-agent-and-agent-to-agent-attacks">6.8 Multi-Agent and Agent-to-Agent Attacks</h3>
+<ul>
+<li>compromised delegate agent sends malicious plan to coordinator</li>
+<li>trust transitivity abuse: agent A trusts agent B which trusts agent C; compromising C grants transitive influence over A</li>
+<li>message bus injection: injecting instructions into shared inter-agent communication channels</li>
+<li>role confusion in coordinator/worker topology: worker claims coordinator authority or coordinator fails to re-validate worker outputs</li>
+<li>cross-agent memory contamination: one agent's poisoned memory influences shared or downstream agent state</li>
+</ul>
+<p>Safe emulation: run coordinator and worker as separate local stubs. Inject malicious content into the worker stub's output. Observe whether the coordinator executes privileged actions without re-validation. Use only stub tools and synthetic credentials; no production systems.</p>
+<p>Key detections:<br />
+- inter-agent messages accepted as authoritative without cryptographic or policy provenance verification<br />
+- worker responses triggering coordinator privileged actions without passing a policy mediation checkpoint (see Section 4 Definitions)</p>
+<hr />
+<h2 id="7-ai-driven-tool-attack-testing-matrix">7) AI-Driven Tool Attack Testing Matrix</h2>
+<h3 id="71-code-assistant-dev-agent">7.1 Code Assistant / Dev Agent</h3>
+<ul>
+<li>test: dependency typosquat recommendation, unsafe patch insertion, secret-bearing debug output</li>
+<li>secure expectation: blocked by dependency policy, static checks, secret scanners, approval gates</li>
+</ul>
+<h3 id="72-browser-automation-agent">7.2 Browser Automation Agent</h3>
+<ul>
+<li>test: DOM-hidden instruction injection, phishing-like navigation, form auto-fill exfil</li>
+<li>secure expectation: origin restrictions, anti-phishing policy, no sensitive autofill cross-origin</li>
+</ul>
+<h3 id="73-soc-copilot-siem-assistant">7.3 SOC Copilot / SIEM Assistant</h3>
+<ul>
+<li>test: suppression/closure abuse, enrichment output injection</li>
+<li>secure expectation: mandatory analyst approval for suppression/closure actions</li>
+</ul>
+<h3 id="74-ticketingitsm-agent">7.4 Ticketing/ITSM Agent</h3>
+<ul>
+<li>test: privilege escalation through ticket text and approval spoofing</li>
+<li>secure expectation: RBAC + signed approval workflow validation</li>
+</ul>
+<h3 id="75-datasql-copilot">7.5 Data/SQL Copilot</h3>
+<ul>
+<li>test: over-broad queries, restricted joins, export helper exfil</li>
+<li>secure expectation: row/column policy enforcement and export constraints</li>
+</ul>
+<h3 id="76-emailcomms-agent">7.6 Email/Comms Agent</h3>
+<ul>
+<li>test: first-seen outbound domain, BCC expansion, sensitive payload leakage</li>
+<li>secure expectation: destination allow-list + DLP + approval</li>
+</ul>
+<hr />
+<h2 id="8-how-to-run-a-full-attack-campaign-repeatable">8) How to Run a Full Attack Campaign (Repeatable)</h2>
+<ol>
+<li>Baseline secure workflows and normal tool-sequence distributions.</li>
+<li>Run single-vector tests per attack class.</li>
+<li>Run chained attacks (e.g., retrieval poisoning -&gt; tool-output injection -&gt; outbound exfil).</li>
+<li>Validate persistence (memory, registry, cross-session effects).</li>
+<li>Validate detections and response playbooks.</li>
+<li>Gate releases with regression attack suites.</li>
+</ol>
+<h3 id="metrics-that-matter">Metrics That Matter</h3>
+<ul>
+<li><strong>Attack success rate by class</strong> (explicitly track three stages):</li>
+<li>(a) agent emits unsafe tool call</li>
+<li>(b) tool call executes</li>
+<li>(c) sensitive data reaches attacker-controlled sink</li>
+<li>Mean Time to Detect (MTTD)</li>
+<li>Mean Time to Respond (MTTR)</li>
+<li>% sensitive actions requiring human approval</li>
+<li>False-positive rate of key detections</li>
+<li>Tool registry drift detection latency</li>
+<li>Memory poisoning persistence duration</li>
+</ul>
+<hr />
+<h2 id="9-public-evidence-discipline">9) Public Evidence Discipline</h2>
+<ul>
+<li>Keep incident claims and lab findings separate.</li>
+<li>Use only the following labels:</li>
+<li><code>Confirmed public incident</code></li>
+<li><code>Confirmed public research/PoC</code></li>
+<li><code>Plausible, not publicly confirmed</code></li>
+<li>Every <code>Confirmed</code> claim must include citation(s).</li>
+<li>Avoid naming victim organizations unless primary-source confirmed.</li>
+</ul>
+<h3 id="public-case-status-snapshot-as-of-april-2026">Public case status snapshot (as of April 2026)</h3>
+<ul>
+<li>Prompt-injection style agent manipulation: <code>Confirmed public research/PoC</code>.<a href="https://arxiv.org/abs/2302.12173">[1]</a> <a href="https://owasp.org/www-project-top-10-for-large-language-model-applications/">[2]</a></li>
+<li>Enterprise-scale postmortems with full forensic attribution for memory poisoning/tool-output/retrieval poisoning: mostly <code>Plausible, not publicly confirmed</code>.</li>
+</ul>
+<hr />
+<h2 id="appendix-a-advanced-ml-based-detections-not-standard-siem-rules">Appendix A: Advanced ML-based Detections (Not Standard SIEM Rules)</h2>
+<h3 id="a1-unusual-tool-sequence-markovgraph-based">A1) Unusual Tool Sequence (Markov/graph-based)</h3>
+<p>This is not deployable as a standard static SIEM rule without supporting ML infrastructure.</p>
+<ul>
+<li><strong>Detection expression:</strong> trigger when <code>sequence_probability</code> is below the 1st percentile of the 30-day empirical distribution of tool-chain transition probabilities for this <code>agent_id</code>.</li>
+<li><strong>Engineering effort estimate:</strong> substantial — estimated 4–10 weeks initial build depending on data pipeline readiness, requiring:</li>
+<li>feature pipeline (tool transition graph extraction),</li>
+<li>model training and periodic recalibration,</li>
+<li>online scoring service,</li>
+<li>drift monitoring and analyst feedback loop.</li>
+<li><strong>Severity:</strong> High when sensitive tools are present in anomalous sequence.</li>
+</ul>
+<hr />
+<h2 id="appendix-b-severity-mapping">Appendix B: Severity Mapping</h2>
+<table>
+<thead>
+<tr>
+<th>Article Severity</th>
+<th>NIST 800-30-style qualitative mapping</th>
+<th>CVSS v3.1 rough range</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Critical</td>
+<td>Very High adverse impact / mission degradation</td>
+<td>9.0 - 10.0</td>
+</tr>
+<tr>
+<td>High</td>
+<td>High adverse impact / material business risk</td>
+<td>7.0 - 8.9</td>
+</tr>
+<tr>
+<td>Medium</td>
+<td>Moderate adverse impact</td>
+<td>4.0 - 6.9</td>
+</tr>
+<tr>
+<td>Low</td>
+<td>Limited adverse impact</td>
+<td>0.1 - 3.9</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="appendix-c-framework-mapping-owasp-llm-top-10-v20-2025">Appendix C: Framework Mapping (OWASP LLM Top 10 v2.0, 2025)</h2>
+<table>
+<thead>
+<tr>
+<th>Attack</th>
+<th>OWASP LLM Top 10 category code + name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Indirect prompt injection</td>
+<td>LLM01: Prompt Injection</td>
+</tr>
+<tr>
+<td>Tool/function argument abuse</td>
+<td>LLM06: Excessive Agency</td>
+</tr>
+<tr>
+<td>Action-channel exfiltration</td>
+<td>LLM02: Sensitive Information Disclosure</td>
+</tr>
+<tr>
+<td>Memory poisoning</td>
+<td>LLM08: Vector and Embedding Weaknesses [v2.0] — covers manipulation of runtime knowledge/memory stores including retrieval indices and agent memory. Note: verify code against current release; no v1.1 (2023) category precisely covers this vector.</td>
+</tr>
+<tr>
+<td>Goal hijacking</td>
+<td>LLM01: Prompt Injection and LLM06: Excessive Agency</td>
+</tr>
+<tr>
+<td>Tool-output injection</td>
+<td>LLM05: Improper Output Handling</td>
+</tr>
+<tr>
+<td>Malicious plugin/MCP supply chain</td>
+<td>LLM03: Supply Chain Vulnerabilities</td>
+</tr>
+<tr>
+<td>Retrieval poisoning</td>
+<td>LLM08: Vector and Embedding Weaknesses</td>
+</tr>
+</tbody>
+</table>
+<p>VERIFICATION REQUIRED before publication: confirm each category code and full name against the live OWASP LLM Top 10 v2.0 release at https://owasp.org/www-project-top-10-for-large-language-model-applications/ Category positions have shifted across releases; the codes above reflect the v2.0 structure as of drafting.</p>
+<p>ATLAS mapping note: use the MITRE ATLAS Navigator to select current technique IDs/names for your environment and release baseline.<a href="https://atlas.mitre.org/">[3]</a></p>
+<hr />
+<h2 id="references">References</h2>
+<p>[1] Fabian Greshake, et al. <em>Not What You've Signed Up For: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection</em>. arXiv:2302.12173, 2023. https://arxiv.org/abs/2302.12173<br />
+[2] OWASP Foundation. <em>OWASP Top 10 for LLM Applications, Version 2.0 (2025)</em>. https://owasp.org/www-project-top-10-for-large-language-model-applications/<br />
+[3] MITRE. <em>ATLAS: Adversarial Threat Landscape for Artificial-Intelligence Systems</em>. https://atlas.mitre.org/<br />
+[4] Anthropic and MCP contributors. <em>Model Context Protocol (MCP) Specification</em>, 2024. https://modelcontextprotocol.io/<br />
+[5] Open Policy Agent. <em>OPA/Rego Documentation</em>. https://www.openpolicyagent.org/docs/latest/<br />
+[6] Amazon. <em>Cedar Policy Language Documentation</em>. https://www.cedarpolicy.com/<br />
+[7] NIST. <em>Guide for Conducting Risk Assessments (SP 800-30 Rev.1)</em> and CVSS reference usage guidance. https://csrc.nist.gov/publications/detail/sp/800-30/rev-1/final<br />
+[8] CISA. <em>Advanced Persistent Threat Compromise of Government Agencies, Critical Infrastructure, and Private Sector Organizations (SolarWinds)</em>, 2020 advisory. https://www.cisa.gov/news-events/cybersecurity-advisories/aa20-352a<br />
+[9] Andres Freund. "backdoor in upstream xz/liblzma leading to ssh server compromise." oss-security mailing list, March 29, 2024. https://www.openwall.com/lists/oss-security/2024/03/29/4</p>
+<hr />
+<h2 id="changelog-issue-by-issue-resolution">Changelog (Issue-by-Issue Resolution)</h2>
+<ol>
+<li>Replaced source-file admission with methodology paragraph and evidence-tier language.  </li>
+<li>Added formal citations throughout; every <code>Confirmed</code> claim now cites references.  </li>
+<li>Added prominent <strong>Custom instrumentation required</strong> callout with all specified fields and runtime instrumentation requirement.  </li>
+<li>Relabeled all rules as <strong>PSEUDOCODE — requires translation to target SIEM</strong> and added translator note.  </li>
+<li>Rewrote Detection 1 using explicit multi-event join semantics (<code>join_key: trace_id</code>) instead of <code>trace_id = T</code>.  </li>
+<li>Added <strong>False positive guidance</strong> under Detection 3 with both requested mitigations (imperative co-occurrence + low-trust scoping).  </li>
+<li>Moved Markov-chain detection to <strong>Appendix A</strong> and added implementation effort note; marked non-standard SIEM.  </li>
+<li>Replaced vague "reasoning firewall" with precise <strong>policy mediation checkpoint</strong> definition and behavior.  </li>
+<li>Replaced <code>MTTB</code> with <code>MTTR (Mean Time to Respond)</code>.  </li>
+<li>Removed <code>medium_high</code>, standardized to <code>High</code>, and added severity mapping table to NIST/CVSS in Appendix B.  </li>
+<li>Removed arbitrary 120s; Detection 1 now uses environment-based correlation window guidance with 300s starting point.  </li>
+<li>Added explicit Threat Model in Section 2 with actor types A/B/C and tagged each attack.  </li>
+<li>Replaced <code>rot13</code> with realistic obfuscation techniques: zero-width Unicode, homoglyphs, chunk fragmentation.  </li>
+<li>Defined <strong>denial of wallet</strong> on first use and noted adaptation from cloud security terminology.  </li>
+<li>Added MCP specification reference and defined <code>scopes</code> and <code>tool manifest</code> on first use.  </li>
+<li>Corrected sequence anomaly expression to "below the 1st percentile of 30-day empirical distribution for this <code>agent_id</code>."  </li>
+<li>Expanded cross-tenant retrieval bleed with scenario, detection rule, and hardening control.  </li>
+<li>Replaced time-bound phrasing with "as of [Month Year of publication]".  </li>
+<li>Added Framework Mapping appendix aligning attacks to OWASP LLM Top 10 and MITRE ATLAS.  </li>
+<li>Defined <strong>dual control</strong> as independent two-person authorization with independent authentication/approval.  </li>
+<li>Split "cryptographically/policy anchored" into distinct cryptographic and policy controls.  </li>
+<li>Added SolarWinds and XZ Utils as concrete supply-chain analogies.  </li>
+<li>Defined attack success in three stages: unsafe emission, execution, and sink reachability.  </li>
+<li>Applied consistent three-tier public-case labels to per-attack status entries.  </li>
+<li>Added pinned <code>requirements.txt</code> stub in the lab section.  </li>
+<li>Defined policy engine and added two implementation options (OPA/Rego, Amazon Cedar).</li>
+</ol>
+<h3 id="round-4-resolutions">Round 4 resolutions</h3>
+<ul>
+<li>C1 resolved: OWASP mappings and cited OWASP release now aligned to v2.0 (2025).</li>
+<li>C2 resolved: Memory Poisoning row now maps to LLM08: Vector and Embedding Weaknesses [v2.0] with the required note.</li>
+<li>S1 resolved: Restored omitted catalog items in Sections 6.4, 6.5, 6.6, and restored Section 6.10; added "ranking abuse via keyword stuffing" in Section 6.2.</li>
+<li>S2 resolved: Added <code>dlp_hit</code> to Custom instrumentation required callout with structured telemetry guidance.</li>
+<li>S3 resolved: Detection 2 condition now correlates by <code>trace_id</code>.</li>
+<li>S4 resolved: Removed <code>requester_tenant_id</code> from CrossTenantRetrievalBleed selection and added the required scope comment.</li>
+<li>S5 resolved: Tool/function argument abuse row now retains only the primary mapping.</li>
+<li>S6 resolved: Added URLs to References <a href="https://owasp.org/www-project-top-10-for-large-language-model-applications/">[2]</a>, <a href="https://atlas.mitre.org/">[3]</a>, <a href="https://modelcontextprotocol.io/">[4]</a>, <a href="https://www.openpolicyagent.org/docs/latest/">[5]</a>, and <a href="https://www.cedarpolicy.com/">[6]</a>.</li>
+<li>M1 resolved: Replaced Section 9 placeholder with month/year and added required final-edit comment marker.</li>
+<li>M2 resolved: Added pinned-version advisory sentence after the <code>requirements.txt</code> block.</li>
+<li>M3 resolved: Added explicit network isolation requirement in Section 3 Lab Architecture.</li>
+<li>M4 resolved: Updated Attack 4 public case status label and citation.</li>
+<li>Round 4 was a no-change submission and all Round 3 fixes were re-applied from the Round 3 fix prompt.</li>
+<li>Round 3 restoration: sections 6.4, 6.5, 6.6, and 6.10 content was silently omitted between drafts; all removed items restored.</li>
+</ul>
+  <p class="back-top"><a href="#top">↑ Back to top</a></p>
+</body>
+</html>

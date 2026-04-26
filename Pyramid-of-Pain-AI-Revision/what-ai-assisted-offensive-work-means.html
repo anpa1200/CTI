@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What AI-Assisted Offensive Work Actually Means for Your Detection Program: A Practitioner's Dependency Audit</title>
+  <meta name="author" content="Andrey Pautov">
+  <link rel='canonical' href='https://medium.com/system-weakness/what-ai-assisted-offensive-work-actually-means-for-your-detection-program-a-practitioners-9c27a8f40f12'>
+  <style>
+  :root {
+    font-family: "Georgia", "Times New Roman", serif;
+    line-height: 1.7;
+    color: #1a1a1a;
+    --toc-bg: #f8f9fa;
+    --border: #dee2e6;
+    --link: #0a5eb2;
+    --link-visited: #551a8b;
+    --code-bg: #f1f3f4;
+  }
+  body { margin: 0; padding: 0; max-width: 52rem; margin-left: auto; margin-right: auto; padding: 2rem 1.5rem 3rem; }
+  .doc-meta {
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 0.875rem;
+    color: #495057;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .doc-meta a { color: var(--link); }
+  h1 { font-size: 1.75rem; font-weight: 700; margin-top: 0; margin-bottom: 0.5rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; }
+  h2 { font-size: 1.35rem; margin-top: 2.5rem; margin-bottom: 0.75rem; scroll-margin-top: 1rem; }
+  h3 { font-size: 1.15rem; margin-top: 1.75rem; margin-bottom: 0.5rem; }
+  h4 { font-size: 1.05rem; margin-top: 1.25rem; margin-bottom: 0.4rem; }
+  nav.toc { background: var(--toc-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1rem 1.5rem; margin: 1.5rem 0 2rem; }
+  nav.toc ul { list-style: none; padding-left: 0; margin: 0; }
+  nav.toc li { margin: 0.4rem 0; }
+  nav.toc a { color: var(--link); text-decoration: none; }
+  nav.toc a:hover { text-decoration: underline; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  a:visited { color: var(--link-visited); }
+  code { font-family: "Consolas", "Monaco", monospace; background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-size: 0.88em; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 5px; padding: 1rem 1.2rem; overflow-x: auto; }
+  pre code { background: none; padding: 0; font-size: 0.85em; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0 1.5rem; font-size: 0.9em; }
+  th { background: #e9ecef; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.75rem; text-align: left; }
+  tr:nth-child(even) td { background: #f8f9fa; }
+  blockquote { border-left: 3px solid var(--border); margin: 1rem 0; padding: 0.5rem 1.2rem; color: #495057; font-style: italic; }
+  ul, ol { margin: 0.75rem 0 1.25rem 1.5rem; padding-left: 1.5rem; }
+  li { margin: 0.35rem 0; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  p { margin: 0.75rem 0; }
+  .back-top { margin-top: 2.5rem; font-size: 0.9rem; color: #6c757d; }
+  @media print {
+    body { padding: 1rem; }
+    nav.toc { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+  <header class="doc-meta">
+    <p>Author: <a href="https://medium.com/@1200km">Andrey Pautov</a>. <a href="https://medium.com/system-weakness/what-ai-assisted-offensive-work-actually-means-for-your-detection-program-a-practitioners-9c27a8f40f12">Published on Medium</a></p>
+  </header>
+  <h1 id="what-ai-assisted-offensive-work-actually-means-for-your-detection-program-a-practitioners-dependency-audit">What AI-Assisted Offensive Work Actually Means for Your Detection Program: A Practitioner's Dependency Audit</h1>
+<p><strong>What the public record supports, what it does not, and how to audit the analytics most likely to fail under cheaper variation.</strong></p>
+<p>By <a href="https://medium.com/@1200km">Andrey Pautov</a> — April 2026</p>
+<hr />
+<p>You know this failure mode already. A rule tagged "behavioral" stops firing after a renamed binary, a parser change, or a missing command-line field. The label survived. The coverage did not.</p>
+<p>[Documented] The public record through April 2026 shows actors using AI for research, malicious scripting, payload work, and a smaller set of cases where AI appears inside live tooling or operational flow. (<a href="https://openai.com/index/disrupting-malicious-uses-of-ai-by-state-affiliated-threat-actors/">3</a>, <a href="https://www.microsoft.com/en-us/security/blog/2024/02/14/staying-ahead-of-threat-actors-in-the-age-of-ai/">4</a>, <a href="https://cloud.google.com/blog/topics/threat-intelligence/adversarial-misuse-generative-ai">5</a>, <a href="https://cloud.google.com/blog/topics/threat-intelligence/threat-actor-usage-of-ai-tools">6</a>, <a href="https://www.microsoft.com/en-us/security/blog/2025/11/03/sesameop-novel-backdoor-uses-openai-assistants-api-for-command-and-control/">7</a>)</p>
+<p>[Inferred] That pattern likely reduces labor for some forms of code variation and payload work.</p>
+<p>[Inferred] That does not prove your analytics are failing. It does justify an audit of dependencies the adversary controls and can now vary more cheaply. The audit method here is a dependency-inventory and validation method. It does not replace Bianco or CTID.</p>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol>
+<li>What the Public Record Actually Says (and What It Doesn't)</li>
+<li>The Two Frameworks You Need and Why They Answer Different Questions</li>
+<li>The Dependency Map: How to Classify What You Have</li>
+<li>The Classification Rule: Apply It Per Dependency, Not Per Analytic</li>
+<li>The Local Validation Test: Three Variants, Three Measurements, One Decision</li>
+<li>Prioritization: Where to Start When You Have 300 Analytics</li>
+<li>What This Does Not Tell You</li>
+<li>Conclusion</li>
+<li>References</li>
+</ol>
+<hr />
+<h2 id="1-what-the-public-record-actually-says-and-what-it-doesnt">1. What the Public Record Actually Says (and What It Doesn't)</h2>
+<h3 id="openai-february-14-2024">OpenAI, February 14, 2024</h3>
+<ul>
+<li>[Documented] OpenAI reported state-affiliated actors using LLMs for research, translation, scripting help, debugging, and phishing-related content generation. (<a href="https://openai.com/index/disrupting-malicious-uses-of-ai-by-state-affiliated-threat-actors/">3</a>)</li>
+<li>[Inferred] The report did not establish novel intrusion techniques, measured defender-side degradation, or end-to-end autonomous compromise.</li>
+<li>[Inferred] The source reflects OpenAI-visible activity. It is not a census of actor behavior off that infrastructure.</li>
+</ul>
+<h3 id="microsoft-security-february-14-2024">Microsoft Security, February 14, 2024</h3>
+<ul>
+<li>[Documented] Microsoft described the same pattern. AI was a productivity tool for threat actors. It supported research, translation, scripting, and phishing preparation. (<a href="https://www.microsoft.com/en-us/security/blog/2024/02/14/staying-ahead-of-threat-actors-in-the-age-of-ai/">4</a>)</li>
+<li>[Documented] Microsoft said plainly that it had not observed especially novel or unique AI-enabled attack or abuse techniques. OpenAI said the same on the same date. (<a href="https://openai.com/index/disrupting-malicious-uses-of-ai-by-state-affiliated-threat-actors/">3</a>, <a href="https://www.microsoft.com/en-us/security/blog/2024/02/14/staying-ahead-of-threat-actors-in-the-age-of-ai/">4</a>)</li>
+<li>[Inferred] This is still provider-visible activity and should not be treated as representative of actor behavior outside Microsoft-visible environments.</li>
+</ul>
+<h3 id="google-gtig-january-29-2025">Google GTIG, January 29, 2025</h3>
+<ul>
+<li>[Documented] GTIG reported use of Gemini for research, vulnerability work, malicious scripting, payload development, translation, and post-compromise support. (<a href="https://cloud.google.com/blog/topics/threat-intelligence/adversarial-misuse-generative-ai">5</a>)</li>
+<li>[Documented] GTIG also said it did not observe actors developing novel capabilities from that use.</li>
+<li>[Inferred] The source shows what Google could observe. It does not settle what actors do outside that visibility.</li>
+</ul>
+<h3 id="google-gtig-november-5-2025">Google GTIG, November 5, 2025</h3>
+<ul>
+<li>[Documented] GTIG's November 2025 tracker added public cases where AI appeared inside malware or operational workflows, not just in pre-operational support work. (<a href="https://cloud.google.com/blog/topics/threat-intelligence/threat-actor-usage-of-ai-tools">6</a>)</li>
+<li>[Inferred] The tracker did not establish ecosystem-wide prevalence, measured defender-side failure rates, or a collapse in detection durability.</li>
+<li>[Inferred] The source is provider casework. It is high signal. It is not representative sampling.</li>
+</ul>
+<h3 id="microsoft-security-november-3-2025">Microsoft Security, November 3, 2025</h3>
+<ul>
+<li>[Documented] Microsoft reported SesameOp as a backdoor that used the OpenAI Assistants API for command and control. (<a href="https://www.microsoft.com/en-us/security/blog/2025/11/03/sesameop-novel-backdoor-uses-openai-assistants-api-for-command-and-control/">7</a>)</li>
+<li>[Inferred] The report did not establish that this channel was common, that most actors would copy it, or that existing analytics had already failed at scale because of it.</li>
+<li>[Inferred] The case matters because it creates a real dependency-mapping problem. It still reflects provider-visible activity on hosted infrastructure.</li>
+</ul>
+<p>[Documented] Taken together, these sources show AI use in research, malicious scripting, payload work, and selected live operational cases.</p>
+<p>[Inferred] They support a labor-reduction inference for some offensive support work, including some forms of code variation and payload preparation.</p>
+<p>[Inferred] They do not show measured failure of your detection program. They do justify testing analytics that depend on adversary-mutable artifacts.</p>
+<hr />
+<h2 id="2-the-two-frameworks-you-need-and-why-they-answer-different-questions">2. The Two Frameworks You Need and Why They Answer Different Questions</h2>
+<p>[Documented] Bianco's Pyramid of Pain asks one question: how much does it hurt the adversary when defenders force replacement? Hashes, IPs, and domains are low because replacement is cheap. Tools and TTPs are higher because replacement costs more time, retraining, and rework. (<a href="https://detect-respond.blogspot.com/2013/03/the-pyramid-of-pain.html">1</a>)</p>
+<p>[Documented] That is an attacker-cost model. It is not a measurement model for analytic quality. It does not tell you false-positive rate, parser resilience, maintenance burden, or whether your rule survives implementation change. (<a href="https://detect-respond.blogspot.com/2013/03/the-pyramid-of-pain.html">1</a>)</p>
+<p>[Documented] MITRE CTID's December 2024 work introduces spanning observables and decomposition methods. (<a href="https://ctid.mitre.org/blog/2024/12/16/summiting-the-pyramid-bring-the-pain/">2</a>)</p>
+<p>[Inferred] Those concepts provide defender-side vocabulary for reasoning about analytic durability under implementation variation. They still do not tell you which of your specific rules will fail first. That depends on the dependencies inside each implementation.</p>
+<p>[Inferred] A defender can target a high-cost behavior with a low-durability rule if the implementation depends on narrow artifacts or weak telemetry.</p>
+<p>[Inferred] These are separate questions. Conflating attacker replacement cost with defender analytic durability is a recurring analytical error in writing about AI and detection. A change can be expensive for the adversary and still break your rule. A change can be cheap for the adversary and still miss a spanning observable.</p>
+<hr />
+<h2 id="3-the-dependency-map-how-to-classify-what-you-have">3. The Dependency Map: How to Classify What You Have</h2>
+<p>[Inferred] Teams often classify the analytic by name. They should classify the dependencies inside the implementation.</p>
+<p>[Inferred] If cheaper variation matters anywhere, it matters first where coverage depends on implementation details the adversary can change. That is why the audit unit is the dependency, not the incident or the rule label.</p>
+<p>[Inferred] Use four primary analytic dependency classes. Give each analytic dependency one primary class and record two other things alongside it: the controller of the dependency and any infrastructure prerequisites.</p>
+<p>[Inferred] Apply the primary classes in order. If a dependency requires prior behavioral history for a specific entity, classify it as entity-baseline. If not, but the observable is structurally required across multiple implementations of the behavior, classify it as implementation-spanning. If not, but it still encodes a security-relevant action or state transition, classify it as behaviorally anchored. Otherwise classify it as artifact-dependent.</p>
+<p>[Inferred] A primary class is a prioritization aid, not a claim that the rest of the dependency map is secondary. If two dependencies are equally necessary to rule behavior, record them separately instead of forcing one headline label.</p>
+<p>[Inferred] Infrastructure prerequisites stay outside the four analytic classes. They still belong in the review because they confound local validation and often explain rule failure before adversary variation does.</p>
+<h3 id="class-1-artifact-dependent">Class 1 — Artifact-dependent</h3>
+<p>[Inferred] An artifact-dependent dependency requires an exact string, hash, path, tool name, mutex, user agent, or narrow regex fragment. In Windows process telemetry, that is <code>process_name = "mimikatz.exe"</code> in Sysmon Event ID 1 or Windows Security Event ID 4688. In proxy or firewall logs, that is an exact user agent or exact destination path.</p>
+<p>[Inferred] If the adversary controls the artifact, the dependency is brittle under cheap variation. A rule on <code>process_name = "rundll32.exe"</code> plus a fixed path is not the same as a rule on a structurally required API call.</p>
+<p>[Inferred] Some artifact dependencies are not adversary-mutable. They are third-party-constrained. A proxy rule on <code>dst_domain = api.openai.com</code> or a path tied to a vendor API is still artifact-dependent. The vendor controls that artifact, not the adversary. Treat it as stable only where the endpoint, request path, or client markers remain observable, and until the vendor changes them. Do not treat it like a renamed binary.</p>
+<h3 id="class-2-behaviorally-anchored">Class 2 — Behaviorally anchored</h3>
+<p>[Inferred] A behaviorally anchored dependency encodes a security-relevant action or state transition. Examples include a document-handling process spawning a script interpreter, a service account logging on interactively, or a non-system process reading LSASS memory.</p>
+<p>[Inferred] In process telemetry, a rule on a document-handling process spawning a script interpreter is behaviorally anchored when it tries to encode document-to-script execution rather than one exact binary name. In network telemetry, a sequence of repeated outbound API interaction followed by local command execution is behaviorally anchored.</p>
+<p>[Inferred] These dependencies may survive tool-name changes when the implementation does not gate on a specific parent, interpreter family, or exact field value. They still fail when the implementation is much narrower than the label suggests.</p>
+<h3 id="class-3-implementation-spanning">Class 3 — Implementation-spanning</h3>
+<p>[Documented] MITRE CTID's spanning-observable idea points to dependencies that survive multiple implementations of the same behavior because the observable is structurally required by the behavior itself. (<a href="https://ctid.mitre.org/blog/2024/12/16/summiting-the-pyramid-bring-the-pain/">2</a>)</p>
+<p>[Inferred] In practice, this means the dependency is anchored to what the adversary must do, not what they happened to name the binary. With API-call or EDR telemetry, a strong example across many user-mode implementations is a process calling <code>OpenProcess</code> with <code>PROCESS_VM_READ</code> on <code>lsass.exe</code> and then calling <code>ReadProcessMemory</code>, regardless of process name or path.</p>
+<p>[Inferred] These are often the most durable dependencies when the required telemetry is available and stable. They usually need EDR or API-call telemetry. They do not usually come from Windows Security Event ID 4688 alone.</p>
+<h3 id="class-4-entity-baseline">Class 4 — Entity-baseline</h3>
+<p>[Inferred] An entity-baseline dependency requires prior behavioral history of a user, host, or service principal to score, suppress, or prioritize. In process telemetry, that may be "this host has never run PowerShell from Office." In proxy logs, that may be "this user has no prior Assistants API traffic."</p>
+<p>[Inferred] These dependencies fail in four ways that are independent of adversary variation. Cold-start breaks new entities. Baseline contamination breaks already-compromised entities. Administrative change windows shift legitimate behavior. Environmental concept drift changes what "normal" means as new tools become common.</p>
+<h3 id="recorded-separately-infrastructure-dependencies">Recorded Separately — Infrastructure dependencies</h3>
+<p>[Inferred] Infrastructure dependencies are collection, parser, normalization, and correlation prerequisites. The adversary does not control them. A missing <code>CommandLine</code> field, a dropped Sysmon Event ID 1 stream, a changed Windows Security Event ID 4688 parser, or a broken join key can kill coverage before adversary variation matters.</p>
+<p>[Inferred] In many real programs, infrastructure-controlled dependencies break as many or more analytics than attacker-side variation does. Record them separately. Fix them first when they are the actual failure point.</p>
+<table>
+<thead>
+<tr>
+<th>Primary class</th>
+<th>What the dependency needs</th>
+<th>Typical controller</th>
+<th>Example</th>
+<th>First review question</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Artifact-dependent</td>
+<td>Exact token, path, name, hash, or narrow regex</td>
+<td>Adversary-mutable or third-party-constrained</td>
+<td><code>process_name = "mimikatz.exe"</code>; <code>dst_domain = api.openai.com</code></td>
+<td>Who controls the artifact?</td>
+</tr>
+<tr>
+<td>Behaviorally anchored</td>
+<td>Security-relevant action or state transition</td>
+<td>Mixed</td>
+<td>Office process spawning script interpreter</td>
+<td>Does the implementation match the label?</td>
+</tr>
+<tr>
+<td>Implementation-spanning</td>
+<td>Structurally required observable across variants</td>
+<td>Usually harder for the adversary to change without changing behavior</td>
+<td>LSASS read via API-call sequence</td>
+<td>Is the observable required by the behavior?</td>
+</tr>
+<tr>
+<td>Entity-baseline</td>
+<td>Prior history for a user, host, or service principal</td>
+<td>Environment-controlled</td>
+<td>"No prior Assistants API traffic"</td>
+<td>Is the baseline still trustworthy?</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-the-classification-rule-apply-it-per-dependency-not-per-analytic">4. The Classification Rule: Apply It Per Dependency, Not Per Analytic</h2>
+<p>[Inferred] Most real analytics mix dependency classes. Do not classify the whole analytic. Classify each dependency.</p>
+<p>[Inferred] Splunk Security Content's "Malicious PowerShell Process - Encoded Command" is a good example because the title sounds broader than the implementation really is. The example below is illustrative and only partially replayable from the published dataset. (<a href="https://research.splunk.com/endpoint/c4db14d9-7909-48b4-a054-aa14d89dbb19/">8</a>)</p>
+<table>
+<thead>
+<tr>
+<th>Entry</th>
+<th>Primary class or prerequisite</th>
+<th>Controller</th>
+<th>Supporting constraint</th>
+<th>First failure point</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>process_name</code> or <code>original_file_name</code> identifies the PowerShell family</td>
+<td>Artifact-dependent</td>
+<td>Mixed: adversary-mutable plus metadata-dependent</td>
+<td>PowerShell family identification must survive normalization and metadata handling</td>
+<td>Loss of PowerShell family identification</td>
+</tr>
+<tr>
+<td>Command-line regex matches <code>EncodedCommand</code> and shortened forms</td>
+<td>Narrow behaviorally anchored</td>
+<td>Adversary-mutable</td>
+<td>Exact switch forms still matter</td>
+<td>Variant outside the regex set</td>
+</tr>
+<tr>
+<td><code>CommandLine</code> field capture in the pipeline</td>
+<td>Infrastructure prerequisite</td>
+<td>Infrastructure-controlled</td>
+<td>Parser and data-model preservation</td>
+<td>Truncation, parser loss, or data-model change</td>
+</tr>
+</tbody>
+</table>
+<p>[Inferred] Dependency 1 is artifact-dependent. A simple rename may not break it if <code>original_file_name</code> still resolves to the PowerShell family. The gate fails when PowerShell family identification no longer survives the variation, or when the actor shifts to a different launcher.</p>
+<p>[Inferred] Dependency 2 is a narrow behaviorally anchored dependency because it tries to encode "PowerShell executing an encoded payload" as a security-relevant action, but only in one expression. It is not a broad detection of encoded execution across launchers or interpreters.</p>
+<p>[Inferred] It still carries supporting constraints because the full command line must be present and the switch forms still matter. (<a href="https://research.splunk.com/endpoint/c4db14d9-7909-48b4-a054-aa14d89dbb19/">8</a>)</p>
+<p>[Inferred] The <code>CommandLine</code> field is not an analytic class here. It is an infrastructure prerequisite. If that field is missing, truncated, or normalized differently, the analytic loses coverage before the adversary changes anything.</p>
+<p>[Inferred] The key finding is simple. The label says "Malicious PowerShell Process." That sounds broader than the implementation. The implementation still leans on artifact-dependent PowerShell family identification. A team that treats this as durable coverage without testing is trusting the label, not the implementation.</p>
+<p>[Inferred] The same dependency map helps on SesameOp. Microsoft described a backdoor using the OpenAI Assistants API for command and control. (<a href="https://www.microsoft.com/en-us/security/blog/2025/11/03/sesameop-novel-backdoor-uses-openai-assistants-api-for-command-and-control/">7</a>)</p>
+<ul>
+<li>[Inferred] One dependency is artifact-dependent and third-party-constrained: vendor API endpoints, request paths, and default SDK or user-agent markers when those are visible. The adversary does not control <code>api.openai.com</code>. OpenAI does. Treat these as stable only at telemetry points where the endpoint, request path, or client markers remain observable.</li>
+<li>[Inferred] One dependency is behaviorally anchored: an endpoint process shows repeated Assistants API sessions correlated with local command execution or file operations. That sequence matters more than the client string, but it only exists where the SOC can correlate endpoint activity with network or proxy metadata.</li>
+<li>[Inferred] One dependency is entity-baseline: a host or identity with no prior Assistants API traffic suddenly shows this pattern. That signal has limited shelf life because enterprise LLM adoption creates concept drift.</li>
+</ul>
+<p>[Inferred] The same incident therefore needs three review paths. Third-party-constrained artifacts need change tracking. Behaviorally anchored dependencies need sequence testing. Baseline dependencies need expiration and recalibration rules. Do not assign one shelf-life label to the whole detection package.</p>
+<hr />
+<h2 id="5-the-local-validation-test-three-variants-three-measurements-one-decision">5. The Local Validation Test: Three Variants, Three Measurements, One Decision</h2>
+<p>[Inferred] This is a small-team test, not a research program.</p>
+<p>[Inferred] The time estimate below assumes the team already has a replayable test harness or lab path into the same normalized pipeline the analytic uses. Building that path is separate work and often costs more than the first round of rule testing.</p>
+<p><strong>Inputs</strong></p>
+<ul>
+<li>[Documented] One published analytic with stated telemetry prerequisites.</li>
+<li>[Documented] One baseline test case with the telemetry fields or event sequence the analytic requires. Use a real case when possible. If it is constructed from published attack data, state the provenance.</li>
+<li>[Inferred] Two behavior-preserving variants that change one implementation layer each.</li>
+</ul>
+<p><strong>Constraints</strong></p>
+<ul>
+<li>[Inferred] Keep the objective, execution phase, and required privilege level constant across all three cases.</li>
+<li>[Inferred] Vary one layer per pass. Good first-pass layers are process family, command-line form, parent process, path, or client library.</li>
+<li>[Inferred] Hold telemetry source, parser version, normalized field mapping, and correlation window constant. If these drift, you are measuring collection failure, not implementation variation.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Measurement</th>
+<th>Allowed values</th>
+<th>What to record</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Trigger retention</td>
+<td>Yes / No</td>
+<td>Did the analytic fire?</td>
+</tr>
+<tr>
+<td>Analyst usefulness</td>
+<td>High / Moderate / Low / None</td>
+<td>How much triage work is needed?</td>
+</tr>
+<tr>
+<td>Maintenance effort</td>
+<td>None / Low / Moderate / High</td>
+<td>What engineering lift restores coverage?</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Analyst usefulness</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>High</td>
+<td>The alert is triageable without reconstruction.</td>
+</tr>
+<tr>
+<td>Moderate</td>
+<td>The alert is usable, but needs added context or manual reconstruction.</td>
+</tr>
+<tr>
+<td>Low</td>
+<td>The alert is weak and hard to separate from benign activity.</td>
+</tr>
+<tr>
+<td>None</td>
+<td>The analytic no longer produces a useful alert.</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Maintenance effort</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>No analytic change required</td>
+</tr>
+<tr>
+<td>Low</td>
+<td>Rule edit only, no new data source, under 4 hours</td>
+</tr>
+<tr>
+<td>Moderate</td>
+<td>Logic restructuring or normalization change, 4 hours to one sprint</td>
+</tr>
+<tr>
+<td>High</td>
+<td>New telemetry source, vendor dependency, or detection class replacement</td>
+</tr>
+</tbody>
+</table>
+<p>[Inferred] <code>High</code> is not just a larger sprint. A new detection class or new telemetry source can mean weeks of work. Treat it as an architectural change, not a tuning task.</p>
+<p>[Inferred] Using Splunk's published Encoded Command rule and Splunk attack data as the baseline case, the readout below is the right shape for a local test. (<a href="https://research.splunk.com/endpoint/c4db14d9-7909-48b4-a054-aa14d89dbb19/">8</a>, <a href="https://research.splunk.com/attack_data/cc9b264d-efc9-11eb-926b-550bf0943fbb/">9</a>)</p>
+<p>[Inferred] The second non-baseline case below is schematic. It represents the point where the PowerShell family no longer resolves in the identifying fields the rule uses.</p>
+<table>
+<thead>
+<tr>
+<th>Case</th>
+<th>Layer changed</th>
+<th>Trigger retention</th>
+<th>Analyst usefulness</th>
+<th>Maintenance effort</th>
+<th>Failure point</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Baseline</td>
+<td>None</td>
+<td>Yes</td>
+<td>High</td>
+<td>None</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Variant 1</td>
+<td>Command-line form</td>
+<td>Yes</td>
+<td>High</td>
+<td>None</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Variant 2</td>
+<td>PowerShell family identity</td>
+<td>No</td>
+<td>None</td>
+<td>Moderate</td>
+<td>Loss of <code>process_name</code> / <code>original_file_name</code> family resolution</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Decision rule</strong></p>
+<ol>
+<li>[Inferred] If trigger retention is <code>Yes</code> for both non-baseline variants, classify the tested dependency as surviving this variation distance. Do not call it spanning from two variants alone.</li>
+<li>[Inferred] If trigger retention is <code>No</code> for either non-baseline variant, the tested dependency or prerequisite is confirmed not to survive that variation distance. Record whether the break was artifact-driven, infrastructure-driven, or due to a narrower implementation than the label implied.</li>
+<li>[Inferred] If results are mixed, do not average them. Record the failed variant, the broken dependency, and the maintenance effort. The failure is the signal.</li>
+<li>[Inferred] If only one non-baseline variant is complete, record the result as incomplete. Do not classify from one data point.</li>
+</ol>
+<p>[Inferred] In a three-engineer team, one engineer can build variants, one can verify telemetry parity and parser consistency, and one can score usefulness and maintenance effort and update the inventory.</p>
+<hr />
+<h2 id="6-prioritization-where-to-start-when-you-have-300-analytics">6. Prioritization: Where to Start When You Have 300 Analytics</h2>
+<ol>
+<li>
+<p>Pull every analytic tagged or documented as <code>durable</code>, <code>high-confidence</code>, <code>TTP-based</code>, or <code>behavioral</code>. [Inferred] These are the highest-risk mislabeling candidates. Teams suppress or deprioritize alerts from rules they think are solid. A mislabeled tripwire in this tier can be suppressed, deprioritized, or misinterpreted in incident review. Record the rule ID, owner, tag source, and current suppression or severity settings. Decide which ones enter the first audit tier.</p>
+</li>
+<li>
+<p>As a starting default, test process-execution analytics before network analytics in mixed EDR environments. [Inferred] Process telemetry normalization and process-family mapping diverge earlier across EDR vendors and versions than coarse network metadata. If your network controls already expose stable third-party-constrained domains or request paths, those may be faster first-pass audits. Record the telemetry source for each rule. Record whether it depends on Sysmon Event ID 1, Windows Security Event ID 4688, vendor EDR fields, or a normalized data model. Decide the first batch from that map.</p>
+</li>
+<li>
+<p>Build the dependency map before you build variants. Record each dependency, its class, and its controller: adversary-mutable, third-party-constrained, or infrastructure-controlled. Decide which single-layer variants are valid for that rule. If you skip this step, you are guessing.</p>
+</li>
+<li>
+<p>Run the three-variant test. Record trigger retention, analyst usefulness, maintenance effort, and the exact failure point. Decide one of three outcomes for each dependency: survives this variation distance, narrower than label, or incomplete pending more testing.</p>
+</li>
+<li>
+<p>Re-examine every entity-baseline dependency outside the three-variant test. Record cold-start risk, contamination risk, administrative change-window risk, and concept-drift risk. Decide whether the baseline is still useful, needs tighter scoping, or should stop driving priority.</p>
+</li>
+</ol>
+<p>[Inferred] For simple single-source endpoint analytics, one dependency map plus one three-variant test may take about two to four hours when the test harness already exists. Multi-source correlations and baseline-heavy analytics take longer. A program with 300 analytics therefore represents roughly 600 to 1,200 engineering hours at the low end once the harness, replay path, and normalized telemetry access already exist. Start with the highest-risk tier. Do not try to audit everything at once.</p>
+<hr />
+<h2 id="7-what-this-does-not-tell-you">7. What This Does Not Tell You</h2>
+<p>[Inferred] This method tests simple, single-layer implementation variation first. Real adversaries combine layers. They rename the binary, change the path, swap the parent, and lose the command line in one move. Multi-layer testing should follow single-layer testing. It should not replace it.</p>
+<p>[Inferred] AI does not create artifact mutability. Adversaries already had that option. The narrower point is that cheaper variation may make recovery, retesting, or evasion attempts cheaper after defensive friction. In many real programs, parser loss, field truncation, and normalization drift still break more analytics than adversary variation does.</p>
+<p>[Inferred] The cited public record supports a labor-reduction inference for some forms of code variation, scripting, and payload work.</p>
+<p>[Inferred] It does not show how often actors will spend that cheaper variation on detection evasion instead of target volume, fraud scale, or other offensive goals. The review is justified by mechanism plausibility. It is not justified by a measured effect size.</p>
+<p>[Documented] These sources come from providers reporting on activity visible to their own platforms and investigations.</p>
+<p>[Inferred] That creates provider selection bias.</p>
+<p>[Speculative] Actors operating fully off-provider infrastructure may show different patterns. Absence of public evidence here is not evidence of absence there.</p>
+<hr />
+<h2 id="8-conclusion">8. Conclusion</h2>
+<p>Do this this week: pull the first batch of analytics that your team already treats as durable coverage, and build a dependency map for them before you touch the test harness.</p>
+<p>Stop assuming this: a rule labeled <code>behavioral</code>, <code>TTP-based</code>, or <code>high-confidence</code> is durable because the label says so. The implementation decides that. The dependency map exposes it.</p>
+<p>This paper cannot tell you this: whether the adversaries in your environment will spend cheaper variation on evasion often enough to change your incident rate. Only local testing can answer that.</p>
+<hr />
+<h2 id="references">References</h2>
+<ol>
+<li><a href="https://detect-respond.blogspot.com/2013/03/the-pyramid-of-pain.html">David Bianco, <em>The Pyramid of Pain</em> (2013)</a></li>
+<li><a href="https://ctid.mitre.org/blog/2024/12/16/summiting-the-pyramid-bring-the-pain/">Center for Threat-Informed Defense, <em>Summiting the Pyramid: Bring the Pain with Robust and Accurate Detection</em> (December 16, 2024)</a></li>
+<li><a href="https://openai.com/index/disrupting-malicious-uses-of-ai-by-state-affiliated-threat-actors/">OpenAI, <em>Disrupting malicious uses of AI by state-affiliated threat actors</em> (February 14, 2024)</a></li>
+<li><a href="https://www.microsoft.com/en-us/security/blog/2024/02/14/staying-ahead-of-threat-actors-in-the-age-of-ai/">Microsoft Security, <em>Staying ahead of threat actors in the age of AI</em> (February 14, 2024)</a></li>
+<li><a href="https://cloud.google.com/blog/topics/threat-intelligence/adversarial-misuse-generative-ai">Google Threat Intelligence Group, <em>Adversarial Misuse of Generative AI</em> (January 29, 2025)</a></li>
+<li><a href="https://cloud.google.com/blog/topics/threat-intelligence/threat-actor-usage-of-ai-tools">Google Threat Intelligence Group, <em>GTIG AI Threat Tracker: Advances in Threat Actor Usage of AI Tools</em> (November 5, 2025)</a></li>
+<li><a href="https://www.microsoft.com/en-us/security/blog/2025/11/03/sesameop-novel-backdoor-uses-openai-assistants-api-for-command-and-control/">Microsoft Security, <em>SesameOp: Novel backdoor uses OpenAI Assistants API for command and control</em> (November 3, 2025)</a></li>
+<li><a href="https://research.splunk.com/endpoint/c4db14d9-7909-48b4-a054-aa14d89dbb19/">Splunk Security Content, <em>Detection: Malicious PowerShell Process - Encoded Command</em> (updated March 25, 2026)</a></li>
+<li><a href="https://research.splunk.com/attack_data/cc9b264d-efc9-11eb-926b-550bf0943fbb/">Splunk Security Content, <em>Encoded Powershell</em> attack data, including <code>explorer_spawns_windows-Sysmon.log</code> (published January 19, 2021)</a></li>
+</ol>
+  <p class="back-top"><a href="#top">↑ Back to top</a></p>
+</body>
+</html>

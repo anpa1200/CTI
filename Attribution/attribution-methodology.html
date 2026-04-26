@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attribution Methodology: How to Build, Defend, and Challenge a Threat Actor Attribution</title>
+  <meta name="author" content="Andrey Pautov">
+  <link rel='canonical' href='https://medium.com/@1200km'>
+  <style>
+  :root {
+    font-family: "Georgia", "Times New Roman", serif;
+    line-height: 1.7;
+    color: #1a1a1a;
+    --toc-bg: #f8f9fa;
+    --border: #dee2e6;
+    --link: #0a5eb2;
+    --link-visited: #551a8b;
+    --code-bg: #f1f3f4;
+  }
+  body { margin: 0; padding: 0; max-width: 52rem; margin-left: auto; margin-right: auto; padding: 2rem 1.5rem 3rem; }
+  .doc-meta {
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 0.875rem;
+    color: #495057;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .doc-meta a { color: var(--link); }
+  h1 { font-size: 1.75rem; font-weight: 700; margin-top: 0; margin-bottom: 0.5rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; }
+  h2 { font-size: 1.35rem; margin-top: 2.5rem; margin-bottom: 0.75rem; scroll-margin-top: 1rem; }
+  h3 { font-size: 1.15rem; margin-top: 1.75rem; margin-bottom: 0.5rem; }
+  h4 { font-size: 1.05rem; margin-top: 1.25rem; margin-bottom: 0.4rem; }
+  nav.toc { background: var(--toc-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1rem 1.5rem; margin: 1.5rem 0 2rem; }
+  nav.toc ul { list-style: none; padding-left: 0; margin: 0; }
+  nav.toc li { margin: 0.4rem 0; }
+  nav.toc a { color: var(--link); text-decoration: none; }
+  nav.toc a:hover { text-decoration: underline; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  a:visited { color: var(--link-visited); }
+  code { font-family: "Consolas", "Monaco", monospace; background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-size: 0.88em; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 5px; padding: 1rem 1.2rem; overflow-x: auto; }
+  pre code { background: none; padding: 0; font-size: 0.85em; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0 1.5rem; font-size: 0.9em; }
+  th { background: #e9ecef; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.75rem; text-align: left; }
+  tr:nth-child(even) td { background: #f8f9fa; }
+  blockquote { border-left: 3px solid var(--border); margin: 1rem 0; padding: 0.5rem 1.2rem; color: #495057; font-style: italic; }
+  ul, ol { margin: 0.75rem 0 1.25rem 1.5rem; padding-left: 1.5rem; }
+  li { margin: 0.35rem 0; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  p { margin: 0.75rem 0; }
+  .back-top { margin-top: 2.5rem; font-size: 0.9rem; color: #6c757d; }
+  @media print {
+    body { padding: 1rem; }
+    nav.toc { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+  <header class="doc-meta">
+    <p>Author: <a href="https://medium.com/@1200km">Andrey Pautov</a>. <a href="https://medium.com/@1200km">Published on Medium</a></p>
+  </header>
+  <h1 id="attribution-methodology-how-to-build-defend-and-challenge-a-threat-actor-attribution">Attribution Methodology: How to Build, Defend, and Challenge a Threat Actor Attribution</h1>
+<p><strong>A practitioner's guide for CTI analysts — from evidence collection to defensible conclusions.</strong><br />
+By <a href="https://medium.com/@1200km">Andrey Pautov</a> — March 2026</p>
+<hr />
+<h2 id="contents">Contents</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>attribution.pdf</strong></td>
+<td>Full article PDF.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="about-this-guide">About This Guide</h2>
+<p>This guide teaches attribution as an <strong>analytical discipline</strong>, not a lookup operation. The goal is not to memorize which nation-state uses which malware family — the goal is to understand <em>how</em> analysts build attribution cases, <em>what makes evidence strong or weak</em>, and <em>how to communicate attribution conclusions with the epistemic honesty that separates credible intelligence from assertive noise</em>.</p>
+<p><strong>Audience:</strong> CTI analysts, threat intelligence consumers, and security practitioners who need to build, defend, or challenge attribution claims.</p>
+<p><strong>What this guide covers:</strong><br />
+- The five-level attribution spectrum (Unattributed → Individual Attribution) and when each level is achievable<br />
+- The four evidence types ranked by strength: IOC Overlap (weakest) → Infrastructure Reuse → TTP Consistency → Operator Mistakes (strongest)<br />
+- Why wrong attribution is worse than no attribution: IR misdirection, policy harm, false flag success, credibility loss<br />
+- The Attribution Confidence Model and how to apply it<br />
+- Cluster-level vs. incident-level attribution and when to use each<br />
+- False flag detection — how adversaries plant deceptive evidence and how to resist it<br />
+- A practical worked exercise: attributing APT29 / Cozy Bear / SVR<br />
+- How to articulate attribution statements with valid uncertainty bounds<br />
+- Common analyst mistakes and how to avoid them<br />
+- Interview-ready frameworks for communicating attribution in reports and to leadership</p>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol>
+<li>Introduction: Why Attribution Is Hard and Why It Matters</li>
+<li>The Attribution Spectrum</li>
+<li>Evidence Type 1: IOC Overlap — Why It Is the Weakest Signal</li>
+<li>Evidence Type 2: Infrastructure Reuse — Stronger, But Still Caveateable</li>
+<li>Evidence Type 3: TTP Consistency — The Behavioral Fingerprint</li>
+<li>Evidence Type 4: Operator Mistakes — The Strongest Evidence</li>
+<li>The Attribution Confidence Model</li>
+<li>Cluster-Level vs. Incident-Level Attribution</li>
+<li>False Flags: When the Evidence Lies</li>
+<li>Practical Exercise: Attributing APT29 / Cozy Bear / SVR</li>
+<li>Splitting Findings: Confirmed / Assessed / Weak / Noise</li>
+<li>How to Articulate Attribution — Valid and Uncertain</li>
+<li>Common Attribution Mistakes</li>
+<li>Attribution in Practice: Interview-Ready Frameworks</li>
+<li>Quick Reference Cheatsheet</li>
+<li>Conclusion</li>
+</ol>
+<hr />
+<h2 id="source">Source</h2>
+<ul>
+<li><strong>Medium:</strong> <a href="https://medium.com/@1200km">medium.com/@1200km</a></li>
+<li><strong>Evidence cutoff:</strong> March 2026</li>
+</ul>
+  <p class="back-top"><a href="#top">↑ Back to top</a></p>
+</body>
+</html>

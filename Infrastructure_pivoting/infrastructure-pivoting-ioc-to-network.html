@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Infrastructure Pivoting: How CTI Analysts Expand From a Single IOC to a Full Attacker Network</title>
+  <meta name="author" content="Andrey Pautov">
+  <link rel='canonical' href='https://medium.com/@1200km/infrastructure-pivoting-how-cti-analysts-expand-from-a-single-ioc-to-a-full-attacker-network-1295d50ec29c'>
+  <style>
+  :root {
+    font-family: "Georgia", "Times New Roman", serif;
+    line-height: 1.7;
+    color: #1a1a1a;
+    --toc-bg: #f8f9fa;
+    --border: #dee2e6;
+    --link: #0a5eb2;
+    --link-visited: #551a8b;
+    --code-bg: #f1f3f4;
+  }
+  body { margin: 0; padding: 0; max-width: 52rem; margin-left: auto; margin-right: auto; padding: 2rem 1.5rem 3rem; }
+  .doc-meta {
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 0.875rem;
+    color: #495057;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .doc-meta a { color: var(--link); }
+  h1 { font-size: 1.75rem; font-weight: 700; margin-top: 0; margin-bottom: 0.5rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; }
+  h2 { font-size: 1.35rem; margin-top: 2.5rem; margin-bottom: 0.75rem; scroll-margin-top: 1rem; }
+  h3 { font-size: 1.15rem; margin-top: 1.75rem; margin-bottom: 0.5rem; }
+  h4 { font-size: 1.05rem; margin-top: 1.25rem; margin-bottom: 0.4rem; }
+  nav.toc { background: var(--toc-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1rem 1.5rem; margin: 1.5rem 0 2rem; }
+  nav.toc ul { list-style: none; padding-left: 0; margin: 0; }
+  nav.toc li { margin: 0.4rem 0; }
+  nav.toc a { color: var(--link); text-decoration: none; }
+  nav.toc a:hover { text-decoration: underline; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  a:visited { color: var(--link-visited); }
+  code { font-family: "Consolas", "Monaco", monospace; background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-size: 0.88em; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 5px; padding: 1rem 1.2rem; overflow-x: auto; }
+  pre code { background: none; padding: 0; font-size: 0.85em; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0 1.5rem; font-size: 0.9em; }
+  th { background: #e9ecef; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.75rem; text-align: left; }
+  tr:nth-child(even) td { background: #f8f9fa; }
+  blockquote { border-left: 3px solid var(--border); margin: 1rem 0; padding: 0.5rem 1.2rem; color: #495057; font-style: italic; }
+  ul, ol { margin: 0.75rem 0 1.25rem 1.5rem; padding-left: 1.5rem; }
+  li { margin: 0.35rem 0; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  p { margin: 0.75rem 0; }
+  .back-top { margin-top: 2.5rem; font-size: 0.9rem; color: #6c757d; }
+  @media print {
+    body { padding: 1rem; }
+    nav.toc { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+  <header class="doc-meta">
+    <p>Author: <a href="https://medium.com/@1200km">Andrey Pautov</a>. <a href="https://medium.com/@1200km/infrastructure-pivoting-how-cti-analysts-expand-from-a-single-ioc-to-a-full-attacker-network-1295d50ec29c">Published on Medium</a></p>
+  </header>
+  <h1 id="infrastructure-pivoting-how-cti-analysts-expand-from-a-single-ioc-to-a-full-attacker-network">Infrastructure Pivoting: How CTI Analysts Expand From a Single IOC to a Full Attacker Network</h1>
+<p><strong>The field manual for tracing attacker infrastructure — from one domain to dozens.</strong><br />
+By <a href="https://medium.com/@1200km">Andrey Pautov</a> — March 2026 · 32 min read</p>
+<hr />
+<h2 id="contents">Contents</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Infrastructure Pivoting_...Medium.pdf</strong></td>
+<td>Full article PDF saved from Medium.</td>
+</tr>
+<tr>
+<td><strong><a href="autoWF.py">autoWF.py</a></strong></td>
+<td>Automated pivoting tool: seed domain → full infrastructure map via VirusTotal, SecurityTrails, and crt.sh.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="about-this-guide">About This Guide</h2>
+<p>A junior analyst receives a phishing domain and adds it to a blocklist. A senior CTI analyst treats that same domain as a starting point — a thread that, when pulled correctly, unravels an entire attacker infrastructure.</p>
+<p>This guide teaches <strong>infrastructure pivoting</strong>: the systematic process of using one known indicator to discover related, previously-unknown attacker infrastructure. Done well, it transforms a single domain into a map of dozens of C2 servers, staging hosts, and supporting infrastructure — most of which the attacker believes is still unknown.</p>
+<p><strong>Why pivoting works:</strong> Attacker infrastructure is expensive to build. Adversaries reuse hosting providers, registration habits, certificate patterns, and naming conventions across campaigns. These reuse patterns are the analyst's most powerful tool.</p>
+<p><strong>Audience:</strong> CTI analysts, threat hunters, incident responders, and detection engineers.</p>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol>
+<li>Introduction: Why Infrastructure Pivoting Is a Core CTI Skill</li>
+<li>The Mental Model: Why Attackers Leave Trails</li>
+<li>The Pivoting Workflow: Domain → IP → ASN → Certificates → Expanded Infrastructure</li>
+<li>Pivot Type 1: Domain → IP Resolution</li>
+<li>Pivot Type 2: Passive DNS — The History Book of the Internet</li>
+<li>Pivot Type 3: IP → ASN / Hosting Reuse</li>
+<li>Pivot Type 4: TLS Certificates — The Most Underused Pivot</li>
+<li>Pivot Type 5: Subdomain Patterns and Enumeration</li>
+<li>Pivot Type 6: Shodan / Censys / FOFA — Fingerprinting Infrastructure</li>
+<li>Pivot Type 7: WHOIS and Registration Pattern Analysis</li>
+<li>The Complete Tooling Stack</li>
+<li>Full Worked Example: Tracing a C2 Network End-to-End</li>
+<li>Automating the Workflow with Python</li>
+<li>Common Pivoting Mistakes and Dead Ends</li>
+<li>Interview-Ready: Answering "How Do You Discover Attacker Infrastructure?"</li>
+<li>Quick Reference Cheatsheet</li>
+<li>Conclusion</li>
+<li>References and Further Reading</li>
+</ol>
+<hr />
+<h2 id="tool-autowfpy-automated-infrastructure-pivot-workflow">Tool: autoWF.py — Automated Infrastructure Pivot Workflow</h2>
+<p><code>autoWF.py</code> implements the article's pivoting workflow as a single-command Python script. Given a seed domain, it automatically runs all four pivot stages and returns a structured infrastructure map.</p>
+<h3 id="what-it-does">What it does</h3>
+<p><strong>Stage 1 — VirusTotal passive DNS</strong><br />
+Queries the VirusTotal API for the domain's full historical DNS resolution history, extracting every IP the domain has ever resolved to.</p>
+<p><strong>Stage 2 — Reverse IP pivot (SecurityTrails)</strong><br />
+For each discovered IP, queries SecurityTrails reverse DNS to find all other domains that have resolved to the same IP — uncovering co-hosted or reused infrastructure.</p>
+<p><strong>Stage 3 — Subdomain enumeration (SecurityTrails)</strong><br />
+Enumerates all known subdomains for the seed domain, expanding the infrastructure surface area.</p>
+<p><strong>Stage 4 — Certificate transparency (crt.sh)</strong><br />
+Queries crt.sh CT logs for all TLS certificates issued for the domain and its subdomains, surfacing additional hostnames the attacker may have registered.</p>
+<h3 id="output">Output</h3>
+<p>Returns a JSON summary with:<br />
+- <code>discovered_ips</code> — all IPs the seed domain has resolved to<br />
+- <code>discovered_domains</code> — all co-hosted domains found via reverse IP lookup<br />
+- <code>subdomains</code> — all known subdomains<br />
+- <code>certificate_names</code> — all CN/SAN names from CT logs</p>
+<h3 id="requirements">Requirements</h3>
+<pre><code>pip install requests
+</code></pre>
+<p>API keys (free tiers sufficient for most CTI work):<br />
+- <strong>VirusTotal:</strong> <a href="https://www.virustotal.com">virustotal.com</a> — free API key<br />
+- <strong>SecurityTrails:</strong> <a href="https://securitytrails.com">securitytrails.com</a> — free tier available</p>
+<h3 id="usage">Usage</h3>
+<pre><code class="language-bash">export VT_API_KEY=your_virustotal_api_key
+export ST_API_KEY=your_securitytrails_api_key
+
+python3 autoWF.py &lt;seed_domain&gt;
+</code></pre>
+<p><strong>Example:</strong></p>
+<pre><code class="language-bash">python3 autoWF.py malicious-c2.example.com
+</code></pre>
+<p><strong>Example output:</strong></p>
+<pre><code>[*] Starting pivot on: malicious-c2.example.com
+  [DNS] Historical resolution: malicious-c2.example.com → 185.220.101.45
+  [IP PIVOT] 185.220.101.45 → another-c2.example.net
+  [SUB] staging.malicious-c2.example.com
+  [CERT] Found in CT logs: admin.malicious-c2.example.com
+
+=== PIVOT SUMMARY ===
+{
+  &quot;seed&quot;: &quot;malicious-c2.example.com&quot;,
+  &quot;discovered_ips&quot;: [&quot;185.220.101.45&quot;],
+  &quot;discovered_domains&quot;: [&quot;another-c2.example.net&quot;, &quot;malicious-c2.example.com&quot;],
+  &quot;subdomains&quot;: [&quot;staging.malicious-c2.example.com&quot;],
+  &quot;certificate_names&quot;: [&quot;admin.malicious-c2.example.com&quot;, &quot;malicious-c2.example.com&quot;]
+}
+</code></pre>
+<h3 id="notes">Notes</h3>
+<ul>
+<li>IPv6 addresses are skipped for SecurityTrails reverse lookup (API limitation).</li>
+<li>crt.sh failures are non-fatal — the script continues and logs a warning.</li>
+<li>For large infrastructure clusters, SecurityTrails free tier rate limits may apply.</li>
+<li><strong>Defensive / research use only.</strong> Run against infrastructure you are authorized to investigate.</li>
+</ul>
+<hr />
+<h2 id="source">Source</h2>
+<ul>
+<li><strong>Medium:</strong> <a href="https://medium.com/@1200km">medium.com/@1200km</a></li>
+<li><strong>Evidence cutoff:</strong> March 2026</li>
+</ul>
+  <p class="back-top"><a href="#top">↑ Back to top</a></p>
+</body>
+</html>

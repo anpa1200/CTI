@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ATT&CK as a Working Tool: Theory and Hands-On Practical Usage</title>
+  <meta name="author" content="Andrey Pautov">
+  <link rel='canonical' href='https://medium.com/@1200km/att-ck-as-a-working-tool-theory-and-hands-on-practical-usage-d63835c9f101'>
+  <style>
+  :root {
+    font-family: "Georgia", "Times New Roman", serif;
+    line-height: 1.7;
+    color: #1a1a1a;
+    --toc-bg: #f8f9fa;
+    --border: #dee2e6;
+    --link: #0a5eb2;
+    --link-visited: #551a8b;
+    --code-bg: #f1f3f4;
+  }
+  body { margin: 0; padding: 0; max-width: 52rem; margin-left: auto; margin-right: auto; padding: 2rem 1.5rem 3rem; }
+  .doc-meta {
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 0.875rem;
+    color: #495057;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .doc-meta a { color: var(--link); }
+  h1 { font-size: 1.75rem; font-weight: 700; margin-top: 0; margin-bottom: 0.5rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; }
+  h2 { font-size: 1.35rem; margin-top: 2.5rem; margin-bottom: 0.75rem; scroll-margin-top: 1rem; }
+  h3 { font-size: 1.15rem; margin-top: 1.75rem; margin-bottom: 0.5rem; }
+  h4 { font-size: 1.05rem; margin-top: 1.25rem; margin-bottom: 0.4rem; }
+  nav.toc { background: var(--toc-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1rem 1.5rem; margin: 1.5rem 0 2rem; }
+  nav.toc ul { list-style: none; padding-left: 0; margin: 0; }
+  nav.toc li { margin: 0.4rem 0; }
+  nav.toc a { color: var(--link); text-decoration: none; }
+  nav.toc a:hover { text-decoration: underline; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  a:visited { color: var(--link-visited); }
+  code { font-family: "Consolas", "Monaco", monospace; background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-size: 0.88em; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 5px; padding: 1rem 1.2rem; overflow-x: auto; }
+  pre code { background: none; padding: 0; font-size: 0.85em; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0 1.5rem; font-size: 0.9em; }
+  th { background: #e9ecef; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.75rem; text-align: left; }
+  tr:nth-child(even) td { background: #f8f9fa; }
+  blockquote { border-left: 3px solid var(--border); margin: 1rem 0; padding: 0.5rem 1.2rem; color: #495057; font-style: italic; }
+  ul, ol { margin: 0.75rem 0 1.25rem 1.5rem; padding-left: 1.5rem; }
+  li { margin: 0.35rem 0; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  p { margin: 0.75rem 0; }
+  .back-top { margin-top: 2.5rem; font-size: 0.9rem; color: #6c757d; }
+  @media print {
+    body { padding: 1rem; }
+    nav.toc { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+  <header class="doc-meta">
+    <p>Author: <a href="https://medium.com/@1200km">Andrey Pautov</a>. <a href="https://medium.com/@1200km/att-ck-as-a-working-tool-theory-and-hands-on-practical-usage-d63835c9f101">Published on Medium</a></p>
+  </header>
+  <h1 id="attck-as-a-working-tool-theory-and-hands-on-practical-usage">ATT&amp;CK as a Working Tool: Theory and Hands-On Practical Usage</h1>
+<p><strong>A practitioner's guide for CTI analysts, detection engineers, and threat hunters.</strong><br />
+By <a href="https://medium.com/@1200km">Andrey Pautov</a> — March 2026 · 64 min read</p>
+<hr />
+<h2 id="contents">Contents</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>ATT&amp;CK as a Working Tool_ Theory and Hands-On Practical Usage _ by Andrey Pautov _ Mar, 2026 _ Medium.pdf</strong></td>
+<td>Full article PDF saved from Medium.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="about-this-guide">About This Guide</h2>
+<p>This is not a framework overview or a "here is the matrix, good luck" introduction. It is a working practitioner's reference built around tasks you actually do: analyze a threat actor, write a CTI report, build detection rules, run a purple team exercise.</p>
+<p><strong>Audience:</strong> CTI analysts, detection engineers, SOC analysts, and security practitioners transitioning into threat intelligence.</p>
+<p><strong>What you will be able to do after reading:</strong><br />
+- Read any threat report and extract a complete, evidence-labeled ATT&amp;CK mapping table with correct technique IDs, tactic assignments, and confidence levels<br />
+- Build ATT&amp;CK Navigator layers that accurately represent a threat actor's TTP profile<br />
+- Overlay a threat actor profile against your detection coverage and produce a prioritized gap analysis<br />
+- Write Sigma detection rules correctly tagged with ATT&amp;CK IDs, based on the technique's documented data sources<br />
+- Design a threat hunt hypothesis from ATT&amp;CK technique data and formulate the corresponding queries<br />
+- Run adversary emulation and purple team exercises driven by ATT&amp;CK TTPs<br />
+- Identify and avoid the seven most common analyst mistakes that undermine the framework's value</p>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol>
+<li>Introduction: Why You Need This Guide</li>
+<li>A Note on How to Use This Guide</li>
+<li>Why ATT&amp;CK Exists — The Problem It Solves</li>
+<li>Framework Anatomy — Reading the Map</li>
+<li>The 14 Tactics: Adversary Goals, Not Steps</li>
+<li>Techniques, Sub-Techniques, and Procedures</li>
+<li>ATT&amp;CK Domains: Enterprise, Mobile, ICS</li>
+<li>How a CTI Analyst Actually Uses ATT&amp;CK</li>
+<li>Use Case 1: Mapping a Threat Report to ATT&amp;CK</li>
+<li>Use Case 2: Coverage Gap Analysis with ATT&amp;CK Navigator</li>
+<li>What ATT&amp;CK Navigator Is and Why It Matters</li>
+<li>Use Case 3: Detection Engineering (Sigma + ATT&amp;CK)</li>
+<li>Use Case 4: Threat Hunting with ATT&amp;CK</li>
+<li>Use Case 5: Adversary Emulation and Purple Teaming</li>
+<li>Hands-On: Step-by-Step Worked Example</li>
+<li>Essential Tooling Reference</li>
+<li>Common Pitfalls and Analyst Mistakes</li>
+<li>ATT&amp;CK in a CTI Workflow: Putting It All Together</li>
+<li>Quick Reference Cheatsheet</li>
+</ol>
+<hr />
+<h2 id="source">Source</h2>
+<ul>
+<li><strong>Medium:</strong> <a href="https://medium.com/@1200km">medium.com/@1200km</a></li>
+<li><strong>Framework reference:</strong> MITRE ATT&amp;CK v16, Enterprise domain</li>
+<li><strong>Evidence cutoff:</strong> March 2026</li>
+</ul>
+  <p class="back-top"><a href="#top">↑ Back to top</a></p>
+</body>
+</html>
