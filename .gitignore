@@ -32,15 +32,16 @@ Thumbs.db
 *.log
 .cache/
 
-# Research working files (not for publication)
-Anomaly_activity/gemini_research.md
-Anomaly_activity/openAI_research.md
-Insider_Attack_Detection/gemini_research.md
-Insider_Attack_Detection/openAI_research.md
-Insider_Attack_Detection/openai_research.md
-Insider_Attack_Detection/claude_research.md
-Pyramid-of-Pain-AI-Revision/deep-research-prompt.md
-Pyramid-of-Pain-AI-Revision/gemini-research.md
-Pyramid-of-Pain-AI-Revision/openAi.md
-AI_Threat_Actors/gemini_research.md
-AI_Threat_Actors/openAI_research.md
+# Research working files (AI model notes, prompts — not for publication)
+**/*gemini*.md
+**/*openai*.md
+**/*openAI*.md
+**/*claude_research*.md
+**/*research-claude*.md
+**/*research-gemini*.md
+**/*research-openai*.md
+**/*research_gemini*.md
+**/*research_openai*.md
+**/*deep_research_prompt*.md
+**/*deep-research-prompt*.md
+**/*openAi*.md
