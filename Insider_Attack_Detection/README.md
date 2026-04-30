@@ -925,13 +925,13 @@ This phased approach prioritises the highest-value, lowest-effort controls first
 
 ### Phase 1 — Foundations (Months 1–3)
 
-Target outcome: Minimum viable insider detection programme. Would have provided real-time detection or materially shortened investigation time in the Cisco, Yahoo, and Morrisons cases.
+Target outcome: Minimum viable insider detection programme. Would have provided real-time detection or materially shortened investigation time in the Cisco, Barile, Yahoo, and Morrisons cases.
 
 1. **HR system integration with IdP**: departure dates, role changes, leave status reaching SIEM within hours of change. This single integration has the greatest leverage over detection quality of any action in this phase.
 2. **Enable and forward to SIEM**: IdP sign-in logs (full field set), AD security audit events (4624, 4720, 4728, 1102), AWS CloudTrail (all management events), M365 UAL.
 3. **Implement Tier 1 deterministic rules**: post-termination access, audit log clearing, email forwarding to external domain, new privileged account creation, backup deletion outside change window.
 4. **Legal and policy foundation**: review and update AUP; engage legal counsel for DPIA or jurisdiction-appropriate assessment; document legal basis for each monitoring activity before enabling it.
-5. **Offboarding SLA**: define and enforce a technical offboarding SLA — all accounts disabled and credentials revoked within 4 hours of documented departure. The Cisco/Ramesh case demonstrates the direct cost of missing this.
+5. **Offboarding SLA**: define and enforce a technical offboarding SLA — all accounts disabled and credentials revoked within 4 hours of documented departure. The Cisco/Ramesh (§3.5) and Barile (§3.14) cases demonstrate the direct cost of missing this.
 
 ---
 
@@ -1018,9 +1018,9 @@ The following primary sources are cited in this guide. For DOJ criminal matters,
 <a id="ref-2"></a>[[2]](https://www.verizon.com/business/resources/reports/dbir/) Verizon. *2025 Data Breach Investigations Report*. 2025. https://www.verizon.com/business/resources/reports/dbir/
 *(DBIR "internal actor" category includes both malicious insiders and negligent human error. Not all internal-actor incidents represent malicious insider cases.)*
 
-<a id="ref-3"></a>[[3]](https://ponemonsullivanreport.com/2023/10/cost-of-insider-risks-global-report-2023/) Ponemon Institute / DTEX Systems. *2023 Cost of Insider Risks Global Report*. 2023. https://www.dtexsystems.com/resource/2023-insider-risk-report/ *(Sponsored research; available via DTEX Systems' resources page — confirm the URL is current. Self-selected survey methodology; reported figures reflect participating organisations only.)*
+<a id="ref-3"></a>[[3]](https://ponemonsullivanreport.com/2023/10/cost-of-insider-risks-global-report-2023/) Ponemon Institute / DTEX Systems. *2023 Cost of Insider Risks Global Report*. 2023. https://ponemonsullivanreport.com/2023/10/cost-of-insider-risks-global-report-2023/ *(Sponsored research; self-selected survey methodology; reported figures reflect participating organisations only.)*
 
-<a id="ref-4"></a>[[4]](https://www.sei.cmu.edu/library/common-sense-guide-to-mitigating-insider-threats-seventh-edition/) Carnegie Mellon University SEI CERT Division. *Common Sense Guide to Mitigating Insider Threats, Seventh Edition*. 2022. https://resources.sei.cmu.edu/library/asset-view.cfm?assetid=552459
+<a id="ref-4"></a>[[4]](https://www.sei.cmu.edu/library/common-sense-guide-to-mitigating-insider-threats-seventh-edition/) Carnegie Mellon University SEI CERT Division. *Common Sense Guide to Mitigating Insider Threats, Seventh Edition*. 2022. https://www.sei.cmu.edu/library/common-sense-guide-to-mitigating-insider-threats-seventh-edition/
 *(Primary source for CERT case statistics, taxonomy, kill chain model, and sector study statistics cited throughout this guide.)*
 
 <a id="ref-5"></a>[[5]](#ref-5) US Army / DOJ. *United States v. Bradley (Chelsea) Manning*. Court-martial record, 2013. Manning v. United States, subsequent legal proceedings.
@@ -1031,17 +1031,17 @@ The following primary sources are cited in this guide. For DOJ criminal matters,
 
 <a id="ref-7"></a>[[7]](https://www.justice.gov/usao-ndca/pr/former-cisco-engineer-sentenced-two-years-federal-prison-intentionally-damaging) US Department of Justice, USAO Northern District of California. *United States v. Sudhish Kasaba Ramesh*. Press release, 2020. https://www.justice.gov/usao-ndca/pr/former-cisco-engineer-sentenced-two-years-federal-prison-intentionally-damaging
 
-<a id="ref-8"></a>[[8]](https://www.justice.gov/archives/opa/pr/former-ge-power-engineer-convicted-conspiracy-commit-economic-espionage) US Department of Justice. *United States v. Xiaoqing Zheng*. Indictment, 2019; Conviction press release, 2023. https://www.justice.gov/opa/pr/ge-engineer-and-chinese-businessman-charged-economic-espionage-and-theft-trade-secrets
+<a id="ref-8"></a>[[8]](https://www.justice.gov/archives/opa/pr/former-ge-power-engineer-convicted-conspiracy-commit-economic-espionage) US Department of Justice. *United States v. Xiaoqing Zheng*. Conviction press release, 2023. https://www.justice.gov/archives/opa/pr/former-ge-power-engineer-convicted-conspiracy-commit-economic-espionage
 
 <a id="ref-9"></a>[[9]](https://www.justice.gov/usao-sdny/pr/former-employee-ubiquiti-sentenced-six-years-prison-stealing-confidential-data-and) US Department of Justice, SDNY. *United States v. Nickolas Sharp*. Press release, 2023. https://www.justice.gov/usao-sdny/pr/former-employee-ubiquiti-sentenced-six-years-prison-stealing-confidential-data-and
 
 <a id="ref-10"></a>[[10]](#ref-10) Tesla, Inc. v. Tripp and related proceedings; Handelsblatt reporting, 2023. *(Primary legal filings are the authoritative source; Handelsblatt and Tesla legal disclosures are cited as secondary sources in the absence of a consolidated public primary document.)*
 
-<a id="ref-11"></a>[[11]](https://www.justice.gov/archive/usao/nj/Press/files/pdffiles/Older/duro1213rel.pdf) US Department of Justice, USAO District of New Jersey. *United States v. Roger Duronio*. Press release and sentencing documents, 2006. https://www.justice.gov/archive/usao/nj/Press/files/pdffiles/Duroniosen.pdf
+<a id="ref-11"></a>[[11]](https://www.justice.gov/archive/usao/nj/Press/files/pdffiles/Older/duro1213rel.pdf) US Department of Justice, USAO District of New Jersey. *United States v. Roger Duronio*. Press release and sentencing documents, 2006. https://www.justice.gov/archive/usao/nj/Press/files/pdffiles/Older/duro1213rel.pdf
 
 <a id="ref-12"></a>[[12]](https://www.justice.gov/usao-ndca/pr/google-self-driving-car-engineer-pleads-guilty-federal-trade-secret-theft-charges) US Department of Justice, USAO Northern District of California. *United States v. Anthony Scott Levandowski*. Press release, 2020. https://www.justice.gov/usao-ndca/pr/google-self-driving-car-engineer-pleads-guilty-federal-trade-secret-theft-charges
 
-<a id="ref-13"></a>[[13]](https://www.supremecourt.uk/cases/uksc-2018-0213) UK Supreme Court. *Wm Morrison Supermarkets plc v Various Claimants* [2020] UKSC 12. https://www.supremecourt.uk/cases/uksc-2018-0090.html
+<a id="ref-13"></a>[[13]](https://www.supremecourt.uk/cases/uksc-2018-0213) UK Supreme Court. *Wm Morrison Supermarkets plc v Various Claimants* [2020] UKSC 12. https://www.supremecourt.uk/cases/uksc-2018-0213
 *(The Supreme Court reversed Court of Appeal findings of vicarious liability and held Morrisons was NOT vicariously liable.)*
 
 <a id="ref-14"></a>[[14]](https://www.justice.gov/usao-ndca/pr/former-yahoo-employee-pleads-guilty-computer-intrusion) US Department of Justice, USAO Northern District of California. *United States v. Reyes Daniel Ruiz*. Press release, 2019. https://www.justice.gov/usao-ndca/pr/former-yahoo-employee-pleads-guilty-computer-intrusion
@@ -1056,14 +1056,14 @@ The following primary sources are cited in this guide. For DOJ criminal matters,
 
 <a id="ref-19"></a>[[19]](https://cloud.google.com/blog/topics/threat-intelligence/m-trends-2025) Mandiant / Google Cloud Security. *M-Trends 2025: Threat Intelligence Report*. 2025. https://cloud.google.com/blog/topics/threat-intelligence/m-trends-2025 *(Landing page and download registration for the full report. Published annually; cited for external attacker dwell-time comparisons and enterprise detection trend context.)*
 
-<a id="ref-20"></a>[[20]](https://web.archive.org/web/20230330112310/https://www.cisa.gov/sites/default/files/2022-11/Insider%20Threat%20Mitigation%20Guide_Final_508.pdf) CISA. *Insider Threat Mitigation Guide*. 2020. https://www.cisa.gov/resources-tools/resources/insider-threat-mitigation-guide
+<a id="ref-20"></a>[[20]](https://web.archive.org/web/20230330112310/https://www.cisa.gov/sites/default/files/2022-11/Insider%20Threat%20Mitigation%20Guide_Final_508.pdf) CISA. *Insider Threat Mitigation Guide*. 2020. https://web.archive.org/web/20230330112310/https://www.cisa.gov/sites/default/files/2022-11/Insider%20Threat%20Mitigation%20Guide_Final_508.pdf *(Direct PDF via Internet Archive; cisa.gov is blocking automated access.)*
 
 <a id="ref-21"></a>[[21]](https://www.dni.gov/files/NCSC/documents/nittf/NITTF_Insider_Threat_Program_Maturity_Framework.pdf) ODNI National Insider Threat Task Force. *Insider Threat Program Maturity Framework*. 2018. https://www.dni.gov/files/NCSC/documents/nittf/NITTF_Insider_Threat_Program_Maturity_Framework.pdf *(Operational guidance framework for US government programmes; referenced for monitoring boundary guidance, not as legal authority.)*
 
 <a id="ref-22"></a>[[22]](https://gdpr-info.eu/) European Data Protection Board / Official GDPR text. Articles 6, 13, 35. https://gdpr-info.eu/
 
-<a id="ref-23"></a>[[23]](https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/organisations/employee-records-exemption) Office of the Australian Information Commissioner. *Employee Records Exemption*. https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/workplace-privacy/employee-records-exemption
+<a id="ref-23"></a>[[23]](https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/organisations/employee-records-exemption) Office of the Australian Information Commissioner. *Employee Records Exemption*. https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/organisations/employee-records-exemption
 
 <a id="ref-24"></a>[[24]](https://www.fireeye.com/blog/threat-research/2020/12/sunburst-additional-technical-details.html) Mandiant (formerly FireEye). *SUNBURST Additional Technical Details*. December 2020. https://www.fireeye.com/blog/threat-research/2020/12/sunburst-additional-technical-details.html *(Original publication URL; archived at the Internet Archive Wayback Machine as the fireeye.com domain was retired following the FireEye → Mandiant → Google Cloud rebrand sequence. Cited for the documented use of a low-entropy subdomain DGA in the C2 channel, which evades DNS entropy-based detection heuristics.)*
 
-<a id="ref-25"></a>[[25]](#ref-25) National Labor Relations Board, Office of the General Counsel. *Electronic Monitoring and Algorithmic Management of Employees That Implicates the National Labor Relations Act*. GC 23-02. October 2022. https://www.nlrb.gov/news-outreach/news-story/nlrb-general-counsel-issues-memo-on-electronic-monitoring *(GC memos reflect the position of the General Counsel, not binding NLRB precedent. Note: GC 23-02 was rescinded in February 2025 by Acting GC Cowen via GC 25-05. The memo is cited as a documented point-in-time position on electronic monitoring; it no longer reflects current NLRB GC guidance.)*
+<a id="ref-25"></a>[[25]](#ref-25) National Labor Relations Board, Office of the General Counsel. *Electronic Monitoring and Algorithmic Management of Employees That Implicates the National Labor Relations Act*. GC 23-02. October 2022. *(GC 23-02 was rescinded in February 2025 by Acting GC Cowen via GC 25-05; the NLRB website is currently unavailable. The memo is cited as a documented point-in-time position on electronic monitoring; it no longer reflects current NLRB GC guidance. GC memos are not binding NLRB precedent.)*
