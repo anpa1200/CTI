@@ -1077,9 +1077,8 @@ wazuh_manager_ip: 192.168.10.200
 
     - name: Check Zeek logged the JNDI pattern
       ansible.builtin.shell: |
-        grep -rl "jndi" \
-          /var/lib/docker/volumes/dragonrx-lab_zeek_logs/_data/current/ 2>/dev/null \
-          | head -1
+        docker exec dragonrx_zeek sh -c \
+          'grep -il "jndi" *.log 2>/dev/null | head -1'
       register: zeek_detection
       delegate_to: localhost
       failed_when: zeek_detection.stdout == ""
