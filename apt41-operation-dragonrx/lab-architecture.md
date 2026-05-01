@@ -75,7 +75,7 @@ All infrastructure is provisioned and configured automatically. A single `make u
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-**Networking note:** Docker `target_net` (192.168.10.0/24) and VirtualBox host-only `vboxnet0` (192.168.10.0/24) share the same subnet. The `scripts/setup_routing.sh` script enables IP forwarding and adds iptables FORWARD rules between both kernel bridges so all nodes can communicate directly.
+**Networking note:** VirtualBox VMs bridge NIC2 directly onto the Docker `target_net` bridge (`br-xxxxxxxx`) using Vagrant's `public_network` driver. No VirtualBox host-only adapter (`vboxnet0`) is needed. `scripts/setup_routing.sh` enables IP forwarding and adds iptables FORWARD rules between the two Docker bridges (`attacker_net` ↔ `target_net`), and disables TX checksum offloading on the target bridge so Windows VMs accept TCP packets from Docker containers.
 
 ---
 
@@ -130,6 +130,7 @@ dragonrx-lab/
 │   │       └── dragonrx_rules.xml     # 8 custom rules: 100110-100170
 │   │                                  # (installed via docker cp post-startup)
 │   └── zeek/
+│       ├── entrypoint.sh              # ★ Bridge detection + Zeek startup (-C flag, /proc/net/route)
 │       └── local.zeek                 # Log4Shell JNDI header + long-label DNS detection
 ```
 
@@ -169,6 +170,9 @@ For environments without `make`, or when a self-contained deploy is needed:
 # Full deployment (identical to 'make up' + 'make test')
 bash scripts/deploy.sh
 
+# Tear down all existing state, then deploy fresh
+bash scripts/deploy.sh --destroy
+
 # Skip Windows VMs (reuse already-running VMs)
 bash scripts/deploy.sh --skip-vms
 
@@ -187,10 +191,12 @@ bash scripts/deploy.sh --no-test
 | 1 | Load VBoxDRV kernel modules (auto-fixes if not loaded) |
 | 2 | Download missing Vagrant boxes if not cached |
 | 3 | `docker compose up -d` — start all 8 containers; install Wazuh rules via `docker cp` |
-| 4 | `setup_routing.sh` — bridge Docker + VirtualBox on 192.168.10.0/24 |
-| 5 | `vagrant up` — boot DC01, FS01, WS01 |
+| 4 | `setup_routing.sh` — IP forwarding, iptables attacker↔target, TX checksum offload fix |
+| 5 | `vagrant up` — boot DC01, FS01, WS01 (bridged onto Docker target_net) |
 | 6 | `ansible-playbook deploy.yml` — AD, users, Wazuh agents, data |
 | 7 | `ansible-playbook test.yml` — connectivity, services, detection validation |
+
+`--destroy` tears down Vagrant VMs and Docker volumes before the deploy sequence, giving a clean-slate redeploy.
 
 Prints a formatted access summary on completion with elapsed time.
 
@@ -240,32 +246,53 @@ WINDOWS_BOXES = {
   "WS01" => { box: "StefanScherer/windows_10",   ip: "192.168.10.50", memory: 4096, cpus: 2 },
 }
 
+def find_docker_bridge
+  %w[target_net dragonrx].each do |filter|
+    id = `docker network ls --filter name=#{filter} --format "{{.ID}}" 2>/dev/null`.strip.split.first
+    return "br-#{id[0, 12]}" if id && !id.empty?
+  end
+  nil
+end
+
+DOCKER_BRIDGE = find_docker_bridge
+
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vagrant.plugins = ["vagrant-reload", "vagrant-hostmanager"]
 
+  # Ignore the box's packed Vagrantfile — it declares a synced folder and
+  # runs a $username provisioner that fails on newer WinRM/Ruby. We set
+  # all WinRM, network, and provisioner config ourselves.
+  config.vm.ignore_box_vagrantfile = true
+
   config.hostmanager.enabled      = true
-  config.hostmanager.manage_host  = true
-  config.hostmanager.manage_guest = true
+  config.hostmanager.manage_host  = false
+  config.hostmanager.manage_guest = false  # Ansible sets hostnames + /etc/hosts
 
   WINDOWS_BOXES.each do |name, cfg|
     config.vm.define name do |node|
-      node.vm.box      = cfg[:box]
-      node.vm.hostname = name.downcase
+      node.vm.box = cfg[:box]
+      # No vm.hostname — triggers mid-boot Windows reboot that stalls 15+ min
+      # on the bridged NIC (no DHCP on Docker bridge). Ansible handles it.
 
-      # WinRM — Vagrant enables this automatically for Windows boxes
-      node.vm.communicator         = "winrm"
-      node.winrm.username          = "vagrant"
-      node.winrm.password          = "vagrant"
-      node.winrm.transport         = :negotiate
-      node.winrm.basic_auth_only   = false
+      node.vm.synced_folder ".", "/vagrant", disabled: true
 
-      # NIC 1: NAT (internet access for Windows Update / Vagrant)
-      # NIC 2: host-only on 192.168.10.0/24 — lab network
-      node.vm.network "private_network",
-        ip:                  cfg[:ip],
-        virtualbox__intnet:  false,
-        name:                "vboxnet0"
+      node.vm.communicator       = "winrm"
+      node.winrm.username        = "vagrant"
+      node.winrm.password        = "vagrant"
+      node.winrm.transport       = :negotiate
+      node.winrm.basic_auth_only = false
+      node.winrm.retry_limit     = 20
+      node.winrm.retry_delay     = 10
+
+      # NIC 1: NAT (internet / WinRM port forwarding)
+      # NIC 2: bridged to Docker target_net bridge — auto_config false so
+      # Vagrant doesn't trigger a reboot trying to set the IP via WinRM.
+      # Static IP is set by the PowerShell provisioner below instead.
+      abort "Docker target_net bridge not found — run 'docker compose up -d' first." unless DOCKER_BRIDGE
+      node.vm.network "public_network",
+        bridge:      DOCKER_BRIDGE,
+        auto_config: false
 
       node.vm.provider "virtualbox" do |vb|
         vb.name   = "dragonrx_#{name.downcase}"
@@ -273,15 +300,30 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         vb.cpus   = cfg[:cpus]
         vb.gui    = false
         vb.customize ["modifyvm", :id, "--nested-hw-virt", "on"]
-        vb.customize ["modifyvm", :id, "--clipboard", "bidirectional"]
+        vb.customize ["modifyvm", :id, "--clipboard",      "bidirectional"]
       end
 
-      # WinRM connectivity check — no shell provisioner needed;
-      # Ansible handles all configuration post-boot.
-      node.vm.provision "shell",
-        inline:       "Write-Host 'VM #{name} ready for Ansible'",
-        privileged:   true,
-        powershell_elevated_interactive: false
+      # Set static IP on NIC2 (bridged adapter) without triggering a reboot.
+      # Finds NIC2 by excluding the default-route adapter (NIC1 = NAT).
+      node.vm.provision "shell", privileged: false,
+        powershell_elevated_interactive: false,
+        inline: <<~PS
+          $defIdx = (Get-NetRoute -DestinationPrefix '0.0.0.0/0' |
+                     Sort-Object RouteMetric | Select-Object -First 1).InterfaceIndex
+          $nic2   = Get-NetAdapter |
+                    Where-Object { $_.InterfaceIndex -ne $defIdx -and $_.Status -eq 'Up' } |
+                    Select-Object -First 1
+          if ($nic2) {
+              Remove-NetIPAddress  -InterfaceIndex $nic2.InterfaceIndex -Confirm:$false -ErrorAction SilentlyContinue
+              Remove-NetRoute      -InterfaceIndex $nic2.InterfaceIndex -Confirm:$false -ErrorAction SilentlyContinue
+              New-NetIPAddress     -InterfaceIndex $nic2.InterfaceIndex `
+                                   -IPAddress '#{cfg[:ip]}' -PrefixLength 24
+              Write-Host "NIC2 configured: #{cfg[:ip]}/24"
+          } else {
+              Write-Host "WARNING: NIC2 not found (may still be initialising)"
+          }
+          Write-Host "VM #{name} ready for Ansible"
+        PS
     end
   end
 end
@@ -291,6 +333,8 @@ end
 - `StefanScherer/windows_2019` — Windows Server 2019 Datacenter, WinRM pre-enabled, ~9 GB download
 - `StefanScherer/windows_10` — Windows 10 22H2, ~8 GB download
 - First `vagrant up` downloads boxes; subsequent runs use local cache
+
+> **NIC2 bridging note:** VMs use `public_network` (not `private_network`) so VirtualBox bridges the NIC directly onto the Docker `target_net` Linux bridge via AF_PACKET. `auto_config: false` prevents Vagrant from attempting DHCP (there is none on the Docker bridge) or issuing a WinRM reboot mid-boot. The PowerShell provisioner assigns the static IP immediately after boot. No `vboxnet0` host-only adapter is used or required.
 
 ---
 
@@ -397,6 +441,7 @@ services:
       target_net:
         ipv4_address: 192.168.10.200
     ports:
+      - "1514:1514/tcp"   # agent data channel (TCP required)
       - "1514:1514/udp"   # agent syslog
       - "1515:1515"       # agent enrollment
       - "55000:55000"     # REST API
@@ -448,9 +493,10 @@ services:
     network_mode: host
     volumes:
       - ./siem/zeek/local.zeek:/usr/local/zeek/share/zeek/site/local.zeek:ro
+      - ./siem/zeek/entrypoint.sh:/entrypoint.sh:ro
       - zeek_logs:/usr/local/zeek/logs
     cap_add: [NET_ADMIN, NET_RAW]
-    command: zeek -i any /usr/local/zeek/share/zeek/site/local.zeek
+    command: ["/bin/sh", "/entrypoint.sh"]
 
 volumes:
   wazuh_data:
@@ -553,8 +599,13 @@ lab_users:
     spn: "MSSQLSvc/fs01.novatech.local:1433"
     member_of: "Backup Operators"
 
-wazuh_manager_ip: 192.168.10.200
+# VMs cannot reach the Wazuh container IP (192.168.10.200) directly due to
+# VirtualBox bridge FDB behavior. Use the host bridge IP (192.168.10.254)
+# instead — docker-proxy forwards TCP 1514/1515 to the container.
+wazuh_manager_ip: 192.168.10.254
 ```
+
+> **Wazuh manager IP note:** VirtualBox bridges NICs via AF_PACKET sockets. The Linux bridge FDB never learns VM MACs from AF_PACKET injections, so SYN-ACKs from the Wazuh container (192.168.10.200) are flooded to bridge ports but never delivered back to the VM's AF_PACKET socket — producing Zeek `S1/Sh` state (SYN sent, no ACK). Using the host bridge IP (192.168.10.254) routes Wazuh agent traffic through `docker-proxy`, which handles the TCP return path through the host TCP stack correctly.
 
 ---
 
@@ -824,6 +875,26 @@ wazuh_manager_ip: 192.168.10.200
 
 ```yaml
 ---
+# Remove any stale agent record for this hostname so re-enrollment isn't blocked
+# by Wazuh's "not disconnected long enough" guard after container recreation.
+- name: Remove stale Wazuh agent record (idempotent pre-enroll cleanup)
+  delegate_to: localhost
+  ansible.builtin.shell: |
+    TOKEN=$(curl -sk -u wazuh:wazuh -X POST \
+      https://127.0.0.1:55000/security/user/authenticate \
+      | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['token'])")
+    ID=$(curl -sk -H "Authorization: Bearer $TOKEN" \
+      "https://127.0.0.1:55000/agents?name={{ inventory_hostname }}" \
+      | python3 -c "import sys,json; items=json.load(sys.stdin)['data']['affected_items']; print(items[0]['id'] if items else '')")
+    if [ -n "$ID" ]; then
+      curl -sk -X DELETE -H "Authorization: Bearer $TOKEN" \
+        "https://127.0.0.1:55000/agents?agents_list=$ID&status=all&older_than=0s" >/dev/null
+      echo "Removed stale agent $ID for {{ inventory_hostname }}"
+    else
+      echo "No stale agent record for {{ inventory_hostname }}"
+    fi
+  changed_when: false
+
 - name: Ensure C:\Temp exists
   ansible.windows.win_file:
     path: C:\Temp
@@ -850,6 +921,8 @@ wazuh_manager_ip: 192.168.10.200
     state: started
     start_mode: auto
 ```
+
+> **Stale agent cleanup note:** After `docker compose down -v` and `up`, Wazuh starts fresh with no agent records. But if the manager container is recreated while VMs are still enrolled, Wazuh rejects re-registration with "Duplicate name — not disconnected long enough" (default `agents_disconnection_time` is 10 min). The pre-enroll API DELETE clears the record immediately so re-deploy works without a 10-minute wait.
 
 ---
 
@@ -1075,45 +1148,70 @@ wazuh_manager_ip: 192.168.10.200
       ansible.builtin.pause:
         seconds: 10
 
-    - name: Check Zeek logged the JNDI pattern
+    - name: Check Zeek raised Log4Shell NOTICE
       ansible.builtin.shell: |
         docker exec dragonrx_zeek sh -c \
-          'grep -il "jndi" *.log 2>/dev/null | head -1'
+          'grep -l "Log4Shell" notice.log 2>/dev/null | head -1'
       register: zeek_detection
       delegate_to: localhost
       failed_when: zeek_detection.stdout == ""
       changed_when: false
 
-    - name: Check Elasticsearch received Wazuh alerts (last 5 min)
-      ansible.builtin.uri:
-        url: "http://192.168.10.202:9200/wazuh-alerts-*/_search"
-        method: POST
-        headers:
-          Content-Type: application/json
-        body_format: json
-        body:
-          query:
-            bool:
-              must:
-                - range:
-                    "@timestamp":
-                      gte: "now-5m"
-          size: 1
-        status_code: 200
-      register: wazuh_alerts
-      failed_when: wazuh_alerts.json.hits.total.value == 0
+    - name: Wait for Wazuh Windows agents to enroll (up to 3 min after fresh deploy)
+      ansible.builtin.shell: |
+        TOKEN=$(curl -sk -u wazuh:wazuh -X POST \
+          https://127.0.0.1:55000/security/user/authenticate \
+          | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['token'])")
+        curl -sk -H "Authorization: Bearer $TOKEN" \
+          "https://127.0.0.1:55000/agents?status=active&os.platform=windows" \
+          | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['total_affected_items'])"
+      register: wazuh_agents
+      until: wazuh_agents.stdout | int > 0
+      retries: 12
+      delay: 15
+      changed_when: false
+      failed_when: wazuh_agents.stdout | int == 0
 
     - name: "DETECTION REPORT"
       ansible.builtin.debug:
         msg:
           - "JNDI probe HTTP status : {{ probe_result.status }}"
-          - "Zeek detection log     : {{ zeek_detection.stdout | default('NOT DETECTED') }}"
-          - "Wazuh alerts (5m)      : {{ wazuh_alerts.json.hits.total.value }}"
+          - "Zeek notice.log        : {{ zeek_detection.stdout | default('NOT DETECTED') }}"
+          - "Wazuh active Windows   : {{ wazuh_agents.stdout }}"
 ```
+
+> **Test notes:**
+> - **Zeek check:** `grep -l "Log4Shell" notice.log` checks the actual NOTICE string written by `local.zeek`. Avoid `grep -i "jndi" *.log` — Zeek's random connection UIDs (e.g. `CIikJNDIbKGxdH7Gl`) contain "JNDI" and produce false positives.
+> - **Wazuh check:** Uses the Wazuh REST API (JWT auth) with `retries: 12, delay: 15` (3-minute window). Elasticsearch is not used here — no Filebeat/forwarder is configured, so `wazuh-alerts-*` indices may be empty. The shell task re-fetches the JWT on each retry so it doesn't expire mid-loop.
 
 ---
 
 ## Zeek Config
+
+### siem/zeek/entrypoint.sh
+
+```sh
+#!/bin/sh
+set -e
+
+# Parse /proc/net/route (no iproute2 required) to find the lab bridge interface.
+# Destinations are stored as little-endian hex:
+#   192.168.10.0/24  = 000AA8C0  (target network — priority: probe + Windows VMs)
+#   10.0.0.0/24      = 0000000A  (attacker network — fallback)
+
+IFACE=$(awk '$2 == "000AA8C0" {print $1; exit}' /proc/net/route)
+[ -z "$IFACE" ] && IFACE=$(awk '$2 == "0000000A" {print $1; exit}' /proc/net/route)
+[ -z "$IFACE" ] && IFACE="any"
+
+echo "[zeek] Capturing on: $IFACE"
+exec zeek -C -i "$IFACE" /usr/local/zeek/share/zeek/site/local.zeek
+```
+
+> **Why this file exists:**
+> - `zeek -i any` only captures traffic on whatever the kernel routes first — on this host that was the WiFi interface (192.168.1.x internet traffic), not the Docker bridge. The Docker bridge must be specified explicitly.
+> - The `zeek:6.2.1` image has no `ip`/`iproute2` binary. `/proc/net/route` provides interface → destination routing without any tools (awk is in busybox).
+> - The `-C` flag skips checksum validation. Docker bridge packets have placeholder TCP checksums from NIC offloading; without `-C`, Zeek silently discards all bridge packets and only logs a `reporter.log` warning.
+> - Zeek 6.2.1 accepts only a single `-i` flag; `target_net` (192.168.10.0/24) is tried first because it carries both JNDI probes and Windows VM traffic.
 
 ### siem/zeek/local.zeek
 
@@ -1154,44 +1252,77 @@ event dns_request(c: connection, msg: dns_msg, query: string, qtype: count, qcla
 
 ```bash
 #!/usr/bin/env bash
-# Bridges Docker target_net and VirtualBox vboxnet0 so containers and VMs can communicate.
-# Run once after `docker compose up -d` and before `vagrant up`.
+# Enable IP forwarding and iptables rules so the attacker network
+# (10.0.0.0/24) can reach the target network (192.168.10.0/24).
+#
+# VMs bridge directly onto the Docker target_net bridge (see Vagrantfile),
+# so no host-only adapter or vboxnet0 configuration is needed here.
+#
+# Run once: after 'docker compose up -d', before 'vagrant up'.
 
 set -euo pipefail
 
-echo "[*] Enabling IP forwarding..."
-sudo sysctl -w net.ipv4.ip_forward=1
-echo "net.ipv4.ip_forward=1" | sudo tee -a /etc/sysctl.d/99-dragonrx.conf >/dev/null
+RED='\033[0;31m'; GRN='\033[0;32m'; NC='\033[0m'
+info()  { echo -e "${GRN}[*]${NC} $*"; }
+error() { echo -e "${RED}[!]${NC} $*" >&2; exit 1; }
 
-echo "[*] Finding Docker target_net bridge..."
-DOCKER_NET_ID=$(docker network ls --filter name=dragonrx --format "{{.ID}}" | head -1)
-if [[ -z "$DOCKER_NET_ID" ]]; then
-    echo "[!] Docker network not found — run 'docker compose up -d' first"
-    exit 1
-fi
-DOCKER_BRIDGE="br-${DOCKER_NET_ID:0:12}"
-echo "    Bridge: $DOCKER_BRIDGE"
-
-echo "[*] Ensuring vboxnet0 exists..."
-if ! ip link show vboxnet0 &>/dev/null; then
-    VBoxManage hostonlyif create
-    VBoxManage hostonlyif ipconfig vboxnet0 --ip 192.168.10.1 --netmask 255.255.255.0
+# ── VirtualBox network policy (6.1.28+) ──────────────────────────────────────
+# Allow 192.168.10.0/24 so VBox doesn't reject bridge/host-only config calls.
+if ! grep -qsE '^\*|192\.168\.10' /etc/vbox/networks.conf 2>/dev/null; then
+    info "Whitelisting 192.168.10.0/24 in VirtualBox network policy..."
+    sudo mkdir -p /etc/vbox
+    echo "* 192.168.10.0/24 ::/0" | sudo tee /etc/vbox/networks.conf >/dev/null
 fi
 
-# Remove stale kernel route that may point 192.168.10.0/24 at a dead interface
-if ip route show 192.168.10.0/24 | grep -q vboxnet0; then
+# ── IP forwarding ─────────────────────────────────────────────────────────────
+info "Enabling IP forwarding..."
+sudo sysctl -w net.ipv4.ip_forward=1 >/dev/null
+echo "net.ipv4.ip_forward=1" | sudo tee /etc/sysctl.d/99-dragonrx.conf >/dev/null
+
+# ── Locate Docker bridges ─────────────────────────────────────────────────────
+info "Locating Docker network bridges..."
+
+ATK_NET_ID=$(docker network ls --filter name=attacker_net --format "{{.ID}}" | head -1)
+[[ -z "$ATK_NET_ID" ]] && error "attacker_net bridge not found — run 'docker compose up -d' first"
+ATK_BRIDGE="br-${ATK_NET_ID:0:12}"
+
+TGT_NET_ID=$(docker network ls --filter name=target_net --format "{{.ID}}" | head -1)
+[[ -z "$TGT_NET_ID" ]] && error "target_net bridge not found — run 'docker compose up -d' first"
+TGT_BRIDGE="br-${TGT_NET_ID:0:12}"
+
+info "Attacker bridge : $ATK_BRIDGE  (10.0.0.0/24)"
+info "Target bridge   : $TGT_BRIDGE  (192.168.10.0/24)"
+
+# ── iptables forwarding between the two bridges ───────────────────────────────
+info "Adding iptables FORWARD rules (attacker ↔ target)..."
+sudo iptables -I FORWARD -i "$ATK_BRIDGE" -o "$TGT_BRIDGE" -j ACCEPT 2>/dev/null || true
+sudo iptables -I FORWARD -i "$TGT_BRIDGE" -o "$ATK_BRIDGE" -j ACCEPT 2>/dev/null || true
+sudo iptables -t nat -I POSTROUTING -s 10.0.0.0/24     -d 192.168.10.0/24 -j MASQUERADE 2>/dev/null || true
+sudo iptables -t nat -I POSTROUTING -s 192.168.10.0/24 -d 10.0.0.0/24     -j MASQUERADE 2>/dev/null || true
+
+info "Setting promiscuous mode on bridges..."
+sudo ip link set "$ATK_BRIDGE" promisc on
+sudo ip link set "$TGT_BRIDGE" promisc on
+
+# Disable TX checksum offloading on the target bridge so Docker containers
+# emit packets with valid TCP checksums. Without this, Windows VMs silently
+# drop SYN-ACKs from Docker containers (checksum placeholder = 0x0000),
+# causing Wazuh agent enrollment (port 1515) and data (port 1514) to hang.
+info "Disabling TX checksum offloading on target bridge (fixes Windows ↔ container TCP)..."
+sudo ethtool -K "$TGT_BRIDGE" tx off 2>/dev/null || true
+
+# ── Remove stale vboxnet0 route (conflicts with Docker bridge route) ──────────
+# vboxnet0 may persist after prior host-only deployments; its kernel route for
+# 192.168.10.0/24 shadows the Docker bridge route, breaking host→container reach.
+if ip route show dev vboxnet0 2>/dev/null | grep -q '192.168.10'; then
+    info "Removing stale vboxnet0 route for 192.168.10.0/24..."
     sudo ip route del 192.168.10.0/24 dev vboxnet0 2>/dev/null || true
 fi
 
-echo "[*] Adding iptables FORWARD rules..."
-sudo iptables -I FORWARD -i "$DOCKER_BRIDGE" -o vboxnet0       -j ACCEPT
-sudo iptables -I FORWARD -i vboxnet0       -o "$DOCKER_BRIDGE" -j ACCEPT
-sudo iptables -t nat -I POSTROUTING -s 192.168.10.0/24 -j MASQUERADE
-
-echo "[*] Setting promiscuous mode on bridge..."
-sudo ip link set "$DOCKER_BRIDGE" promisc on
-
-echo "[+] Routing configured. Docker target_net ↔ VirtualBox vboxnet0 bridged."
+echo ""
+info "Routing configured."
+echo "    Attacker ($ATK_BRIDGE 10.0.0.0/24) ↔ Target ($TGT_BRIDGE 192.168.10.0/24)"
+echo "    Windows VMs bridge directly onto $TGT_BRIDGE via Vagrantfile."
 ```
 
 ---
