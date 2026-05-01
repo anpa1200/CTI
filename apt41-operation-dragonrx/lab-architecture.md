@@ -824,6 +824,11 @@ wazuh_manager_ip: 192.168.10.200
 
 ```yaml
 ---
+- name: Ensure C:\Temp exists
+  ansible.windows.win_file:
+    path: C:\Temp
+    state: directory
+
 - name: Download Wazuh agent MSI
   ansible.windows.win_get_url:
     url: "https://packages.wazuh.com/4.x/windows/wazuh-agent-4.7.0-1.msi"
