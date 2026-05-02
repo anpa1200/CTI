@@ -160,6 +160,19 @@ bash scripts/deploy.sh        # one script, ~45 min
 
 > **Zeek note:** Zeek runs with `network_mode: host` (no fixed IP). Logs live inside the `dragonrx_zeek` container: `docker exec dragonrx_zeek ls /usr/local/zeek/logs/current/`
 
+## Destroy the Lab
+
+```bash
+# Option A — Docker only
+docker compose down -v          # stops containers and removes volumes
+
+# Option B — Full lab (Docker + VMs)
+bash scripts/destroy.sh         # tears down VMs via Vagrant, then docker compose down -v
+# or: make down
+```
+
+> Volumes hold Wazuh indices and Zeek logs. `-v` removes them; omit it if you want to preserve data between runs.
+
 ---
 
 ## One-Script Deployment
