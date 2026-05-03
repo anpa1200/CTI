@@ -431,7 +431,10 @@ services:
   # ── TARGET SIDE ─────────────────────────────────────────────────────
 
   web01:
-    image: ghcr.io/christophetd/log4shell-vulnerable-app:latest
+    build:
+      context: ./targets/web01
+      dockerfile: Dockerfile.log4shell
+    image: dragonrx_web01:local
     container_name: dragonrx_web01
     hostname: web01
     networks:
