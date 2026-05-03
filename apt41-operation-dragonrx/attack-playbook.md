@@ -37,10 +37,16 @@
 Run these before touching any attack commands.
 
 ```bash
+# 0. (First time only) Build the Kali attacker container
+#    This installs nmap, impacket, hashcat, crackmapexec, metasploit, etc.
+#    Skip on subsequent runs — image is cached.
+docker compose build kali
+# ~5–10 min on first build
+
 # 1. Deploy the lab (from dragonrx-lab/ directory)
 make up
-# First run: ~45 min (Vagrant boxes download, Ansible provisions)
-# Subsequent runs (boxes cached): ~10 min
+# First run: ~55 min (Kali build + Vagrant boxes download + Ansible provisioning)
+# Subsequent runs (all cached): ~10 min
 
 # 2. Verify all services are healthy
 make test
