@@ -151,46 +151,56 @@ nmap -sV -sC -p 8080 10.0.0.100 -oA /opt/loot/recon/web01_scan
 **Expected output:**
 ```
 PORT     STATE SERVICE VERSION
-8080/tcp open  http    Apache Tomcat/Coyote JSP engine 1.1
-| http-title: Patient Portal - NovaTech Pharma
-|_http-server-header: Apache-Coyote/1.1
+8080/tcp open  http    Apache Tomcat (Spring Boot embedded)
 ```
+
+> The app suppresses the `Server:` response header. nmap confirms the port is open and HTTP — that is enough.
 
 ```bash
 [KALI]
-# Web technology fingerprinting — detects frameworks, CMS, server headers
+# Web technology fingerprinting
 whatweb http://10.0.0.100:8080 -v 2>/dev/null | tee /opt/loot/recon/whatweb.txt
+```
 
-# Read raw response headers — look for Server, X-Powered-By
+**Expected — Spring Boot REST API, no HTML:**
+```
+Status    : 400 Bad Request
+Content-Type: application/json
+```
+
+WhatWeb detects little: no HTML, no Server header, no cookies. The `application/json`
+content type and bare 400 on `/` are characteristic of a Spring Boot REST API with no default endpoint.
+
+```bash
+[KALI]
+# Read raw response headers
 curl -s -o /dev/null -D - http://10.0.0.100:8080/ | grep -iE "server|x-powered|content-type"
 ```
 
 **Expected:**
 ```
-Server: Apache-Coyote/1.1
-Content-Type: text/html;charset=UTF-8
+Content-Type: application/json
 ```
 
 ```bash
 [KALI]
-# CRITICAL STEP: trigger a 404 error to expose the Java stack trace
-# This app has debug error pages enabled (dev config left in production)
-curl -s "http://10.0.0.100:8080/DOESNOTEXIST" 2>/dev/null | grep -i "log4j\|core\|jar\|java"
+# Probe for injection vectors: test the X-Api-Version header
+# Spring Boot REST APIs commonly accept custom version headers; log4j logs them at request time
+curl -v -H "X-Api-Version: recon-test" http://10.0.0.100:8080/ 2>&1 | grep -E "< HTTP|Content-Type"
 ```
 
-**Expected — this is the Log4Shell confirmation:**
+**Expected:**
 ```
-...log4j-core-2.14.1.jar...
-...org.apache.logging.log4j...
-...at com.novatech.portal...
+< HTTP/1.1 200
+< Content-Type: text/plain;charset=UTF-8
 ```
 
-The stack trace exposes `log4j-core-2.14.1.jar` in the classpath. CVE-2021-44228 affects Log4j 2
-versions 2.0-beta9 through 2.15.0 — this version (2.14.1) is vulnerable. Confirmed without sending
-any exploit code.
+A 200 confirms the app accepts and processes `X-Api-Version`. This is the header log4j logs.
+The log4j version is not visible in the HTTP response — OOB callback in Phase 1.1 is the
+confirmation step. CVE-2021-44228 affects all log4j-core 2.x prior to 2.15.0.
 
-**SIEM detection posture:** Zero alerts. These are all standard HTTP requests or external database
-queries. Zeek logs the 404 but generates no alert.
+**SIEM detection posture:** Zero alerts. Standard HTTP requests with no exploit payload.
+Zeek logs connections to conn.log; no rule match.
 
 ---
 
