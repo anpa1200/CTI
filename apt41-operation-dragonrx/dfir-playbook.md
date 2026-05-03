@@ -7,6 +7,8 @@
 
 ---
 
+> **Operation DragonRx series** · [CTI Report](apt41-dragonrx-cti-report.md) · [Lab Architecture](lab-architecture.md) · [Attack Playbook](attack-playbook.md) · [Detection Guide](detection-guide.md) · **DFIR Playbook** · [Malware Analysis](rxphage-malware.md)
+
 ## Table of Contents
 
 1. [IR Phase 1: Triage and Scoping](#1-ir-phase-1-triage-and-scoping)

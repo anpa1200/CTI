@@ -26,6 +26,8 @@ docker exec -it dragonrx_wazuh bash
 
 ---
 
+> **Operation DragonRx series** · [CTI Report](apt41-dragonrx-cti-report.md) · [Lab Architecture](lab-architecture.md) · [Attack Playbook](attack-playbook.md) · **Detection Guide** · [DFIR Playbook](dfir-playbook.md) · [Malware Analysis](rxphage-malware.md)
+
 ## Detection Coverage Map
 
 | Attack Phase | Detection Method | Alert Name | Confidence |

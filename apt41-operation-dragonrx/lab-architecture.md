@@ -1,6 +1,7 @@
 # Lab Architecture — Operation DragonRx
 
-> **Part of the Operation DragonRx series** · [Overview](README.md) · **Lab Architecture** · [Attack Playbook](attack-playbook.md) · [DFIR Walkthrough](dfir-walkthrough.md)
+> **Operation DragonRx series** · [CTI Report](apt41-dragonrx-cti-report.md) · **Lab Architecture** · [Attack Playbook](attack-playbook.md) · [Detection Guide](detection-guide.md) · [DFIR Playbook](dfir-playbook.md) · [Malware Analysis](rxphage-malware.md)
+> Published: [medium.com/@1200km — Lab Architecture: Operation DragonRx](https://medium.com/@1200km/lab-architecture-operation-dragonrx-38602f432e5c)
 
 **A fully automated, reproducible APT41 detection lab.** Docker + Vagrant + Ansible provisioned in a single command. Three Windows VMs (Active Directory, file server, workstation), eight Linux containers (attacker tooling, Log4Shell target, Wazuh/Elastic/Zeek SIEM), and custom attack simulation tooling. Built for security researchers studying Log4Shell exploitation, Kerberoasting, DCSync, and lateral movement — with full SIEM telemetry from day one.
 
@@ -115,6 +116,8 @@ dragonrx-lab/
 │   └── payloads/                      # Exploit.class served to Log4Shell victims
 │
 ├── attacker/
+│   ├── Dockerfile.kali                # kalilinux/kali-rolling base + nmap, impacket, hashcat,
+│   │                                  # crackmapexec, metasploit, dnscat2, theHarvester, sliver-client
 │   ├── tools/                         # volume-mounted into Kali container at /opt/tools
 │   └── loot/                          # exfil landing zone at /opt/loot
 │
@@ -374,7 +377,10 @@ services:
   # ── ATTACKER SIDE ───────────────────────────────────────────────────
 
   kali:
-    image: kalilinux/kali-rolling:latest
+    build:
+      context: ./attacker
+      dockerfile: Dockerfile.kali
+    image: dragonrx_kali:local
     container_name: dragonrx_kali
     hostname: kali
     networks:
