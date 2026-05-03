@@ -117,7 +117,8 @@ dragonrx-lab/
 │
 ├── attacker/
 │   ├── Dockerfile.kali                # kalilinux/kali-rolling base + nmap, impacket, hashcat,
-│   │                                  # crackmapexec, metasploit, dnscat2, theHarvester, sliver-client
+│   │                                  # crackmapexec, metasploit, netcat, ldap-utils, dnscat2,
+│   │                                  # theHarvester, sliver-client v1.7.3 (linux-amd64)
 │   ├── tools/                         # volume-mounted into Kali container at /opt/tools
 │   └── loot/                          # exfil landing zone at /opt/loot
 │
