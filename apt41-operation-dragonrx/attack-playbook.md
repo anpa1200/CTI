@@ -877,8 +877,14 @@ $krb5tgs$23$*svc_backup...<full hash>...:Backup_Svc99!
 **What is Backup Operators privilege escalation:** Windows Backup Operators hold `SeBackupPrivilege` —
 the right to bypass file ACLs for backup purposes. This includes reading any file on the system,
 including `NTDS.dit` (the Active Directory database containing all password hashes). impacket's
-`secretsdump` can leverage this privilege remotely: it instructs the DC to create a VSS shadow copy
-and reads NTDS.dit from the shadow. No Domain Admin required — Backup Operators membership is enough.
+`secretsdump -use-vss` leverages this by starting `RemoteRegistry` remotely and creating a VSS
+shadow copy to read NTDS.dit.
+
+> **Lab note:** `svc_backup` is also a member of the local `Administrators` group on DC01 —
+> a common real-world misconfiguration where backup service accounts are granted excessive rights
+> on the servers they protect. Without local admin, starting `RemoteRegistry` remotely is denied
+> (RPC 0x5). The `SeBackupPrivilege` path to NTDS.dit works on a local shell even without
+> local admin; the remote impacket path requires it.
 
 ATT&CK: T1003.003 — OS Credential Dumping: NTDS
 
