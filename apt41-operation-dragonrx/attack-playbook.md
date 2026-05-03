@@ -335,33 +335,16 @@ APT41 is documented to establish multiple redundant persistence mechanisms befor
 We deploy two independent channels: a JSP webshell (instantly accessible via HTTP) and the RxPhage
 beacon (persistent C2 via Sliver HTTPS). Both survive the reverse shell dying.
 
-### 2.1 Stabilize the Reverse Shell (PTY Upgrade)
+### 2.1 Stabilize the Reverse Shell
 
-The raw reverse shell has no TTY: no tab completion, commands like `sudo` break, Ctrl+C kills the
-whole shell. Upgrade to a proper PTY:
+WEB01 is a minimal Alpine container — no Python, no `script`, no bash. A proper PTY upgrade
+is not possible. The raw shell works fine for the handful of commands needed in this phase.
+**Sliver C2 (§2.3) replaces the reverse shell entirely and provides full interactivity.**
 
-```bash
-[WEB01 — raw reverse shell]
-# WEB01 is Alpine — no Python, no bash. Use `script` (busybox built-in) to spawn a PTY.
-script -qc /bin/sh /dev/null
-# Now you have a sh prompt with job control
-
-# Press Ctrl+Z to background the shell
-```
-
-```bash
-[KALI]
-# Set raw mode — passes all keystrokes including Ctrl+C to the remote shell
-stty raw -echo
-fg
-# Press Enter once
-```
-
-```bash
-[WEB01 — now a proper PTY]
-export TERM=xterm
-stty rows 50 cols 200
-```
+Two things to keep in mind with the dumb shell:
+- **Do not press Ctrl+C** — it kills the nc connection. Use `Ctrl+\` to send SIGQUIT or just
+  avoid signals altogether.
+- Pipes and semicolons work normally: `id; whoami; hostname`
 
 ### 2.2 Deploy JSP Webshell (China Chopper Pattern)
 
