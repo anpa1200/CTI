@@ -1,3 +1,4 @@
+import ipaddress
 import requests
 import json
 import os
@@ -103,14 +104,22 @@ def pivot_domain(seed_domain: str) -> dict:
     }
     print(f"[*] Starting pivot on: {seed_domain}")
     # Step 1: VT domain info + passive DNS
-    vt_data = vt_domain_info(seed_domain)
+    try:
+        vt_data = vt_domain_info(seed_domain)
+    except Exception as e:
+        print(f"  [WARN] VT domain lookup failed for {seed_domain}: {e}")
+        vt_data = {}
     for record in vt_data.get("dns_history", []):
         ip = record["ip"]
         results["discovered_ips"].add(ip)
         print(f"  [DNS] Historical resolution: {seed_domain} → {ip}")
         # Step 2: Reverse IP pivot for each discovered IP (IPv4 only)
-        if ":" in ip:
-            print(f"  [SKIP] IPv6 not supported by ST reverse lookup: {ip}")
+        try:
+            if ipaddress.ip_address(ip).version == 6:
+                print(f"  [SKIP] IPv6 not supported by ST reverse lookup: {ip}")
+                continue
+        except ValueError:
+            print(f"  [SKIP] Unparseable IP address: {ip}")
             continue
         co_hosted = st_reverse_ip(ip)
         for d in co_hosted:
@@ -118,7 +127,11 @@ def pivot_domain(seed_domain: str) -> dict:
                 results["discovered_domains"].add(d)
                 print(f"  [IP PIVOT] {ip} → {d}")
     # Step 3: Subdomain enumeration
-    subs = st_subdomains(seed_domain)
+    try:
+        subs = st_subdomains(seed_domain)
+    except Exception as e:
+        print(f"  [WARN] ST subdomain lookup failed for {seed_domain}: {e}")
+        subs = []
     results["subdomains"].update(subs)
     for sub in subs:
         print(f"  [SUB] {sub}")

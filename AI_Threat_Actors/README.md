@@ -101,7 +101,7 @@ The most important 2026 update is not that AI has replaced human intruders. It i
 
 **KJ-9** [Likely] — Most 2023 underground "dark LLM" offerings were wrappers, repackaging, or marketing claims rather than independently validated purpose-built criminal models. By 2025, however, underground AI tooling and repurposed mainstream/agentic services had matured enough to lower barriers for lower-skill actors in fraud, phishing, and malware development.
 
-**KJ-10** [Likely] — Official quantification is now emerging. The FBI's 2025 IC3 annual report introduced an AI-related descriptor and recorded **22,364 complaints** and **$893,346,472** in losses, reinforcing that the dominant measurable impact remains in cyber-enabled fraud and impersonation rather than high-end autonomous intrusion.
+**KJ-10** [Likely] — Official quantification is now emerging. The FBI's 2025 IC3 annual report introduced an AI-related descriptor for the first time and recorded **22,364 complaints** and **$893,346,472** in losses. Because 2025 is the first year this descriptor existed, no directly comparable prior-year figure is available; these numbers establish a baseline rather than a trend. The data reinforces that the dominant measurable impact remains in cyber-enabled fraud and impersonation rather than high-end autonomous intrusion.
 
 ---
 

@@ -105,13 +105,13 @@ Three adversary groups were selected on four criteria: technical sophistication,
 
 ---
 
-### 2.3 Lazarus Group — HIDDEN COBRA / Diamond Sleet / TraderTraitor (DPRK, RGB)
+### 2.3 Lazarus Group — HIDDEN COBRA / Diamond Sleet (DPRK, RGB)
 
 **Classification:** North Korean Reconnaissance General Bureau (RGB), active since at least 2009  
 **MITRE ATT&CK:** [G0032](https://attack.mitre.org/groups/G0032/)  
 **Primary mission:** Revenue generation for the DPRK regime (cryptocurrency theft, financial fraud, sanctions evasion) AND targeted espionage (defense, nuclear, aerospace)
 
-**Why chosen:** Lazarus provides the richest set of social-engineering-to-intrusion chain examples and is uniquely documented for financial system targeting. Operation Dream Job (fake LinkedIn recruitment), AppleJeus (trojanized crypto software), and the 3CX supply chain compromise give concrete cases for initial access detection. TraderTraitor is documented extensively by CISA, FBI, and the UN Panel of Experts. They generate excellent examples of: initial access via social engineering, cross-platform malware, BYOVD (bring-your-own-vulnerable-driver), and financial API abuse.
+**Why chosen:** Lazarus provides the richest set of social-engineering-to-intrusion chain examples and is uniquely documented for financial system targeting. Operation Dream Job (fake LinkedIn recruitment), AppleJeus (trojanized crypto software), and the 3CX supply chain compromise give concrete cases for initial access detection. The TraderTraitor campaign cluster (a CISA/FBI campaign designation for Lazarus Group cryptocurrency-targeting operations, not a separate actor alias) is documented extensively by CISA, FBI, and the UN Panel of Experts. They generate excellent examples of: initial access via social engineering, cross-platform malware, BYOVD (bring-your-own-vulnerable-driver), and financial API abuse.
 
 **Key campaigns and public reporting:**
 - **Operation AppleJeus:** Kaspersky Aug 2018, CISA Apr 2021 advisory (AA21-048A)

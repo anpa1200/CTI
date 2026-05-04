@@ -83,6 +83,16 @@ If you use the same pipeline as existing reports:
 
 ---
 
+## IOC formatting standards
+
+- **URL defanging:** All malicious or suspicious URLs in `IOCs.md` must be defanged using the `hxxps://domain[.]tld/path` convention — replace `https` with `hxxps` and bracket each dot in the hostname with `[.]`. This prevents accidental clicks and tool auto-linking.
+  - Correct: `hxxps://malicious-domain[.]com/payload`
+  - Incorrect: `https://malicious-domain.com/payload`
+- **IPs:** Defang with bracket notation: `192[.]168[.]1[.]1`.
+- **Safe context URLs** (official sources, CVE advisories, vendor reports) do not need defanging — only IOCs from the actor's own infrastructure.
+
+---
+
 ## Adding the report to the repo README
 
 In the root **README.md**, add a row to the **Reports** table:

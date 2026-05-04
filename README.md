@@ -13,7 +13,7 @@ Structured, citation-linked versions of long-form CTI articles: **PDF** and **HT
 
 - **Defender-focused:** Prioritizes actionable guidance, detection ideas, and controls mapping.
 - **Evidence-labeled:** Claims are tagged (Observed / Reported / Assessed / Claimed) with source references.
-- **Offline-friendly:** PDFs and HTML work without depending on Medium or external links for the body text.
+- **Offline-readable:** PDFs and HTML work without depending on Medium for the body text. Reference URLs (`[R1]`–`[Rx]`) require internet connectivity to resolve.
 
 ---
 
