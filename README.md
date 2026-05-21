@@ -1,112 +1,88 @@
-# CTI — Cyber Threat Intelligence
+# CTI
 
-**Evidence-labeled threat reports, SOC-oriented guidance, and defensive research.**  
-Open-source CTI by [Andrey Pautov](https://medium.com/@1200km).
+Evidence-labeled cyber threat intelligence reports designed to become hunts, detections, pivots, and defensible assessments.
 
-[![Medium](https://img.shields.io/badge/Medium-@1200km-12100E?style=flat&logo=medium)](https://medium.com/@1200km)
+![License](https://img.shields.io/github/license/anpa1200/CTI)
+![Last commit](https://img.shields.io/github/last-commit/anpa1200/CTI)
 
----
+## Demo
 
-## What’s in this repo
+Add screenshots of one HTML report, the evidence-label rubric, and the template directory.
 
-Structured, citation-linked versions of long-form CTI articles: **PDF** and **HTML** with table of contents, working reference links `[R1]`–`[Rx]`, and original figures. Each report is self-contained in its own directory and can be used for SOC playbooks, hunting, and training.
+## What This Is For
 
-- **Defender-focused:** Prioritizes actionable guidance, detection ideas, and controls mapping.
-- **Evidence-labeled:** Claims are tagged (Observed / Reported / Assessed / Claimed) with source references.
-- **Offline-readable:** PDFs and HTML work without depending on Medium for the body text. Reference URLs (`[R1]`–`[Rx]`) require internet connectivity to resolve.
+This repository is for CTI analysts, SOC leads, and detection engineers who need structured threat reports with explicit confidence discipline. Each report should make clear what is observed, reported, assessed, or claimed.
 
----
+## What It Produces
+
+| Output | Use |
+|---|---|
+| PDF report | Formal reading and sharing |
+| HTML report | Web review |
+| Evidence labels | Claim discipline |
+| Actor notes | Research continuity |
+| Templates | Repeatable CTI production |
 
 ## Reports
 
-| Report | Scope | Format |
-|--------|--------|--------|
-| [**Handala Hack Group**](handala-hack-group/) | Handala Hack Team / Void Manticore. Evidence-labeled assessment and SOC guidance. Dec 2023–Mar 2026. | [PDF](handala-hack-group/cti-research-handala-hack-group-with-nav.pdf) · [HTML](handala-hack-group/cti-research-handala-hack-group.html) · [Medium →](https://medium.com/@1200km/cti-research-handala-hack-group-aka-handala-hack-team-ddbdd294cfb8) |
-| [**Sandworm / APT44**](sandworm-apt44/) | GRU GTsST (Sandworm). Evidence-labeled assessment and SOC guidance. 2009–Mar 2026. | [PDF](sandworm-apt44/cti-research-sandworm-apt44-with-nav.pdf) · [HTML](sandworm-apt44/cti-research-sandworm-apt44.html) · [Medium →](https://medium.com/@1200km/cti-research-sandworm-apt44-649332e8af44) |
-| [**MuddyWater / Seedworm**](muddywater-seedworm/) | Iranian MOIS-linked MuddyWater cluster. Evidence-labeled assessment and SOC guidance. 2017–Mar 2026. | [PDF](muddywater-seedworm/cti-research-muddywater-seedworm-with-nav.pdf) · [HTML](muddywater-seedworm/cti-research-muddywater-seedworm.html) · [Primary sources →](https://www.cisa.gov/uscert/ncas/alerts/aa22-055a) |
-| [**ATT&CK as a Working Tool**](ATT%26CK/) | Practitioner's guide: framework anatomy, 14 tactics, 5 hands-on use cases (mapping, gap analysis, Sigma + ATT&CK, threat hunting, adversary emulation). For CTI analysts, detection engineers, and SOC analysts. Mar 2026. | [PDF](ATT%26CK/ATT%26CK%20as%20a%20Working%20Tool_%20Theory%20and%20Hands-On%20Practical%20Usage%20_%20by%20Andrey%20Pautov%20_%20Mar%2C%202026%20_%20Medium.pdf) · [Medium →](https://medium.com/@1200km) |
-| [**Attribution Methodology**](Attribution/) | Practitioner's guide: building and defending threat actor attribution. Evidence types ranked by strength (IOC overlap → TTP consistency → operator mistakes), 5-level attribution spectrum, false flag detection, APT29 worked exercise. For CTI analysts. Mar 2026. | [PDF](Attribution/attribution.pdf) · [Medium →](https://medium.com/@1200km) |
-| [**Infrastructure Pivoting**](Infrastructure_pivoting/) | Field manual: expanding a single IOC into a full attacker infrastructure map. 7 pivot types (passive DNS, reverse IP, ASN, TLS certs, subdomains, Shodan/Censys, WHOIS), C2 tracing worked example. Includes `autoWF.py` — automated pivot tool (VirusTotal + SecurityTrails + crt.sh). Mar 2026. | [autoWF.py](Infrastructure_pivoting/autoWF.py) · [Medium →](https://medium.com/@1200km) |
-| [**AI in Offensive Operations**](AI_Threat_Actors/) | Evidence-based deep research report: how threat actors use AI. Chronological timeline 2019–2026, 10 major incidents (voice cloning, Arup $25M deepfake, LAMEHUG, GTG-1002 agentic intrusion), TTP analysis (ATT&CK-aligned), statistics, reality vs. hype, actor segmentation, 5-year forecast. Apr 2026. | [Report →](AI_Threat_Actors/README.md) |
+| Report | Format | Evidence model | Assessment confidence summary |
+|---|---|---|---|
+| Handala / Void Manticore | PDF + HTML | Observed / Reported / Assessed / Claimed | [user: confirm summary] |
+| Sandworm / APT44 | PDF + HTML | Observed / Reported / Assessed / Claimed | [user: confirm summary] |
+| MuddyWater / Seedworm | PDF + HTML | Observed / Reported / Assessed / Claimed | [user: confirm summary] |
 
-*More reports (malware writeups, tool analysis, IOCs) will be added in separate directories.*
+## Quick Start
 
-- **Template:** Use **[template/](template/)** to start a new report with the same structure (README, IOCs, outline, optional build scripts).
-
----
-
-## Repo structure
-
-```
-CTI/
-├── README.md                 # This file
-├── template/                 # Universal research template (see below)
-│   ├── README.md             # How to use the template
-│   ├── REPORT-README.tpl.md  # Report directory README template
-│   ├── IOCs.tpl.md           # IOC document template
-│   ├── REPORT-OUTLINE.md     # Section outline for the long-form article
-│   └── extract_figures.sh.tpl
-├── handala-hack-group/       # One directory per report
-│   ├── README.md, IOCs.md
-│   ├── *.pdf, *.html
-│   └── assets/               # Figures (optional; gitignored)
-├── sandworm-apt44/
-│   ├── README.md, IOCs.md
-│   ├── *.pdf, *.html
-│   └── assets/
-├── muddywater-seedworm/
-│   ├── README.md, IOCs.md
-│   ├── *.pdf, *.html
-│   └── assets/
-├── ATT&CK/                   # Practitioner's guide to MITRE ATT&CK
-│   ├── README.md
-│   └── *.pdf
-├── Attribution/              # Practitioner's guide to attribution methodology
-│   ├── README.md
-│   └── *.pdf
-├── Infrastructure_pivoting/  # Field manual: single IOC → full attacker infrastructure
-│   ├── README.md
-│   ├── autoWF.py             # Automated pivot tool (VT + SecurityTrails + crt.sh)
-│   └── *.pdf
-└── AI_Threat_Actors/         # Deep research: AI use by threat actors 2019–2026
-    └── README.md
+```bash
+git clone https://github.com/anpa1200/CTI.git
+cd CTI
+find . -maxdepth 3 -type f | sort
 ```
 
-- **PDF:** Table of contents, clickable `[R1]`…`[Rx]` to references, original figures where available.
-- **HTML:** Same content; good for search, copy-paste, and re-printing to PDF.
-- **assets/:** Figures extracted from source; used when (re)building the report.
+## How It Works
 
----
+```mermaid
+flowchart LR
+  Sources[Sources] --> Evidence[Evidence labeling]
+  Evidence --> Assessment[Analytic assessment]
+  Assessment --> Attack[ATT&CK mapping]
+  Attack --> Detection[Hunts / detections]
+  Detection --> Report[PDF / HTML report]
+```
 
-## Author & sources
+## Coverage
 
-- **Author:** [Andrey Pautov](https://medium.com/@1200km)  
-- **Long-form articles:** [Medium @1200km](https://medium.com/@1200km)  
-- Reports here are structured, citation-linked editions of those articles (evidence cutoff and scope noted in each report).
+| Area | Coverage |
+|---|---|
+| Actors | Handala / Void Manticore, Sandworm / APT44, MuddyWater / Seedworm |
+| Labels | Observed, Reported, Assessed, Claimed |
+| Outputs | PDF, HTML, templates |
+| Use case | CTI, SOC handoff, detection planning |
 
----
+## Related Sites And Articles
 
-## Adding a new report
+- Israel CTI knowledge base: https://anpa1200.github.io/israel-government-threat-actors-cti/
+- CTI Analyst Field Manual: https://anpa1200.github.io/cti-analyst-field-manual/
+- Attribution Methodology: https://medium.com/@1200km/attribution-methodology-how-to-build-defend-and-challenge-a-threat-actor-attribution-071066437ced
+- Infrastructure Pivoting: https://infosecwriteups.com/infrastructure-pivoting-how-cti-analysts-expand-from-a-single-ioc-to-a-full-attacker-network
+- ATT&CK as a Working Tool: https://medium.com/@1200km/att-ck-as-a-working-tool-theory-and-hands-on-practical-usage-d63835c9f101
 
-Use the **[template](template/)** for a consistent structure:
+## How To Cite
 
-1. Copy files from **`template/`** into a new directory (e.g. `my-actor-name/`).
-2. Rename and fill placeholders in `REPORT-README.tpl.md` → save as `README.md`; do the same for `IOCs.tpl.md` → `IOCs.md`.
-3. Add your report **PDF** and **HTML** (and `assets/` if you have figures; see template and existing reports for the build workflow).
-4. Add a row to the **Reports** table above with links to the report and source.
+Use the report title, repository URL, commit hash, and access date. See `CITATION.cff`.
 
-See **[template/README.md](template/README.md)** for placeholders, naming conventions, and optional build steps.
+## Research Charter
 
----
+See `RESEARCH-CHARTER.md`.
 
-## Disclaimer
+## Limitations And Honesty
 
-- **Use:** Defensive and research only. Not for offensive use.
-- **IOCs/samples:** Handle according to your security policy; validate before production use.
-- **Attribution:** Views and assessments are the author’s; sources are cited in each report.
-
----
+Public-source CTI is bounded by available reporting. Reports should not overstate attribution beyond evidence quality.
 
 ## License
 
-Per-report. See each report’s README and the original source (e.g. Medium) for terms of use.
+CC BY 4.0 recommended for reports and prose.
+
+## Security Policy
+
+See `SECURITY.md`.
