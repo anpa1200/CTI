@@ -61,8 +61,8 @@ flowchart LR
 
 ## Related Sites And Articles
 
-- Israel CTI knowledge base: https://anpa1200.github.io/israel-government-threat-actors-cti/
-- CTI Analyst Field Manual: https://anpa1200.github.io/cti-analyst-field-manual/
+- Israel CTI knowledge base: https://1200km.com/israel-government-threat-actors-cti/
+- CTI Analyst Field Manual: https://1200km.com/cti-analyst-field-manual/
 - Attribution Methodology: https://medium.com/@1200km/attribution-methodology-how-to-build-defend-and-challenge-a-threat-actor-attribution-071066437ced
 - Infrastructure Pivoting: https://infosecwriteups.com/infrastructure-pivoting-how-cti-analysts-expand-from-a-single-ioc-to-a-full-attacker-network
 - ATT&CK as a Working Tool: https://medium.com/@1200km/att-ck-as-a-working-tool-theory-and-hands-on-practical-usage-d63835c9f101
