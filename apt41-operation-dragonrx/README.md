@@ -34,6 +34,7 @@ make reset     # destroy everything and start clean
 | [lab-architecture.md](lab-architecture.md) | Full deployment guide: Docker Compose + Vagrant + Ansible + Makefile; network topology, Vagrantfile, Ansible roles, Sysmon config, Wazuh rules, Zeek scripts |
 | [attack-playbook.md](attack-playbook.md) | Phase-by-phase commands: recon → Log4Shell → webshell → discovery → Kerberoasting → LSASS dump → DCSync → lateral movement → exfil → DLL sideloading → cleanup |
 | [rxphage-malware.md](rxphage-malware.md) | PlugX-lite Go RAT design: XOR config, HTTPS C2, DLL sideloading loader, anti-analysis, static/dynamic analysis walkthrough, YARA rule, IOCs |
+| [malware-analysis-guide.md](malware-analysis-guide.md) | Full malware analysis guide for every DragonRx artifact: RxPhage ELF/PE, JVM sideloading loader, JSP webshell, JNDI class, Sliver beacon, DNS tunnel, and lab encryptor |
 | [detection-guide.md](detection-guide.md) | Zeek signatures, Wazuh XML rules (100110–100170), Elastic KQL/EQL correlation rules, Suricata IDS rules, threat hunting queries — mapped to every attack phase |
 | [dfir-playbook.md](dfir-playbook.md) | IR triage, memory acquisition, Volatility3 (Linux + Windows), disk forensics, Plaso timeline, network forensics, attribution, eradication checklist |
 
