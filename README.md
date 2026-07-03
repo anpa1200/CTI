@@ -30,6 +30,7 @@ This repository is for CTI analysts, SOC leads, and detection engineers who need
 | Handala / Void Manticore | PDF + HTML | Observed / Reported / Assessed / Claimed | [user: confirm summary] |
 | Sandworm / APT44 | PDF + HTML | Observed / Reported / Assessed / Claimed | [user: confirm summary] |
 | MuddyWater / Seedworm | PDF + HTML | Observed / Reported / Assessed / Claimed | [user: confirm summary] |
+| Embedded Systems / Hardware / Firmware Attack Surface | Web + Medium + Git index | Source-verified public reporting | Edge appliances, firmware, BMC, UEFI, SOHO/IoT, OT/IoT, silicon, and hardware trust-boundary risk |
 
 ## Quick Start
 
@@ -54,7 +55,7 @@ flowchart LR
 
 | Area | Coverage |
 |---|---|
-| Actors | Handala / Void Manticore, Sandworm / APT44, MuddyWater / Seedworm |
+| Actors | Handala / Void Manticore, Sandworm / APT44, MuddyWater / Seedworm, Volt Typhoon, UNC3886, UNC5221, UNC4841, UAT-4356, Cyclops Blink/Sandworm |
 | Labels | Observed, Reported, Assessed, Claimed |
 | Outputs | PDF, HTML, templates |
 | Use case | CTI, SOC handoff, detection planning |
@@ -66,6 +67,7 @@ flowchart LR
 - Attribution Methodology: https://medium.com/@1200km/attribution-methodology-how-to-build-defend-and-challenge-a-threat-actor-attribution-071066437ced
 - Infrastructure Pivoting: https://infosecwriteups.com/infrastructure-pivoting-how-cti-analysts-expand-from-a-single-ioc-to-a-full-attacker-network
 - ATT&CK as a Working Tool: https://medium.com/@1200km/att-ck-as-a-working-tool-theory-and-hands-on-practical-usage-d63835c9f101
+- Embedded Systems, Hardware, and Firmware Attack Surface CTI: https://1200km.com/CTI/
 
 ## How To Cite
 
