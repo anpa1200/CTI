@@ -67,7 +67,7 @@ flowchart LR
 - Attribution Methodology: https://medium.com/@1200km/attribution-methodology-how-to-build-defend-and-challenge-a-threat-actor-attribution-071066437ced
 - Infrastructure Pivoting: https://infosecwriteups.com/infrastructure-pivoting-how-cti-analysts-expand-from-a-single-ioc-to-a-full-attacker-network
 - ATT&CK as a Working Tool: https://medium.com/@1200km/att-ck-as-a-working-tool-theory-and-hands-on-practical-usage-d63835c9f101
-- Embedded Systems, Hardware, and Firmware Attack Surface CTI: https://1200km.com/cti.html#threat-landscape
+- Embedded Systems, Hardware, and Firmware Attack Surface CTI: https://1200km.com/embedded-systems-hardware-firmware/
 
 ## How To Cite
 
