@@ -4,7 +4,7 @@ Source-verified CTI research record for the 1200km ecosystem.
 
 ## Publication
 
-- Live 1200km page: https://1200km.com/CTI/
+- 1200km CTI ecosystem entry: https://1200km.com/cti.html#threat-landscape
 - Medium article: https://medium.com/@1200km/comprehensive-cyber-intelligence-research-attacks-against-embedded-systems-hardware-firmware-8a151f8d5f1b
 - Published: 2026-07-03
 - Version: Final source-verified edition
